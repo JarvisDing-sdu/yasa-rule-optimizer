@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvaluationRecord",
+  "type": "object",
+  "required": ["case_id", "label", "language", "expected", "actual"],
+  "properties": {
+    "case_id": { "type": "string" },
+    "label": { "type": "string", "enum": ["TP", "FP", "FN", "TN"] },
+    "language": { "type": "string" },
+    "expected": { "type": "object" },
+    "actual": { "type": "object" },
+    "reason_hint": { "type": "string" }
+  },
+  "additionalProperties": true
+}

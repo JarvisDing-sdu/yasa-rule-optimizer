@@ -1,0 +1,10 @@
+{
+  "case_id": "python_ssrf_001",
+  "expected_findings": [
+    {
+      "vulnerability_type": "SSRF",
+      "should_report": true,
+      "location": ""
+    }
+  ]
+}

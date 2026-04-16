@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>马医生 · 代码安全审计</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --panel: #ffffff;
+        --panel-border: #000000;
+        --text: #000000;
+        --muted: #4b5563;
+        --accent: #000000;
+        --accent-2: #000000;
+        --danger: #b91c1c;
+        --radius: 12px;
+        --radius-sm: 8px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Noto Sans SC', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.55;
+      }
+      .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; }
+      .hero {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 16px;
+        margin-bottom: 32px;
+        padding: 18px 24px 20px;
+        background: #ffffff;
+        border: 1px solid #000000;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+      .hero-text { text-align: left; }
+      .hero-mascot {
+        flex-shrink: 0;
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        object-position: center;
+        mix-blend-mode: multiply;
+        opacity: 0.92;
+      }
+      .title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        margin: 0 0 8px;
+        color: #000000;
+      }
+      .tagline { color: var(--muted); margin: 0; font-size: 0.95rem; }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 24px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        color: var(--text);
+      }
+      .panel h2 {
+        margin: 0 0 20px;
+        padding-bottom: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #000000;
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #000000;
+      }
+      .panel h2:not(:first-child) { margin-top: 24px; }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .form-row.row-2 { grid-template-columns: 1fr 1fr; }
+      .form-row.row-3 { grid-template-columns: 1fr 1fr 1fr; }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .form-group label {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(236, 72, 153, 0.3);
+        background: #fefefe;
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .form-group input::placeholder,
+      .form-group textarea::placeholder { color: #9ca3af; }
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.12);
+      }
+      .form-group select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+      }
+      .form-group-full { grid-column: 1 / -1; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .row.row-3 { grid-template-columns: 1fr 1fr 1fr; }
+      label {
+        display: block;
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+      input, select, textarea {
+        width: 100%;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(236, 72, 153, 0.3);
+        background: #fefefe;
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+      input::placeholder, textarea::placeholder { color: #9ca3af; }
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.12);
+      }
+      select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+      textarea { min-height: 120px; resize: vertical; }
+      button {
+        width: 100%;
+        border-radius: var(--radius-sm);
+        border: none;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      }
+      .btn {
+        background: linear-gradient(135deg, var(--accent-2), var(--accent));
+        color: #fff;
+      }
+      .btn:hover:not(:disabled) {
+        box-shadow: 0 4px 16px rgba(219, 39, 119, 0.35);
+        transform: translateY(-1px);
+      }
+      .btn:active:not(:disabled) { transform: translateY(0); }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .btn.secondary {
+        background: #fff;
+        color: var(--accent);
+        border: 1px solid var(--panel-border);
+      }
+      .btn.secondary:hover:not(:disabled) {
+        background: #fdf2f8;
+        border-color: var(--accent);
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .status.error { 
+        color: var(--danger); 
+        background: rgba(185, 28, 28, 0.05);
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 3px solid var(--danger);
+      }
+      .status.loading::after {
+        content: '';
+        animation: dots 1.5s steps(4, end) infinite;
+      }
+      @keyframes dots {
+        0%, 20% { content: ''; }
+        40% { content: '.'; }
+        60% { content: '..'; }
+        80%, 100% { content: '...'; }
+      }
+      .output {
+        white-space: pre-wrap;
+        line-height: 1.6;
+        min-height: 260px;
+        max-height: 440px;
+        overflow: auto;
+        background: #fdf2f8;
+        padding: 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(236, 72, 153, 0.2);
+        color: var(--text);
+      }
+      .output::-webkit-scrollbar { width: 8px; }
+      .output::-webkit-scrollbar-track { background: #fce7f3; border-radius: 4px; }
+      .output::-webkit-scrollbar-thumb { background: rgba(236, 72, 153, 0.4); border-radius: 4px; }
+      .output::-webkit-scrollbar-thumb:hover { background: rgba(236, 72, 153, 0.5); }
+      .chat-box {
+        max-height: 320px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin-bottom: 14px;
+        padding: 6px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .chat-box::-webkit-scrollbar { width: 6px; }
+      .chat-box::-webkit-scrollbar-track { background: transparent; }
+      .msg {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 14px;
+        max-width: 88%;
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+      .msg.user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, rgba(219, 39, 119, 0.15), rgba(236, 72, 153, 0.12));
+        border: 1px solid rgba(236, 72, 153, 0.3);
+        border-bottom-right-radius: 4px;
+      }
+      .msg.ai {
+        align-self: flex-start;
+        background: #fdf2f8;
+        border: 1px solid rgba(236, 72, 153, 0.2);
+        border-bottom-left-radius: 4px;
+        color: var(--text);
+      }
+      .msg.typing {
+        align-self: flex-start;
+        padding: 14px 18px;
+        min-height: 44px;
+      }
+      .typing-dots {
+        display: inline-flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .typing-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: typing-bounce 1.2s ease-in-out infinite;
+      }
+      .chat-box::-webkit-scrollbar-thumb { background: rgba(236, 72, 153, 0.35); border-radius: 3px; }
+      .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+      .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes typing-bounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+        30% { transform: translateY(-6px); opacity: 1; }
+      }
+      .chat-input-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+      }
+      .chat-input-row textarea {
+        flex: 1;
+        min-height: 44px;
+        resize: none;
+        margin: 0;
+      }
+      .chat-input-row .btn { width: auto; min-width: 72px; flex-shrink: 0; }
+      .meta { font-size: 0.75rem; color: var(--muted); margin-top: 8px; }
+      .chat-desc { margin: -6px 0 12px; font-size: 0.8rem; color: var(--muted); }
+      .export-btn-wrap label { min-height: 1.3em; }
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .checkbox-row input[type="checkbox"] { width: auto; cursor: pointer; }
+      .checkbox-row label { margin: 0; display: inline; }
+      .model-custom:focus { outline: none; border-color: var(--accent); }
+      @media (max-width: 980px) {
+        .grid { grid-template-columns: 1fr; }
+        .wrap { padding: 20px 16px; }
+        .row-3, .form-row.row-3 { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <img class="hero-mascot" src="/assets/mascot.png" alt="" />
+        <div class="hero-text">
+          <h1 class="title">马医生 · 代码安全审计</h1>
+          <p class="tagline">智能漏洞扫描 · AI 分析报告 · 一键审计</p>
+        </div>
+      </header>
+      <div class="grid">
+        <div class="panel">
+          <h2>扫描配置</h2>
+          <div class="form-row form-group-full">
+            <div class="form-group">
+              <label>目标路径（必填，绝对路径）</label>
+              <input id="targetPath" placeholder="/home/.../project_or_file.py" />
+            </div>
+          </div>
+          <div class="form-row row-3">
+            <div class="form-group">
+              <label>语言</label>
+              <select id="language">
+                <option value="">自动推断</option>
+                <option value="python">Python</option>
+                <option value="go">Go</option>
+                <option value="java">Java</option>
+                <option value="js">JavaScript</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>规则模式</label>
+              <select id="ruleMode">
+                <option value="full">全面</option>
+                <option value="minimal">精简</option>
+              </select>
+            </div>
+
+          </div>
+          <div class="form-row row-2">
+            <div class="form-group">
+              <label>AI 服务</label>
+              <select id="provider"></select>
+            </div>
+            <div class="form-group">
+              <label>模型</label>
+              <select id="model"></select>
+            </div>
+          </div>
+          <div class="form-row form-group-full">
+            <div class="form-group">
+              <label>API Key（必填）</label>
+              <input id="apiKey" type="password" placeholder="请输入 API Key" />
+            </div>
+          </div>
+          <div class="checkbox-row">
+            <input id="clearApiKeyAfterRequest" type="checkbox" checked />
+            <label for="clearApiKeyAfterRequest">请求完成后自动清空 API Key</label>
+          </div>
+          <div class="form-row form-group-full" style="margin-bottom:0; display: flex; gap: 12px;">
+            <button id="scanBtn" class="btn" style="flex: 1;">开始扫描并生成分析</button>
+            <button id="cancelBtn" class="btn" style="flex: 1; background: #b91c1c; display: none;">取消扫描</button>
+          </div>
+          <div id="scanStatus" class="status"></div>
+          <div id="scanMeta" class="meta"></div>
+
+          <h2>导出报告</h2>
+          <div class="form-row form-group-full">
+            <div class="form-group">
+              <label>导出路径</label>
+              <input id="outputPath" placeholder="/home/.../scan-report.md" />
+            </div>
+          </div>
+          <div class="form-row row-2">
+            <div class="form-group">
+              <label>格式</label>
+              <select id="exportFormat">
+                <option value="markdown">Markdown</option>
+                <option value="json">JSON</option>
+              </select>
+            </div>
+            <div class="form-group export-btn-wrap">
+              <label>&nbsp;</label>
+              <button id="exportBtn" class="btn secondary">导出报告</button>
+            </div>
+          </div>
+          <div id="exportStatus" class="status"></div>
+        </div>
+
+        <div class="panel">
+          <h2>AI 漏洞分析报告</h2>
+          <div id="analysisOutput" class="output panel"></div>
+
+          <h2>AI 对话</h2>
+          <p class="chat-desc">基于当前扫描报告继续追问，获取修复建议与解释。</p>
+          <div id="chatBox" class="chat-box"></div>
+          <div class="chat-input-row">
+            <textarea id="chatInput" placeholder="例如：这条链路如何修复更稳妥？" rows="2"></textarea>
+            <button id="chatBtn" class="btn">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const state = {
+        reportId: null,
+        reportDir: null,
+        language: null,
+        targetPath: null,
+        findingsCount: 0,
+        analysis: '',
+        messages: [],
+      };
+
+      const el = (id) => document.getElementById(id);
+      const providerSel = el('provider');
+      const modelSel = el('model');
+      const apiKeyInput = el('apiKey');
+      const clearApiKeyAfterRequest = el('clearApiKeyAfterRequest');
+
+      const PROVIDER_MODELS = {
+        deepseek: [
+          { value: 'deepseek-chat', label: 'deepseek-chat' },
+          { value: 'deepseek-coder', label: 'deepseek-coder' },
+          { value: 'deepseek-reasoner', label: 'deepseek-reasoner' },
+        ],
+        openai: [
+          { value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+          { value: 'gpt-4o', label: 'gpt-4o' },
+          { value: 'gpt-4-turbo', label: 'gpt-4-turbo' },
+          { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
+        ],
+      };
+
+      function fillModelSelect(providerId, defaultModel) {
+        modelSel.innerHTML = '';
+        const list = PROVIDER_MODELS[providerId] || [];
+        list.forEach((m) => {
+          const opt = document.createElement('option');
+          opt.value = m.value;
+          opt.textContent = m.label;
+          modelSel.appendChild(opt);
+        });
+        const hasDefault = list.some((m) => m.value === defaultModel);
+        modelSel.value = hasDefault ? defaultModel : (list[0]?.value || '');
+      }
+
+      function getModelValue() {
+        return modelSel.value || undefined;
+      }
+
+      async function loadProviders() {
+        const res = await fetch('/api/providers');
+        const data = await res.json();
+        providerSel.innerHTML = '';
+        (data.providers || []).forEach((p) => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.label;
+          opt.dataset.defaultModel = p.defaultModel || '';
+          opt.dataset.needsApiKey = String(Boolean(p.needsApiKey));
+          providerSel.appendChild(opt);
+        });
+        if (providerSel.options.length > 0) {
+          const first = providerSel.options[0];
+          fillModelSelect(first.value, first.dataset.defaultModel);
+          apiKeyInput.placeholder = '请输入 API Key';
+        }
+      }
+
+      providerSel.addEventListener('change', () => {
+        const opt = providerSel.options[providerSel.selectedIndex];
+        fillModelSelect(opt.value, opt.dataset.defaultModel);
+        apiKeyInput.placeholder = '请输入 API Key';
+      });
+
+
+      function setStatus(text, isError = false) {
+        const s = el('scanStatus');
+        s.textContent = text;
+        s.className = 'status' + (isError ? ' error' : ' loading');
+      }
+
+      function getApiKeyValue() {
+        return apiKeyInput.value.trim();
+      }
+
+      function validateApiKey() {
+        const apiKey = getApiKeyValue();
+        if (!apiKey) {
+          setStatus('❌ 请输入 API Key（必填）', true);
+          return false;
+        }
+        return true;
+      }
+
+      function maybeClearApiKey() {
+        if (clearApiKeyAfterRequest.checked) {
+          apiKeyInput.value = '';
+        }
+      }
+
+      function pushChat(role, content) {
+        const node = document.createElement('div');
+        node.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+        node.textContent = content;
+        el('chatBox').appendChild(node);
+        scrollChatToBottom();
+      }
+
+      function addTypingIndicator() {
+        const node = document.createElement('div');
+        node.className = 'msg ai typing';
+        node.id = 'chat-typing-indicator';
+        node.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        el('chatBox').appendChild(node);
+        scrollChatToBottom();
+      }
+
+      function removeTypingIndicator() {
+        const node = el('chat-typing-indicator');
+        if (node) node.remove();
+      }
+
+      function scrollChatToBottom() {
+        const box = el('chatBox');
+        box.scrollTop = box.scrollHeight;
+      }
+
+      async function scanAndAnalyze() {
+        const targetPath = el('targetPath').value.trim();
+        const language = el('language').value.trim();
+        const provider = providerSel.value;
+        const model = getModelValue();
+        const apiKey = getApiKeyValue();
+        const ruleMode = el('ruleMode').value || 'full';
+        
+        if (!targetPath) return setStatus('请先输入 targetPath', true);
+        
+        // 检测 Windows 路径格式
+        if (targetPath.includes('\\') || /^[A-Z]:/.test(targetPath)) {
+          return setStatus('❌ 路径格式错误！请使用 Linux 路径格式（以 / 开头，用 / 分隔）\n例如：/home/dys1013/yasa-bundle/pyload/src', true);
+        }
+        
+        // 检测路径是否以 / 开头
+        if (!targetPath.startsWith('/')) {
+          return setStatus('❌ 路径必须是绝对路径（以 / 开头）\n例如：/home/dys1013/yasa-bundle/pyload/src', true);
+        }
+
+        // 验证 API Key 必填
+        if (!validateApiKey()) return;
+
+        el('scanBtn').disabled = true;
+        el('cancelBtn').style.display = 'block';
+        let s = el('scanStatus');
+        s.textContent = '扫描中...';
+        s.className = 'status loading';
+
+        try {
+          const scanRes = await fetch('/api/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              targetPath,
+              lang: language || undefined,
+              ruleMode,
+              aiProvider: provider,
+              aiModel: model || undefined,
+              aiApiKey: apiKey || undefined,
+            }),
+          });
+          const scanData = await scanRes.json();
+          if (!scanRes.ok || !scanData.success) {
+            throw new Error(scanData.details || scanData.error || '扫描失败');
+          }
+
+          Object.assign(state, {
+            reportId: scanData.reportId,
+            reportDir: scanData.reportDir,
+            language: scanData.language || language || 'unknown',
+            targetPath,
+            findingsCount: scanData.findingsCount || 0,
+          });
+          el('scanMeta').textContent =
+            `reportId=${scanData.reportId} | findings=${state.findingsCount}`;
+
+          s = el('scanStatus');
+          s.textContent = '扫描完成，AI 分析中...';
+          s.className = 'status loading';
+
+          const anaRes = await fetch('/api/analyze-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reportId: state.reportId,
+              reportDir: state.reportDir,
+              provider,
+              model,
+              apiKey: apiKey || undefined,
+              targetPath: state.targetPath,
+              language: state.language,
+            }),
+          });
+          const anaData = await anaRes.json();
+          if (!anaRes.ok || !anaData.success) {
+            throw new Error(anaData.details || anaData.error || 'AI 分析失败');
+          }
+
+          state.analysis = anaData.analysis || '';
+          el('analysisOutput').textContent = state.analysis || '完成扫描并分析后，AI 漏洞分析报告将显示在此。';
+          s = el('scanStatus');
+          s.textContent = '✓ 完成';
+          s.className = 'status';
+        } catch (err) {
+          setStatus(err.message || String(err), true);
+        } finally {
+          maybeClearApiKey();
+          el('scanBtn').disabled = false;
+          el('cancelBtn').style.display = 'none';
+        }
+      }
+
+      async function cancelScan() {
+        if (!state.reportId) {
+          setStatus('没有正在进行的扫描', true);
+          return;
+        }
+
+        try {
+          el('cancelBtn').disabled = true;
+          setStatus('正在取消扫描...');
+
+          const res = await fetch('/api/cancel-scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reportId: state.reportId }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.details || data.error || '取消失败');
+          }
+
+          // 重置状态
+          state.reportId = null;
+          state.reportDir = null;
+          state.analysis = '';
+          state.messages = [];
+          el('scanMeta').textContent = '';
+          el('analysisOutput').textContent = '完成扫描并分析后，AI 漏洞分析报告将显示在此。';
+          el('chatOutput').innerHTML = '';
+          setStatus('已取消扫描并清理缓存');
+        } catch (err) {
+          setStatus(err.message || String(err), true);
+        } finally {
+          el('scanBtn').disabled = false;
+          el('cancelBtn').disabled = false;
+          el('cancelBtn').style.display = 'none';
+        }
+      }
+
+      async function sendChat() {
+        const content = el('chatInput').value.trim();
+        if (!content) return;
+        const provider = providerSel.value;
+        const model = getModelValue();
+        const apiKey = getApiKeyValue();
+
+        state.messages.push({ role: 'user', content });
+        pushChat('user', content);
+        el('chatInput').value = '';
+
+        addTypingIndicator();
+        const chatBtn = el('chatBtn');
+        chatBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              provider,
+              model,
+              apiKey: apiKey || undefined,
+              messages: state.messages,
+              context: {
+                reportId: state.reportId,
+                reportDir: state.reportDir,
+                language: state.language,
+                targetPath: state.targetPath,
+                findingsCount: state.findingsCount,
+                analysis: state.analysis,
+              },
+            }),
+          });
+          const data = await res.json();
+          removeTypingIndicator();
+          if (!res.ok || !data.success) {
+            throw new Error(data.details || data.error || '聊天失败');
+          }
+          state.messages.push({ role: 'assistant', content: data.reply });
+          pushChat('assistant', data.reply);
+        } catch (err) {
+          removeTypingIndicator();
+          pushChat('assistant', '聊天失败：' + (err.message || String(err)));
+        } finally {
+          maybeClearApiKey();
+          chatBtn.disabled = false;
+        }
+      }
+
+      async function exportReport() {
+        const outputPath = el('outputPath').value.trim();
+        const format = el('exportFormat').value;
+        const status = el('exportStatus');
+        if (!outputPath) {
+          status.textContent = '请填写导出路径 outputPath';
+          status.className = 'status error';
+          return;
+        }
+        try {
+          const res = await fetch('/api/export-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              outputPath,
+              format,
+              reportMeta: {
+                reportId: state.reportId,
+                language: state.language,
+                targetPath: state.targetPath,
+                findingsCount: state.findingsCount,
+              },
+              analysis: state.analysis,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.details || data.error || '导出失败');
+          }
+          status.textContent = `导出成功: ${data.outputPath}`;
+          status.className = 'status';
+        } catch (err) {
+          status.textContent = err.message || String(err);
+          status.className = 'status error';
+        }
+      }
+
+      el('scanBtn').addEventListener('click', scanAndAnalyze);
+      el('cancelBtn').addEventListener('click', cancelScan);
+      el('chatBtn').addEventListener('click', sendChat);
+      el('exportBtn').addEventListener('click', exportReport);
+      loadProviders();
+    </script>
+  </body>
+</html>

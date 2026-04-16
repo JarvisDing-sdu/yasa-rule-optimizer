@@ -1,0 +1,5 @@
+{
+  "source": "rules-mayisheng/rule_config_python_full.json",
+  "purpose": "Reference example for LLM rule generation",
+  "notes": "Copy a small, high-quality subset of real rules here for few-shot prompting."
+}

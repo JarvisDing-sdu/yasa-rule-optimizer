@@ -1,0 +1,10 @@
+{
+  "case_id": "python_ssrf_001",
+  "language": "python",
+  "vulnerability_type": "SSRF",
+  "source_code_before": "",
+  "source_code_after": "",
+  "source_function_hints": [],
+  "sink_function_hints": [],
+  "notes": "Fill with a real benchmark case."
+}
