@@ -1,0 +1,23 @@
+[
+  {
+    "checkerIds": ["taint_flow_python_input"],
+    "sources": {
+      "TaintSource": [
+        {
+          "path": "request.args",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        }
+      ]
+    },
+    "sinks": {
+      "FuncCallTaintSink": [
+        {
+          "args": ["0"],
+          "attribute": "PythonCommandExec",
+          "fsig": "os.system"
+        }
+      ]
+    }
+  }
+]

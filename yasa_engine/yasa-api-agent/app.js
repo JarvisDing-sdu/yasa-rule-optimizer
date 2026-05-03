@@ -583,6 +583,364 @@ app.post('/api/cancel-scan', async (req, res) => {
   }
 });
 
+// ==================== 规则生成相关接口 ====================
+
+const { RuleValidator } = require('../scripts/validate_rule.js');
+const { RuleGenerationPipeline } = require('../scripts/rule_generation_pipeline.js');
+const { FindingsComparator } = require('../scripts/compare_findings.js');
+
+const ruleValidator = new RuleValidator();
+const ruleGenerationPipeline = new RuleGenerationPipeline(callLLM);
+const findingsComparator = new FindingsComparator();
+
+// 加载现有规则 ID（用于唯一性检查）
+ruleValidator.loadExistingRules('../rules-mayisheng');
+ruleValidator.loadExistingRules('../../generated_rules/staging');
+ruleValidator.loadExistingRules('../../generated_rules/candidate');
+ruleValidator.loadExistingRules('../../generated_rules/production');
+
+/**
+ * POST /api/generate-rule-from-case
+ * 
+ * 从漏洞案例生成规则（Stage 1 + Stage 2）
+ * 
+ * 请求体：
+ * {
+ *   "vulnCase": { case_id, language, vulnerability_type, source_code_before, source_code_after, ... },
+ *   "provider": "deepseek",
+ *   "model": "deepseek-chat",
+ *   "apiKey": "sk-xxx"
+ * }
+ */
+app.post('/api/generate-rule-from-case', async (req, res) => {
+  try {
+    const { vulnCase, provider, model, apiKey } = req.body || {};
+
+    if (!vulnCase || !vulnCase.case_id) {
+      return res.status(400).json({ error: 'vulnCase with case_id is required' });
+    }
+
+    if (!apiKey || !apiKey.trim()) {
+      return res.status(400).json({ error: 'API Key is required' });
+    }
+
+    // 加载规则示例（few-shot）
+    const ruleExamplesPath = path.resolve(__dirname, '../../datasets/rule_examples');
+    let ruleExamples = [];
+    if (fs.existsSync(ruleExamplesPath)) {
+      const files = fs.readdirSync(ruleExamplesPath).filter(f => f.endsWith('.json') && f !== 'README.json');
+      if (files.length > 0) {
+        ruleExamples = JSON.parse(fs.readFileSync(path.join(ruleExamplesPath, files[0]), 'utf8'));
+      }
+    }
+
+    // 如果没有示例，从现有规则中提取一个
+    if (ruleExamples.length === 0) {
+      const lang = vulnCase.language || 'python';
+      const ruleConfigPath = getRuleConfigPath(lang, 'full');
+      const fullRules = JSON.parse(fs.readFileSync(ruleConfigPath, 'utf8'));
+      ruleExamples = fullRules.slice(0, 1); // 取第一条作为示例
+    }
+
+    // 生成规则
+    const result = await ruleGenerationPipeline.generateRuleFromCase(
+      vulnCase,
+      ruleExamples,
+      provider || 'deepseek',
+      model,
+      apiKey
+    );
+
+    // 校验规则
+    const validation = ruleValidator.validateRule(result.rule);
+
+    // 如果校验通过，保存到 staging
+    let savedPath = null;
+    if (validation.valid) {
+      const stagingDir = path.resolve(__dirname, '../../generated_rules/staging');
+      fs.mkdirSync(stagingDir, { recursive: true });
+      savedPath = path.join(stagingDir, `${result.rule.metadata.ruleId}.json`);
+      fs.writeFileSync(savedPath, JSON.stringify(result.rule, null, 2), 'utf8');
+      result.rule.metadata.validationStatus = 'valid';
+    } else {
+      result.rule.metadata.validationStatus = 'invalid';
+    }
+
+    res.json({
+      success: true,
+      description: result.description,
+      rule: result.rule,
+      validation,
+      savedPath,
+    });
+  } catch (err) {
+    console.error('Generate rule from case failed:', err);
+    res.status(500).json({
+      error: 'Generate rule from case failed',
+      details: err.message || String(err),
+    });
+  }
+});
+
+/**
+ * POST /api/validate-rule
+ * 
+ * 校验规则（独立接口）
+ * 
+ * 请求体：
+ * {
+ *   "rule": { ... }
+ * }
+ */
+app.post('/api/validate-rule', async (req, res) => {
+  try {
+    const { rule } = req.body || {};
+
+    if (!rule) {
+      return res.status(400).json({ error: 'rule is required' });
+    }
+
+    const validation = ruleValidator.validateRule(rule);
+
+    res.json({
+      success: true,
+      validation,
+    });
+  } catch (err) {
+    console.error('Validate rule failed:', err);
+    res.status(500).json({
+      error: 'Validate rule failed',
+      details: err.message || String(err),
+    });
+  }
+});
+
+/**
+ * POST /api/evaluate-rule
+ * 
+ * 评估规则（用测试集扫描并对比）
+ * 
+ * 请求体：
+ * {
+ *   "rule": { ... },
+ *   "testCases": [ { case_id, code, language, expected_findings: [...] }, ... ]
+ * }
+ */
+app.post('/api/evaluate-rule', async (req, res) => {
+  try {
+    const { rule, testCases } = req.body || {};
+
+    if (!rule) {
+      return res.status(400).json({ error: 'rule is required' });
+    }
+
+    if (!testCases || !Array.isArray(testCases) || testCases.length === 0) {
+      return res.status(400).json({ error: 'testCases array is required' });
+    }
+
+    // 1. 将规则临时写入文件
+    const tempRuleDir = path.resolve(__dirname, '../report/temp_rules');
+    fs.mkdirSync(tempRuleDir, { recursive: true });
+    const tempRuleId = `temp_${Date.now()}`;
+    const tempRulePath = path.join(tempRuleDir, `${tempRuleId}.json`);
+    fs.writeFileSync(tempRulePath, JSON.stringify([rule], null, 2), 'utf8');
+
+    // 2. 对每个测试案例执行扫描
+    const scanResults = [];
+    for (const testCase of testCases) {
+      // 将测试代码写入临时文件
+      const tempCodeDir = path.resolve(__dirname, '../report/temp_code');
+      fs.mkdirSync(tempCodeDir, { recursive: true });
+      const ext = testCase.language === 'python' ? 'py' : testCase.language === 'java' ? 'java' : testCase.language === 'go' ? 'go' : 'js';
+      const tempCodePath = path.join(tempCodeDir, `${testCase.case_id}.${ext}`);
+      fs.writeFileSync(tempCodePath, testCase.code || '', 'utf8');
+
+      // 执行扫描
+      const reportId = `eval_${testCase.case_id}_${Date.now()}`;
+      try {
+        const scanResult = await runYasaScan({
+          lang: testCase.language,
+          targetPath: tempCodePath,
+          checkers: normalizeCheckerIds(testCase.language, rule.checkerIds),
+          reportId,
+          ruleConfigPath: tempRulePath,
+        });
+
+        // 解析扫描结果
+        const findings = findingsComparator.parseYasaReport(scanResult.reportDir);
+        scanResults.push(findings);
+      } catch (err) {
+        console.error(`Scan failed for case ${testCase.case_id}:`, err.message);
+        scanResults.push([]); // 扫描失败视为无发现
+      }
+    }
+
+    // 3. 对比结果
+    const comparison = findingsComparator.compareAll(testCases, scanResults);
+
+    // 4. 清理临时文件
+    try {
+      fs.unlinkSync(tempRulePath);
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      evaluation: comparison,
+    });
+  } catch (err) {
+    console.error('Evaluate rule failed:', err);
+    res.status(500).json({
+      error: 'Evaluate rule failed',
+      details: err.message || String(err),
+    });
+  }
+});
+
+/**
+ * POST /api/optimize-rule-iteratively
+ * 
+ * 迭代优化规则（Stage 1 → 2 → 3 → 4 → 2 ...）
+ * 
+ * 请求体：
+ * {
+ *   "vulnCase": { ... },
+ *   "testCases": [ ... ],
+ *   "provider": "deepseek",
+ *   "model": "deepseek-chat",
+ *   "apiKey": "sk-xxx",
+ *   "maxRounds": 3
+ * }
+ */
+app.post('/api/optimize-rule-iteratively', async (req, res) => {
+  try {
+    const { vulnCase, testCases, provider, model, apiKey, maxRounds } = req.body || {};
+
+    if (!vulnCase || !vulnCase.case_id) {
+      return res.status(400).json({ error: 'vulnCase with case_id is required' });
+    }
+
+    if (!testCases || !Array.isArray(testCases) || testCases.length === 0) {
+      return res.status(400).json({ error: 'testCases array is required' });
+    }
+
+    if (!apiKey || !apiKey.trim()) {
+      return res.status(400).json({ error: 'API Key is required' });
+    }
+
+    // 加载规则示例
+    const ruleExamplesPath = path.resolve(__dirname, '../../datasets/rule_examples');
+    let ruleExamples = [];
+    if (fs.existsSync(ruleExamplesPath)) {
+      const files = fs.readdirSync(ruleExamplesPath).filter(f => f.endsWith('.json') && f !== 'README.json');
+      if (files.length > 0) {
+        ruleExamples = JSON.parse(fs.readFileSync(path.join(ruleExamplesPath, files[0]), 'utf8'));
+      }
+    }
+
+    if (ruleExamples.length === 0) {
+      const lang = vulnCase.language || 'python';
+      const ruleConfigPath = getRuleConfigPath(lang, 'full');
+      const fullRules = JSON.parse(fs.readFileSync(ruleConfigPath, 'utf8'));
+      ruleExamples = fullRules.slice(0, 1);
+    }
+
+    // 定义评估函数（传给 pipeline）
+    const evaluateFunc = async (rule, testCases) => {
+      // 复用 /api/evaluate-rule 的逻辑
+      const tempRuleDir = path.resolve(__dirname, '../report/temp_rules');
+      fs.mkdirSync(tempRuleDir, { recursive: true });
+      const tempRuleId = `temp_${Date.now()}`;
+      const tempRulePath = path.join(tempRuleDir, `${tempRuleId}.json`);
+      fs.writeFileSync(tempRulePath, JSON.stringify([rule], null, 2), 'utf8');
+
+      const scanResults = [];
+      for (const testCase of testCases) {
+        const tempCodeDir = path.resolve(__dirname, '../report/temp_code');
+        fs.mkdirSync(tempCodeDir, { recursive: true });
+        const ext = testCase.language === 'python' ? 'py' : testCase.language === 'java' ? 'java' : testCase.language === 'go' ? 'go' : 'js';
+        const tempCodePath = path.join(tempCodeDir, `${testCase.case_id}.${ext}`);
+        fs.writeFileSync(tempCodePath, testCase.code || '', 'utf8');
+
+        const reportId = `eval_${testCase.case_id}_${Date.now()}`;
+        try {
+          const scanResult = await runYasaScan({
+            lang: testCase.language,
+            targetPath: tempCodePath,
+            checkers: normalizeCheckerIds(testCase.language, rule.checkerIds),
+            reportId,
+            ruleConfigPath: tempRulePath,
+          });
+
+          const findings = findingsComparator.parseYasaReport(scanResult.reportDir);
+          scanResults.push(findings);
+        } catch (err) {
+          console.error(`Scan failed for case ${testCase.case_id}:`, err.message);
+          scanResults.push([]);
+        }
+      }
+
+      const comparison = findingsComparator.compareAll(testCases, scanResults);
+
+      try {
+        fs.unlinkSync(tempRulePath);
+      } catch (e) {
+        // ignore
+      }
+
+      return comparison;
+    };
+
+    // 执行迭代优化
+    const result = await ruleGenerationPipeline.optimizeRuleIteratively(
+      vulnCase,
+      ruleExamples,
+      testCases,
+      evaluateFunc,
+      provider || 'deepseek',
+      model,
+      apiKey,
+      maxRounds || 3
+    );
+
+    // 保存最佳规则到 candidate
+    let savedPath = null;
+    if (result.bestRule) {
+      const validation = ruleValidator.validateRule(result.bestRule);
+      if (validation.valid && result.bestF1 >= 0.7) {
+        const candidateDir = path.resolve(__dirname, '../../generated_rules/candidate');
+        fs.mkdirSync(candidateDir, { recursive: true });
+        savedPath = path.join(candidateDir, `${result.bestRule.metadata.ruleId}.json`);
+        fs.writeFileSync(savedPath, JSON.stringify(result.bestRule, null, 2), 'utf8');
+      }
+    }
+
+    // 保存迭代日志
+    const logDir = path.resolve(__dirname, '../../iteration_logs');
+    fs.mkdirSync(logDir, { recursive: true });
+    const logPath = path.join(logDir, `${vulnCase.case_id}_${Date.now()}.json`);
+    fs.writeFileSync(logPath, JSON.stringify(result.iterationLog, null, 2), 'utf8');
+
+    res.json({
+      success: true,
+      bestRule: result.bestRule,
+      bestF1: result.bestF1,
+      iterationLog: result.iterationLog,
+      savedPath,
+      logPath,
+    });
+  } catch (err) {
+    console.error('Optimize rule iteratively failed:', err);
+    res.status(500).json({
+      error: 'Optimize rule iteratively failed',
+      details: err.message || String(err),
+    });
+  }
+});
+
+// ==================== 原有代码 ====================
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`YASA API agent listening on port ${PORT}`);

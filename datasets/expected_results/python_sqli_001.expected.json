@@ -1,0 +1,10 @@
+{
+  "case_id": "python_sqli_001",
+  "expected_findings": [
+    {
+      "vulnerability_type": "SQLInjection",
+      "should_report": true,
+      "location": "get_user function"
+    }
+  ]
+}

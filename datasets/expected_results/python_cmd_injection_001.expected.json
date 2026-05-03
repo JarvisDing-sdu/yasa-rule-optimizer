@@ -1,0 +1,10 @@
+{
+  "case_id": "python_cmd_injection_001",
+  "expected_findings": [
+    {
+      "vulnerability_type": "CommandInjection",
+      "should_report": true,
+      "location": "ping_host function"
+    }
+  ]
+}

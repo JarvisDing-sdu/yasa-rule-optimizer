@@ -1,0 +1,20 @@
+{
+  "case_id": "python_cmd_injection_001",
+  "language": "python",
+  "vulnerability_type": "CommandInjection",
+  "source_code_before": "import os\nfrom flask import Flask, request\n\napp = Flask(__name__)\n\n@app.route('/ping')\ndef ping_host():\n    host = request.args.get('host')\n    result = os.system(f'ping -c 1 {host}')\n    return f'Result: {result}'",
+  "source_code_after": "import subprocess\nfrom flask import Flask, request\nimport shlex\n\napp = Flask(__name__)\n\n@app.route('/ping')\ndef ping_host():\n    host = request.args.get('host')\n    # Validate host format\n    if not host or not host.replace('.', '').replace('-', '').isalnum():\n        return 'Invalid host', 400\n    result = subprocess.run(['ping', '-c', '1', host], capture_output=True)\n    return f'Result: {result.returncode}'",
+  "source_function_hints": [
+    "request.args.get",
+    "request.form.get",
+    "sys.argv"
+  ],
+  "sink_function_hints": [
+    "os.system",
+    "os.popen",
+    "subprocess.run",
+    "subprocess.call",
+    "subprocess.Popen"
+  ],
+  "notes": "Command Injection: user input passed to shell command without sanitization"
+}

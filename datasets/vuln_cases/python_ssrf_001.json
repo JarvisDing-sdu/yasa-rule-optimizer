@@ -1,0 +1,18 @@
+{
+  "case_id": "python_ssrf_001",
+  "language": "python",
+  "vulnerability_type": "SSRF",
+  "source_code_before": "import requests\nfrom flask import Flask, request\n\napp = Flask(__name__)\n\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)\n    return response.text",
+  "source_code_after": "import requests\nfrom flask import Flask, request\nfrom urllib.parse import urlparse\n\napp = Flask(__name__)\n\nALLOWED_HOSTS = ['example.com', 'api.example.com']\n\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    parsed = urlparse(url)\n    if parsed.hostname not in ALLOWED_HOSTS:\n        return 'Invalid URL', 400\n    response = requests.get(url)\n    return response.text",
+  "source_function_hints": [
+    "request.args.get",
+    "request.args",
+    "request.form.get"
+  ],
+  "sink_function_hints": [
+    "requests.get",
+    "requests.post",
+    "urllib.request.urlopen"
+  ],
+  "notes": "SSRF vulnerability: user-controlled URL passed directly to HTTP request without validation"
+}
