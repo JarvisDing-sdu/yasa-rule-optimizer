@@ -9,6 +9,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 const WEB_PUBLIC_DIR = path.resolve(__dirname, '../../apps/web/public');
+const WEB_INDEX_PATH = path.join(WEB_PUBLIC_DIR, 'index.html');
 app.use(express.static(WEB_PUBLIC_DIR));
 
 // 多语言配置
@@ -521,7 +522,7 @@ app.post('/api/export-report', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(WEB_INDEX_PATH);
 });
 
 // 全局扫描进程管理
