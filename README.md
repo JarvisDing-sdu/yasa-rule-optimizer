@@ -26,8 +26,6 @@ cd yasa_engine/yasa-api-agent
 node app.js
 ```
 
-服务将在 `http://localhost:3000` 启动。
-
 ### 3. 测试规则生成
 
 ```bash
@@ -94,8 +92,9 @@ node test_optimize_rule.js python_sqli_001 <your-api-key>
 
 ## 示例案例
 
-项目已包含 3 个完整的漏洞案例：
+项目已包含 4 个完整的漏洞案例：
 
+- `example-python-ssrf`: SSRF（示例）
 - `python_sqli_001`: SQL 注入
 - `python_cmd_injection_001`: 命令注入
 - `python_ssrf_001`: SSRF
