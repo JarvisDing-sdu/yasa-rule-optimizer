@@ -1,0 +1,214 @@
+============================================================
+【结构化漏洞报告】
+共 3 条（已去重）
+============================================================
+
+## 高危 (3 条)
+----------------------------------------
+
+1. 【命令执行】 vulnerable.go:12
+   代码: exec.Command(cmd)...
+   污点路径: L11 -> L35 -> L10 -> L11
+
+2. 【SQL 注入】 vulnerable.go:18
+   代码: db.Query(query)...
+   污点路径: L16 -> L36 -> L15 -> L16
+
+3. 【SSRF】 vulnerable.go:28
+   代码: http.Get(url)...
+   污点路径: L27 -> L38 -> L26 -> L27
+
+============================================================
+
+--- 原始 YASA 输出 ---
+[YASA] Begin execution
+[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_go_minimal.json
+[YASA][init] EntrypointMode set: BOTH
+[YASA][init] Specified checker pack IDs: [taint-flow-golang-default]
+version: 0.3.1 (build 20260526, commit local-c-extension)
+v8 heap_size_limit: 11312 MB
+main file:/snapshot/Downloads/YASA-Engine-main/dist/main.js
+[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-go-cases/
+[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-go-cases/test-go-cases_go_20260528_151357
+[YASA][init] Analysis language: golang
+[YASA][init] Analysis analyzer: GoAnalyzer
+[YASA][init] Loading checker: taint_flow_gin_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/gin-default-taint-checker.js
+[YASA][init] Loading checker: taint_flow_go_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/go-default-taint-checker.js
+[YASA][init] Loading checker: cobra.Command-builtIn from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/cobra-command-checker.js
+[YASA][init] Loading checker: go-restful-entryPoints-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/restful-entrypoint-collect-checker.js
+[YASA][init] Loading checker: beego-entrypoint-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/beego-entrypoint-collect-checker.js
+[YASA][init] Loading checker: gorilla-mux-entrypoint-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/gorilla-mux-entrypoint-collect-checker.js
+[YASA][init] Loading checker: gRpc-entryPoint-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/gRpc-entrypoint-collect-checker.js
+[YASA][init] Loading checker: go-main-entryPoints-collection from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/main-entrypoint-collect-checker.js
+[YASA][init] Loading checker: sync.Once.Do-builtIn from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/sync-once-do-checker.js
+[YASA][init] Loading checker: urfave-cli-builtIn from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/urfave-cli-checker.js
+[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js
+[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js
+[YASA][init] Successfully loaded 12 checker(s): [taint_flow_gin_input, taint_flow_go_input, cobra.Command-builtIn, go-restful-entryPoints-collect-checker, beego-entrypoint-collect-checker, gorilla-mux-entrypoint-collect-checker, gRpc-entryPoint-collect-checker, go-main-entryPoints-collection, sync.Once.Do-builtIn, urfave-cli-builtIn, callgraph, sanitizer]
+[YASA] Executing preProcess
+[YASA][preProcess] Executing parseCode
+[YASA][preProcess] Completed parseCode, cost: 85ms, heap: 52.83/71.98 MB, rss: 120.7 MB, arrayBuffers: 6.87 MB
+[YASA][preProcess] Executing processModule
+[YASA][preProcess] Completed processModule, cost: 1ms, heap: 53.23/72.23 MB, rss: 120.91 MB, arrayBuffers: 6.87 MB
+[YASA] Completed preProcess, cost: 86ms, heap: 53.24/72.23 MB, rss: 120.91 MB, arrayBuffers: 6.87 MB
+[YASA] Executing startAnalyze
+[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)
+makeAllCG-start
+	makeAllCG-10%
+	makeAllCG-30%
+	makeAllCG-70%
+	makeAllCG-100%
+[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 8ms, heap: 42.29/71.73 MB, rss: 120.34 MB, arrayBuffers: 0.58 MB
+[YASA] Completed startAnalyze, cost: 9ms, heap: 42.34/71.73 MB, rss: 120.36 MB, arrayBuffers: 0.58 MB
+[YASA] Executing symbolInterpret
+EntryPoint [/vulnerable.main] is executing
+[YASA] Completed symbolInterpret, cost: 13ms, heap: 47.1/72.23 MB, rss: 124.8 MB, arrayBuffers: 0.58 MB
+Found 4 potential output strategy files
+Registered strategy: callchain from callchain-output-strategy.js
+Registered strategy: callgraph from callgraph-output-strategy.js
+Registered strategy: interactive from interactive-output-strategy.js
+Registered strategy: taintflow from taint-output-strategy.js
+Successfully registered 4 output strategies
+
+=======================  outputFindings  =======================
+
+======================== Findings ======================== 
+
+-------------  1 :  taint_flow_gin_input ------------- 
+Description: Gin taint_flow checker，不会使用CallGraph边界制作entrypoint
+File: /vulnerable.go
+Line 12: exec.Command(cmd)
+SINK RULE: exec.Command
+SINK Attribute: GoCommandExec
+entrypoint: 
+{
+  filePath: '/vulnerable.go',
+  functionName: 'main',
+  attribute: 'HTTP',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: undefined
+}
+Trace: 
+ /vulnerable.go
+  AffectedNodeName: r.FormValue("cmd")
+  11:  SOURCE:  	cmd := r.FormValue("cmd")
+ /vulnerable.go
+  AffectedNodeName: commandInjectionCase
+  35:  CALL:  	commandInjectionCase(r)
+ /vulnerable.go
+  AffectedNodeName: commandInjectionCase
+  10:  ARG PASS:  func commandInjectionCase(r *http.Request) {
+ /vulnerable.go
+  AffectedNodeName: cmd
+  11:  Var Pass:  	cmd := r.FormValue("cmd")
+ /vulnerable.go
+  AffectedNodeName: exec.Command
+  12:  SINK:  	exec.Command(cmd).Run()
+
+-------------  2 :  taint_flow_gin_input ------------- 
+Description: Gin taint_flow checker，不会使用CallGraph边界制作entrypoint
+File: /vulnerable.go
+Line 18: db.Query(query)
+SINK RULE: Query
+SINK Attribute: GoSqlInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.go',
+  functionName: 'main',
+  attribute: 'HTTP',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: undefined
+}
+Trace: 
+ /vulnerable.go
+  AffectedNodeName: r.FormValue("id")
+  16:  SOURCE:  	id := r.FormValue("id")
+ /vulnerable.go
+  AffectedNodeName: sqlInjectionCase
+  36:  CALL:  	sqlInjectionCase(r, db)
+ /vulnerable.go
+  AffectedNodeName: sqlInjectionCase
+  15:  ARG PASS:  func sqlInjectionCase(r *http.Request, db *sql.DB) {
+ /vulnerable.go
+  AffectedNodeName: id
+  16:  Var Pass:  	id := r.FormValue("id")
+ /vulnerable.go
+  AffectedNodeName: query
+  17:  Var Pass:  	query := "SELECT * FROM users WHERE id = " + id
+ /vulnerable.go
+  AffectedNodeName: db.Query
+  18:  SINK:  	db.Query(query)
+
+-------------  3 :  taint_flow_gin_input ------------- 
+Description: Gin taint_flow checker，不会使用CallGraph边界制作entrypoint
+File: /vulnerable.go
+Line 28: http.Get(url)
+SINK RULE: http.Get
+SINK Attribute: GoSSRF
+entrypoint: 
+{
+  filePath: '/vulnerable.go',
+  functionName: 'main',
+  attribute: 'HTTP',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: undefined
+}
+Trace: 
+ /vulnerable.go
+  AffectedNodeName: r.FormValue("url")
+  27:  SOURCE:  	url := r.FormValue("url")
+ /vulnerable.go
+  AffectedNodeName: ssrfCase
+  38:  CALL:  	ssrfCase(r)
+ /vulnerable.go
+  AffectedNodeName: ssrfCase
+  26:  ARG PASS:  func ssrfCase(r *http.Request) {
+ /vulnerable.go
+  AffectedNodeName: url
+  27:  Var Pass:  	url := r.FormValue("url")
+ /vulnerable.go
+  AffectedNodeName: http.Get
+  28:  SINK:  	http.Get(url)
+==========================================================
+  # Total-findings : 3
+========================================================== 
+
+report is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-go-cases/test-go-cases_go_20260528_151357/report.sarif
+================================================================
+
+analyze done
+[YASA] Execution completed, cost: 169ms, heap: 48.49/72.48 MB, rss: 126.13 MB, arrayBuffers: 0.69 MB
+
+======================  Analysis Overview  =====================
+Language                           : golang
+Files analyzed                     : 1
+Lines of code                      : 40
+Total time                         : 0s164ms
+Executed instruction               : 102
+Execution count                    : 311
+Sources marked                     : 16
+Sinks matched                      : 0
+Valid entrypoints                  : 1
+Findings                           : 3
+Avg execution time per instruction : 0.00ms
+Avg instruction execution count    : 3.05
+Execution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms
+Execution times 70%/99%/100%       : 4.00/12.00/18.00
+================================================================
+
+
+===================  Performance Statistics  ===================
+total cost: 0s169ms
+preProcess cost: 0s86ms (50.9%)
+  parseCode cost: 0s85ms (98.8%)
+  processModule cost: 0s1ms (1.2%)
+startAnalyze cost: 0s9ms (5.3%)
+  makeFullCallGraph(BySymbolInterpret) cost: 0s8ms (88.9%)
+  other cost: 0s1ms (11.1%)
+symbolInterpret cost: 0s13ms (7.7%)
+other cost: 0s61ms (36.1%)
+================================================================
+

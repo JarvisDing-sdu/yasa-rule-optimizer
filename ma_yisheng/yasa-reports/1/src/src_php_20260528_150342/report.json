@@ -1,0 +1,156 @@
+{
+  "project": "src",
+  "scan_path": "/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-2wzcigy3/src",
+  "language": "php",
+  "raw_output": "[YASA] Begin execution\n[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_php_minimal.json\n[YASA][init] Specified checker pack IDs: [taint-flow-php-default]\nversion: 0.3.1 (build 20260526, commit local-c-extension)\nv8 heap_size_limit: 11312 MB\nmain file:/snapshot/Downloads/YASA-Engine-main/dist/main.js\n[YASA][init] Source path: /var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-2wzcigy3/src/\n[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_php_20260528_150342\n[YASA][init] Analysis language: php\n[YASA][init] Analysis analyzer: PhpAnalyzer\n[YASA][init] Loading checker: taint_flow_php_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/php/php-default-taint-checker.js\n[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js\n[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js\n[YASA][init] Successfully loaded 3 checker(s): [taint_flow_php_input, callgraph, sanitizer]\n[YASA] Executing preProcess\n[YASA][preProcess] Executing parseCode\n[YASA][preProcess] Completed parseCode, cost: 7ms, heap: 28.95/64.23 MB, rss: 117.83 MB, arrayBuffers: 3.43 MB\n[YASA][preProcess] Executing processModule\n[YASA][preProcess] Completed processModule, cost: 1ms, heap: 29.36/64.48 MB, rss: 118.27 MB, arrayBuffers: 3.43 MB\n[YASA] Completed preProcess, cost: 27ms, heap: 29.37/64.48 MB, rss: 118.27 MB, arrayBuffers: 3.43 MB\n[YASA] Executing startAnalyze\n[SpartaEntrypoint] 发现 5 个 Controller action entrypoints\n[SoaServiceEntrypoint] 发现 0 个 SOA Service entrypoints\n[CustomMvcController] 发现 5 个 MVC Controller action entrypoints\n[CustomDataBucket] 发现 0 个 DataBucket entrypoints\n[YASA] Completed startAnalyze, cost: 1ms, heap: 29.55/64.48 MB, rss: 119.03 MB, arrayBuffers: 3.44 MB\n[YASA] Executing symbolInterpret\nEntryPoint [/vulnerable.php.commandAction] is executing\nEntryPoint [/vulnerable.php.sqlAction] is executing\nEntryPoint [/vulnerable.php.xssAction] is executing\nEntryPoint [/vulnerable.php.pathTraversalAction] is executing\nEntryPoint [/vulnerable.php.ssrfAction] is executing\n[YASA] Completed symbolInterpret, cost: 7ms, heap: 31.52/64.73 MB, rss: 133.41 MB, arrayBuffers: 3.44 MB\nFound 4 potential output strategy files\nRegistered strategy: callchain from callchain-output-strategy.js\nRegistered strategy: callgraph from callgraph-output-strategy.js\nRegistered strategy: interactive from interactive-output-strategy.js\nRegistered strategy: taintflow from taint-output-strategy.js\nSuccessfully registered 4 output strategies\n\n=======================  outputFindings  =======================\n\n======================== Findings ======================== \n\n-------------  1 :  taint_flow_php_input ------------- \nDescription: PHP污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.php\nLine 8: system(cmd)\nSINK RULE: system\nSINK Attribute: PhpCommandInjection\nentrypoint: \n{\n  filePath: '/vulnerable.php',\n  functionName: 'commandAction',\n  attribute: 'CustomMvcController',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.php\n  AffectedNodeName: _REQUEST\n  7:   SOURCE:          $cmd = $_REQUEST['cmd'];\n /vulnerable.php\n  AffectedNodeName: cmd\n  7:   Var Pass:         $cmd = $_REQUEST['cmd'];\n /vulnerable.php\n  AffectedNodeName: system\n  8:   SINK:          system($cmd);\n\n-------------  2 :  taint_flow_php_input ------------- \nDescription: PHP污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.php\nLine 15: mysqli_query(GLOBALS.db, sql)\nSINK RULE: mysqli_query\nSINK Attribute: PhpSqlInjection\nentrypoint: \n{\n  filePath: '/vulnerable.php',\n  functionName: 'sqlAction',\n  attribute: 'CustomMvcController',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.php\n  AffectedNodeName: _GET\n  13:  SOURCE:          $id = $_GET['id'];\n /vulnerable.php\n  AffectedNodeName: id\n  13:  Var Pass:         $id = $_GET['id'];\n /vulnerable.php\n  AffectedNodeName: sql\n  14:  Var Pass:         $sql = \"SELECT * FROM users WHERE id = \" . $id;\n /vulnerable.php\n  AffectedNodeName: mysqli_query\n  15:  SINK:          mysqli_query($GLOBALS['db'], $sql);\n\n-------------  3 :  taint_flow_php_input ------------- \nDescription: PHP污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.php\nLine 21: echo(name)\nSINK RULE: echo\nSINK Attribute: PhpXSS\nentrypoint: \n{\n  filePath: '/vulnerable.php',\n  functionName: 'xssAction',\n  attribute: 'CustomMvcController',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.php\n  AffectedNodeName: _POST\n  20:  SOURCE:          $name = $_POST['name'];\n /vulnerable.php\n  AffectedNodeName: name\n  20:  Var Pass:         $name = $_POST['name'];\n /vulnerable.php\n  AffectedNodeName: echo\n  21:  SINK:          echo $name;\n\n-------------  4 :  taint_flow_php_input ------------- \nDescription: PHP污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.php\nLine 33: file_get_contents(url)\nSINK RULE: file_get_contents\nSINK Attribute: PhpPathTraversal\nentrypoint: \n{\n  filePath: '/vulnerable.php',\n  functionName: 'ssrfAction',\n  attribute: 'CustomMvcController',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.php\n  AffectedNodeName: _GET\n  32:  SOURCE:          $url = $_GET['url'];\n /vulnerable.php\n  AffectedNodeName: url\n  32:  Var Pass:         $url = $_GET['url'];\n /vulnerable.php\n  AffectedNodeName: file_get_contents\n  33:  SINK:          file_get_contents($url);\n==========================================================\n  # Total-findings : 4\n========================================================== \n\nreport is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_php_20260528_150342/report.sarif\n================================================================\n\nanalyze done\n[YASA] Execution completed, cost: 88ms, heap: 32.96/64.98 MB, rss: 136.36 MB, arrayBuffers: 3.54 MB\n\n======================  Analysis Overview  =====================\nLanguage                           : php\nFiles analyzed                     : 1\nLines of code                      : 36\nTotal time                         : 0s84ms\nExecuted instruction               : 89\nExecution count                    : 105\nSources marked                     : 20\nSinks matched                      : 0\nValid entrypoints                  : 5\nFindings                           : 4\nAvg execution time per instruction : 0.00ms\nAvg instruction execution count    : 1.18\nExecution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms\nExecution times 70%/99%/100%       : 1.00/2.00/2.00\n================================================================\n\n\n===================  Performance Statistics  ===================\ntotal cost: 0s88ms\npreProcess cost: 0s27ms (30.7%)\n  parseCode cost: 0s7ms (25.9%)\n    parseFiles cost: 0s6ms (85.7%)\n    other cost: 0s1ms (14.3%)\n  processModule cost: 0s1ms (3.7%)\n  other cost: 0s19ms (70.4%)\nstartAnalyze cost: 0s1ms (1.1%)\nsymbolInterpret cost: 0s7ms (8.0%)\nother cost: 0s53ms (60.2%)\n================================================================\n\n",
+  "findings": [
+    {
+      "file": "vulnerable.php",
+      "line": 8,
+      "column": 9,
+      "sink_rule": "system",
+      "sink_attribute": "PhpCommandInjection",
+      "vuln_name": "命令注入",
+      "severity": "高危",
+      "message": "PHP污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "system(cmd)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 7,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: _REQUEST\n  7:   SOURCE:          $cmd = $_R"
+        },
+        {
+          "step": "Step 1",
+          "line": 7,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: cmd\n  7:   Var Pass:         $cmd = $_REQUE"
+        },
+        {
+          "step": "Step 2",
+          "line": 8,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: system\n  8:   SINK:          system($cmd);\n"
+        }
+      ],
+      "fingerprint": "0fa2591e19541755"
+    },
+    {
+      "file": "vulnerable.php",
+      "line": 15,
+      "column": 9,
+      "sink_rule": "mysqli_query",
+      "sink_attribute": "PhpSqlInjection",
+      "vuln_name": "SQL 注入",
+      "severity": "高危",
+      "message": "PHP污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "mysqli_query(GLOBALS.db, sql)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 13,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: _GET\n  13:  SOURCE:          $id = $_GET['i"
+        },
+        {
+          "step": "Step 1",
+          "line": 13,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: id\n  13:  Var Pass:         $id = $_GET['id"
+        },
+        {
+          "step": "Step 2",
+          "line": 14,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: sql\n  14:  Var Pass:         $sql = \"SELECT"
+        },
+        {
+          "step": "Step 3",
+          "line": 15,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: mysqli_query\n  15:  SINK:          mysqli_q"
+        }
+      ],
+      "fingerprint": "90d1105d66bea506"
+    },
+    {
+      "file": "vulnerable.php",
+      "line": 21,
+      "column": 9,
+      "sink_rule": "echo",
+      "sink_attribute": "PhpXSS",
+      "vuln_name": "XSS",
+      "severity": "中危",
+      "message": "PHP污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "echo(name)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 20,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: _POST\n  20:  SOURCE:          $name = $_POS"
+        },
+        {
+          "step": "Step 1",
+          "line": 20,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: name\n  20:  Var Pass:         $name = $_POS"
+        },
+        {
+          "step": "Step 2",
+          "line": 21,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: echo\n  21:  SINK:          echo $name;\n"
+        }
+      ],
+      "fingerprint": "9967a5c9a320ddec"
+    },
+    {
+      "file": "vulnerable.php",
+      "line": 33,
+      "column": 9,
+      "sink_rule": "file_get_contents",
+      "sink_attribute": "PhpPathTraversal",
+      "vuln_name": "路径遍历",
+      "severity": "中危",
+      "message": "PHP污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "file_get_contents(url)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 32,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: _GET\n  32:  SOURCE:          $url = $_GET['"
+        },
+        {
+          "step": "Step 1",
+          "line": 32,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: url\n  32:  Var Pass:         $url = $_GET['"
+        },
+        {
+          "step": "Step 2",
+          "line": 33,
+          "snippet": " /vulnerable.php\n  AffectedNodeName: file_get_contents\n  33:  SINK:          fil"
+        }
+      ],
+      "fingerprint": "9b7b078f0436ad2b"
+    }
+  ],
+  "findings_count": 4,
+  "diagnostics": [
+    {
+      "log_key": "scan_init",
+      "log_time": "2026-05-28 15:03:43",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "src",
+      "string3": "php",
+      "number1": null,
+      "number2": null,
+      "number3": null,
+      "date1": null,
+      "date2": null
+    },
+    {
+      "log_key": "scan_summary",
+      "log_time": "2026-05-28 15:03:43",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "src",
+      "string3": "{\"projectName\":\"src\",\"projectPath\":\"/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-2wzcigy3/src/\",\"yasaVersion\":\"0.3.1 (build 20260526, commit local-c-extension)\",\"parallelWorkers\":1,\"cgAlgorithm\":\"DEFAULT\",\"dumpAllCG\":false,\"dumpAST\":false,\"scanStartTime\":\"2026-05-28T07:03:43.169Z\",\"scanEndTime\":\"2026-05-28T07:03:43.257Z\",\"findingCount\":4,\"language\":\"php\",\"fileCount\":1,\"lineCount\":36,\"totalTimeMs\":88,\"markedSourceCount\":20,\"matchedSinkCount\":0,\"entryPointCount\":5,\"parseMs\":27,\"parseCodeMs\":7,\"preloadMs\":0,\"processModuleMs\":1,\"startAnalyzeMs\":1,\"symbolInterpretMs\":7,\"execCount\":105,\"execInstCount\":89,\"avgExecTimePerInst\":0,\"avgInstExecCount\":1.1797752808988764,\"execTimeP70Ms\":0,\"execTimeP99Ms\":0,\"execTimeP100Ms\":0,\"execTimesP70\":1,\"execTimesP99\":2,\"execTimesP100\":2}",
+      "number1": 88,
+      "number2": 36,
+      "number3": 4,
+      "date1": "2026-05-28 15:03:43",
+      "date2": "2026-05-28 15:03:43"
+    }
+  ]
+}

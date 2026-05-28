@@ -1,0 +1,1 @@
+{"log_key":"scan_init","log_time":"2026-05-28 15:07:04","string1":"0.3.1 (build 20260526, commit local-c-extension)","string2":"test-go-cases","string3":"golang","number1":null,"number2":null,"number3":null,"date1":null,"date2":null}

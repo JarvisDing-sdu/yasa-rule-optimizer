@@ -1,0 +1,257 @@
+{
+  "projectName": "test-go-cases",
+  "projectPath": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-go-cases/",
+  "yasaVersion": "0.3.1 (build 20260526, commit local-c-extension)",
+  "parallelWorkers": 1,
+  "cgAlgorithm": "DEFAULT",
+  "dumpAllCG": false,
+  "dumpAST": false,
+  "scanStartTime": "2026-05-28T07:13:58.140Z",
+  "scanEndTime": "2026-05-28T07:13:58.309Z",
+  "findingCount": 3,
+  "language": "golang",
+  "fileCount": 1,
+  "lineCount": 40,
+  "totalTimeMs": 169,
+  "markedSourceCount": 16,
+  "matchedSinkCount": 0,
+  "entryPointCount": 1,
+  "parseMs": 86,
+  "parseCodeMs": 85,
+  "preloadMs": 0,
+  "processModuleMs": 1,
+  "startAnalyzeMs": 9,
+  "symbolInterpretMs": 13,
+  "execCount": 311,
+  "execInstCount": 102,
+  "avgExecTimePerInst": 0,
+  "avgInstExecCount": 3.049019607843137,
+  "execTimeP70Ms": 0,
+  "execTimeP99Ms": 0,
+  "execTimeP100Ms": 0,
+  "execTimesP70": 4,
+  "execTimesP99": 12,
+  "execTimesP100": 18,
+  "ruleConfig": [
+    {
+      "checkerIds": [
+        "taint_flow_go_input",
+        "taint_flow_gin_input",
+        "taint_flow_gin_input_inner"
+      ],
+      "sources": {
+        "FuncCallReturnValueTaintSource": [
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "Query",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "GetQuery",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "PostForm",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "GetPostForm",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "Param",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "GetString",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*gin.Context",
+            "fsig": "GetRawData",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*http.Request",
+            "fsig": "FormValue",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "*http.Request",
+            "fsig": "PostFormValue",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          },
+          {
+            "calleeType": "os",
+            "fsig": "Getenv",
+            "scopeFile": "all",
+            "scopeFunc": "all",
+            "values": [
+              "0"
+            ]
+          }
+        ],
+        "FuncCallArgTaintSource": [
+          {
+            "args": [
+              "0"
+            ],
+            "calleeType": "*gin.Context",
+            "fsig": "BindJSON",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          }
+        ]
+      },
+      "sinks": {
+        "FuncCallTaintSink": [
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoCommandExec",
+            "calleeType": "",
+            "fsig": "exec.Command"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoCommandExec",
+            "calleeType": "",
+            "fsig": "exec.CommandContext"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoCommandInjection",
+            "calleeType": "os/exec",
+            "fsig": "Command"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoCommandInjection",
+            "calleeType": "os/exec",
+            "fsig": "CommandContext"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoSqlInjection",
+            "calleeType": "*sql.DB",
+            "fsig": "Query"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoSqlInjection",
+            "calleeType": "*sql.DB",
+            "fsig": "Exec"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoSqlInjection",
+            "calleeType": "*sql.DB",
+            "fsig": "QueryRow"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoPathTraversal",
+            "calleeType": "os",
+            "fsig": "Open"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoPathTraversal",
+            "calleeType": "os",
+            "fsig": "OpenFile"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoPathTraversal",
+            "calleeType": "os",
+            "fsig": "Create"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "GoSSRF",
+            "calleeType": "net/http",
+            "fsig": "Get"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "GoSSRF",
+            "calleeType": "",
+            "fsig": "http.Get"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "GoSSRF",
+            "calleeType": "",
+            "fsig": "http.NewRequest"
+          }
+        ]
+      }
+    }
+  ]
+}

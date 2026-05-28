@@ -1,0 +1,39 @@
+[
+  {
+    "checkerIds": ["taint_flow_go_input", "taint_flow_gin_input", "taint_flow_gin_input_inner"],
+    "sources": {
+      "FuncCallReturnValueTaintSource": [
+        {"calleeType": "*gin.Context", "fsig": "Query", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*gin.Context", "fsig": "GetQuery", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*gin.Context", "fsig": "PostForm", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*gin.Context", "fsig": "GetPostForm", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*gin.Context", "fsig": "Param", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*gin.Context", "fsig": "GetString", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*gin.Context", "fsig": "GetRawData", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*http.Request", "fsig": "FormValue", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "*http.Request", "fsig": "PostFormValue", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]},
+        {"calleeType": "os", "fsig": "Getenv", "scopeFile": "all", "scopeFunc": "all", "values": ["0"]}
+      ],
+      "FuncCallArgTaintSource": [
+        {"args": ["0"], "calleeType": "*gin.Context", "fsig": "BindJSON", "scopeFile": "all", "scopeFunc": "all"}
+      ]
+    },
+    "sinks": {
+      "FuncCallTaintSink": [
+        {"args": ["*"], "attribute": "GoCommandExec", "calleeType": "", "fsig": "exec.Command"},
+        {"args": ["*"], "attribute": "GoCommandExec", "calleeType": "", "fsig": "exec.CommandContext"},
+        {"args": ["*"], "attribute": "GoCommandInjection", "calleeType": "os/exec", "fsig": "Command"},
+        {"args": ["*"], "attribute": "GoCommandInjection", "calleeType": "os/exec", "fsig": "CommandContext"},
+        {"args": ["*"], "attribute": "GoSqlInjection", "calleeType": "*sql.DB", "fsig": "Query"},
+        {"args": ["*"], "attribute": "GoSqlInjection", "calleeType": "*sql.DB", "fsig": "Exec"},
+        {"args": ["*"], "attribute": "GoSqlInjection", "calleeType": "*sql.DB", "fsig": "QueryRow"},
+        {"args": ["*"], "attribute": "GoPathTraversal", "calleeType": "os", "fsig": "Open"},
+        {"args": ["*"], "attribute": "GoPathTraversal", "calleeType": "os", "fsig": "OpenFile"},
+        {"args": ["*"], "attribute": "GoPathTraversal", "calleeType": "os", "fsig": "Create"},
+        {"args": ["0"], "attribute": "GoSSRF", "calleeType": "net/http", "fsig": "Get"},
+        {"args": ["0"], "attribute": "GoSSRF", "calleeType": "", "fsig": "http.Get"},
+        {"args": ["*"], "attribute": "GoSSRF", "calleeType": "", "fsig": "http.NewRequest"}
+      ]
+    }
+  }
+]

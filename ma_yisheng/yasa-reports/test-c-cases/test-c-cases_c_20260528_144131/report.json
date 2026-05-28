@@ -1,0 +1,137 @@
+{
+  "project": "test-c-cases",
+  "scan_path": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases",
+  "language": "c",
+  "raw_output": "[YASA] Begin execution\n[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_c_minimal.json\n[YASA][init] Specified checker IDs: [taint_flow_c_input]\nversion: 0.3.1 (build 20260526, commit local-c-extension)\nv8 heap_size_limit: 11312 MB\nmain file:/snapshot/Downloads/YASA-Engine-main/dist/main.js\n[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/\n[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-c-cases/test-c-cases_c_20260528_144131\n[YASA][init] Analysis language: c\n[YASA][init] Analysis analyzer: CAnalyzer\n[YASA][init] Loading checker: taint_flow_c_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/c/c-default-taint-checker.js\n[YASA][init] Successfully loaded 1 checker(s): [taint_flow_c_input]\n[YASA] Executing preProcess\n[YASA][preProcess] Executing parseCode\n[YASA][preProcess] Completed parseCode, cost: 5ms, heap: 29.68/64.84 MB, rss: 114.5 MB, arrayBuffers: 2.18 MB\n[YASA][preProcess] Executing processModule\n[YASA][preProcess] Completed processModule, cost: 1ms, heap: 29.85/64.84 MB, rss: 114.59 MB, arrayBuffers: 2.18 MB\n[YASA] Completed preProcess, cost: 33ms, heap: 29.86/64.84 MB, rss: 114.59 MB, arrayBuffers: 2.18 MB\n[YASA] Executing startAnalyze\n[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)\nmakeAllCG-start\n\tmakeAllCG-10%\n\tmakeAllCG-30%\n\tmakeAllCG-70%\n\tmakeAllCG-100%\n[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 6ms, heap: 30.47/64.84 MB, rss: 120.38 MB, arrayBuffers: 2.18 MB\n[YASA] Completed startAnalyze, cost: 6ms, heap: 30.49/64.84 MB, rss: 120.92 MB, arrayBuffers: 2.18 MB\n[YASA] Executing symbolInterpret\nEntryPoint [/vulnerable.c.main] is executing\nEntryPoint [/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/vulnerable.c] is executing\n[YASA] Completed symbolInterpret, cost: 4ms, heap: 31.38/65.09 MB, rss: 129.86 MB, arrayBuffers: 2.19 MB\nFound 4 potential output strategy files\nRegistered strategy: callchain from callchain-output-strategy.js\nRegistered strategy: callgraph from callgraph-output-strategy.js\nRegistered strategy: interactive from interactive-output-strategy.js\nRegistered strategy: taintflow from taint-output-strategy.js\nSuccessfully registered 4 output strategies\n\n=======================  outputFindings  =======================\n\n======================== Findings ======================== \n\n-------------  1 :  taint_flow_c_input ------------- \nDescription: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数\nFile: /vulnerable.c\nLine 10: strcpy(name, input)\nSINK RULE: strcpy\nSINK Attribute: CBufferOverflow\nentrypoint: \n{\n  filePath: '/vulnerable.c',\n  functionName: 'main',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.c\n  AffectedNodeName: gets(input)\n  9:   SOURCE:      gets(input);\n /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  30:  CALL:      buffer_overflow_case();\n /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  5:   ARG PASS:  void buffer_overflow_case(void) {\n /vulnerable.c\n  AffectedNodeName: strcpy\n  10:  SINK:      strcpy(name, input);\n\n-------------  2 :  taint_flow_c_input ------------- \nDescription: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数\nFile: /vulnerable.c\nLine 19: system(command)\nSINK RULE: system\nSINK Attribute: CCommandInjection\nentrypoint: \n{\n  filePath: '/vulnerable.c',\n  functionName: 'main',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.c\n  AffectedNodeName: gets(command)\n  18:  SOURCE:      gets(command);\n /vulnerable.c\n  AffectedNodeName: direct_command_injection_case\n  31:  CALL:      direct_command_injection_case();\n /vulnerable.c\n  AffectedNodeName: direct_command_injection_case\n  15:  ARG PASS:  void direct_command_injection_case(void) {\n /vulnerable.c\n  AffectedNodeName: system\n  19:  SINK:      system(command);\n\n-------------  3 :  taint_flow_c_input ------------- \nDescription: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数\nFile: /vulnerable.c\nLine 26: printf(format)\nSINK RULE: printf\nSINK Attribute: CFormatString\nentrypoint: \n{\n  filePath: '/vulnerable.c',\n  functionName: 'main',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.c\n  AffectedNodeName: scanf(%255s, format)\n  25:  SOURCE:      scanf(\"%255s\", format);\n /vulnerable.c\n  AffectedNodeName: format_string_case\n  32:  CALL:      format_string_case();\n /vulnerable.c\n  AffectedNodeName: format_string_case\n  22:  ARG PASS:  void format_string_case(void) {\n /vulnerable.c\n  AffectedNodeName: printf\n  26:  SINK:      printf(format);\n==========================================================\n  # Total-findings : 3\n========================================================== \n\nreport is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-c-cases/test-c-cases_c_20260528_144131/report.sarif\n================================================================\n\nanalyze done\n[YASA] Execution completed, cost: 98ms, heap: 32.61/65.34 MB, rss: 133.72 MB, arrayBuffers: 2.28 MB\n\n======================  Analysis Overview  =====================\nLanguage                           : c\nFiles analyzed                     : 1\nLines of code                      : 35\nTotal time                         : 0s94ms\nExecuted instruction               : 66\nExecution count                    : 140\nSources marked                     : 3\nSinks matched                      : 0\nValid entrypoints                  : 2\nFindings                           : 3\nAvg execution time per instruction : 0.00ms\nAvg instruction execution count    : 2.12\nExecution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms\nExecution times 70%/99%/100%       : 2.00/4.00/4.00\n================================================================\n\n\n===================  Performance Statistics  ===================\ntotal cost: 0s98ms\npreProcess cost: 0s33ms (33.7%)\n  parseCode cost: 0s5ms (15.2%)\n    loadFiles cost: 0s1ms (20.0%)\n    parseFiles cost: 0s4ms (80.0%)\n  processModule cost: 0s1ms (3.0%)\n  other cost: 0s27ms (81.8%)\nstartAnalyze cost: 0s6ms (6.1%)\n  makeFullCallGraph(BySymbolInterpret) cost: 0s6ms (100.0%)\nsymbolInterpret cost: 0s4ms (4.1%)\nother cost: 0s55ms (56.1%)\n================================================================\n\n",
+  "findings": [
+    {
+      "file": "vulnerable.c",
+      "line": 10,
+      "column": 5,
+      "sink_rule": "strcpy",
+      "sink_attribute": "CBufferOverflow",
+      "vuln_name": "缓冲区溢出",
+      "severity": "高危",
+      "message": "C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数",
+      "snippet": "strcpy(name, input)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 9,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: gets(input)\n  9:   SOURCE:      gets(input);\n"
+        },
+        {
+          "step": "Step 1",
+          "line": 30,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  30:  CALL:      buffer"
+        },
+        {
+          "step": "Step 2",
+          "line": 5,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  5:   ARG PASS:  void b"
+        },
+        {
+          "step": "Step 3",
+          "line": 10,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: strcpy\n  10:  SINK:      strcpy(name, input);"
+        }
+      ],
+      "fingerprint": "aa073e8327f6d649"
+    },
+    {
+      "file": "vulnerable.c",
+      "line": 19,
+      "column": 5,
+      "sink_rule": "system",
+      "sink_attribute": "CCommandInjection",
+      "vuln_name": "命令注入",
+      "severity": "高危",
+      "message": "C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数",
+      "snippet": "system(command)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 18,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: gets(command)\n  18:  SOURCE:      gets(comman"
+        },
+        {
+          "step": "Step 1",
+          "line": 31,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: direct_command_injection_case\n  31:  CALL:   "
+        },
+        {
+          "step": "Step 2",
+          "line": 15,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: direct_command_injection_case\n  15:  ARG PASS"
+        },
+        {
+          "step": "Step 3",
+          "line": 19,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: system\n  19:  SINK:      system(command);\n"
+        }
+      ],
+      "fingerprint": "849050502a6e2fa9"
+    },
+    {
+      "file": "vulnerable.c",
+      "line": 26,
+      "column": 5,
+      "sink_rule": "printf",
+      "sink_attribute": "CFormatString",
+      "vuln_name": "格式化字符串漏洞",
+      "severity": "高危",
+      "message": "C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数",
+      "snippet": "printf(format)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 25,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: scanf(%255s, format)\n  25:  SOURCE:      scan"
+        },
+        {
+          "step": "Step 1",
+          "line": 32,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: format_string_case\n  32:  CALL:      format_s"
+        },
+        {
+          "step": "Step 2",
+          "line": 22,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: format_string_case\n  22:  ARG PASS:  void for"
+        },
+        {
+          "step": "Step 3",
+          "line": 26,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: printf\n  26:  SINK:      printf(format);\n"
+        }
+      ],
+      "fingerprint": "877257306ebd9dda"
+    }
+  ],
+  "findings_count": 3,
+  "diagnostics": [
+    {
+      "log_key": "scan_init",
+      "log_time": "2026-05-28 14:41:31",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "test-c-cases",
+      "string3": "c",
+      "number1": null,
+      "number2": null,
+      "number3": null,
+      "date1": null,
+      "date2": null
+    },
+    {
+      "log_key": "scan_summary",
+      "log_time": "2026-05-28 14:41:31",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "test-c-cases",
+      "string3": "{\"projectName\":\"test-c-cases\",\"projectPath\":\"/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/\",\"yasaVersion\":\"0.3.1 (build 20260526, commit local-c-extension)\",\"parallelWorkers\":1,\"cgAlgorithm\":\"DEFAULT\",\"dumpAllCG\":false,\"dumpAST\":false,\"scanStartTime\":\"2026-05-28T06:41:31.621Z\",\"scanEndTime\":\"2026-05-28T06:41:31.719Z\",\"findingCount\":3,\"language\":\"c\",\"fileCount\":1,\"lineCount\":35,\"totalTimeMs\":98,\"markedSourceCount\":3,\"matchedSinkCount\":0,\"entryPointCount\":2,\"parseMs\":33,\"parseCodeMs\":5,\"preloadMs\":0,\"processModuleMs\":1,\"startAnalyzeMs\":6,\"symbolInterpretMs\":4,\"execCount\":140,\"execInstCount\":66,\"avgExecTimePerInst\":0,\"avgInstExecCount\":2.121212121212121,\"execTimeP70Ms\":0,\"execTimeP99Ms\":0,\"execTimeP100Ms\":0,\"execTimesP70\":2,\"execTimesP99\":4,\"execTimesP100\":4}",
+      "number1": 98,
+      "number2": 35,
+      "number3": 3,
+      "date1": "2026-05-28 14:41:31",
+      "date2": "2026-05-28 14:41:31"
+    }
+  ]
+}

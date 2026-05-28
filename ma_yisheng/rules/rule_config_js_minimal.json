@@ -1,0 +1,36 @@
+[
+  {
+    "checkerIds": ["taint_flow_js_input", "taint_flow_egg_input", "taint_flow_express_input"],
+    "sources": {
+      "TaintSource": [
+        {"path": "req.query", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "req.params", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "req.body", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "req.headers", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "process.argv", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "process.env", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "ctx.query", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "ctx.params", "scopeFile": "all", "scopeFunc": "all"},
+        {"path": "ctx.request.body", "scopeFile": "all", "scopeFunc": "all"}
+      ]
+    },
+    "sinks": {
+      "FuncCallTaintSink": [
+        {"args": ["0"], "attribute": "NodejsExec", "fsig": "child_process.exec"},
+        {"args": ["0"], "attribute": "NodejsExec", "fsig": "child_process.execSync"},
+        {"args": ["0"], "attribute": "NodejsExec", "fsig": "child_process.spawn"},
+        {"args": ["0"], "attribute": "NodejsExec", "fsig": "eval"},
+        {"args": ["0"], "attribute": "NodejsSqlInjection", "fsig": "connection.query"},
+        {"args": ["*"], "attribute": "NodejsSqlInjection", "fsig": "sequelize.query"},
+        {"args": ["*"], "attribute": "NodejsSqlInjection", "fsig": "prisma.$queryRawUnsafe"},
+        {"args": ["0"], "attribute": "NodejsSSRF", "fsig": "axios.get"},
+        {"args": ["0"], "attribute": "NodejsSSRF", "fsig": "axios.post"},
+        {"args": ["*"], "attribute": "NodejsPathTraversal", "fsig": "fs.readFileSync"},
+        {"args": ["*"], "attribute": "NodejsPathTraversal", "fsig": "fs.writeFileSync"},
+        {"args": ["*"], "attribute": "NodejsPathTraversal", "fsig": "fs.createReadStream"},
+        {"args": ["*"], "attribute": "NodejsResponseWrite", "fsig": "res.send"},
+        {"args": ["*"], "attribute": "NodejsResponseWrite", "fsig": "res.json"}
+      ]
+    }
+  }
+]

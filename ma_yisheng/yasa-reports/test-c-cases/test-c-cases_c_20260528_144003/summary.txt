@@ -1,0 +1,67 @@
+[YASA] Begin execution
+[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_c_minimal.json
+[YASA][init] Specified checker pack IDs: [taint-flow-c-default]
+version: 0.3.1 (build 20260526, commit local-c-extension)
+v8 heap_size_limit: 11312 MB
+main file:/snapshot/Downloads/YASA-Engine-main/dist/main.js
+[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/
+[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-c-cases/test-c-cases_c_20260528_144003
+[YASA][init] Analysis language: c
+[YASA][init] Analysis analyzer: CAnalyzer
+Error occurred in CheckerManager_ctor
+[YASA] Executing preProcess
+[YASA][preProcess] Executing parseCode
+[YASA][preProcess] Completed parseCode, cost: 6ms, heap: 29.69/64.84 MB, rss: 114.75 MB, arrayBuffers: 2.18 MB
+[YASA][preProcess] Executing processModule
+[YASA][preProcess] Completed processModule, cost: 2ms, heap: 29.87/64.84 MB, rss: 119.48 MB, arrayBuffers: 2.18 MB
+[YASA] Completed preProcess, cost: 34ms, heap: 29.88/64.84 MB, rss: 119.48 MB, arrayBuffers: 2.18 MB
+[YASA] Executing startAnalyze
+[YASA] Completed startAnalyze, cost: 0ms, heap: 29.91/64.84 MB, rss: 119.5 MB, arrayBuffers: 2.18 MB
+[YASA] Executing symbolInterpret
+EntryPoint [/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/vulnerable.c] is executing
+EntryPoint [/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/vulnerable.c.main] is executing
+[YASA] Completed symbolInterpret, cost: 9ms, heap: 30.6/64.84 MB, rss: 126.22 MB, arrayBuffers: 2.18 MB
+Found 4 potential output strategy files
+Registered strategy: callchain from callchain-output-strategy.js
+Registered strategy: callgraph from callgraph-output-strategy.js
+Registered strategy: interactive from interactive-output-strategy.js
+Registered strategy: taintflow from taint-output-strategy.js
+Successfully registered 4 output strategies
+
+=======================  outputFindings  =======================
+================================================================
+
+analyze done
+[YASA] Execution completed, cost: 90ms, heap: 31.44/65.09 MB, rss: 126.47 MB, arrayBuffers: 2.27 MB
+
+======================  Analysis Overview  =====================
+Language                           : c
+Files analyzed                     : 1
+Lines of code                      : 35
+Total time                         : 0s84ms
+Executed instruction               : 66
+Execution count                    : 82
+Sources marked                     : 0
+Sinks matched                      : 0
+Valid entrypoints                  : 2
+Findings                           : 0
+Avg execution time per instruction : 0.00ms
+Avg instruction execution count    : 1.24
+Execution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms
+Execution times 70%/99%/100%       : 1.00/4.00/4.00
+================================================================
+
+
+===================  Performance Statistics  ===================
+total cost: 0s90ms
+preProcess cost: 0s34ms (37.8%)
+  parseCode cost: 0s6ms (17.6%)
+    loadFiles cost: 0s2ms (33.3%)
+    parseFiles cost: 0s4ms (66.7%)
+  processModule cost: 0s2ms (5.9%)
+  other cost: 0s26ms (76.5%)
+startAnalyze cost: 0s0ms (0.0%)
+symbolInterpret cost: 0s9ms (10.0%)
+other cost: 0s47ms (52.2%)
+================================================================
+

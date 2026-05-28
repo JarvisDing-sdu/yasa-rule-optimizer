@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #FFFBF0;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #000000;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-brutal {
+    @apply border-3 border-black shadow-brutal font-bold uppercase tracking-wide
+           transition-all duration-75 cursor-pointer select-none inline-flex
+           items-center justify-center gap-2;
+  }
+  .btn-brutal:hover {
+    @apply translate-x-[2px] translate-y-[2px] shadow-brutal-sm;
+  }
+  .btn-brutal:active {
+    @apply translate-x-[4px] translate-y-[4px] shadow-none;
+  }
+
+  .card-brutal {
+    @apply bg-brutal-cream border-3 border-black shadow-brutal;
+  }
+
+  .input-brutal {
+    @apply bg-white border-3 border-black shadow-brutal-sm px-3 py-2
+           outline-none font-medium w-full transition-shadow duration-75;
+  }
+  .input-brutal:focus {
+    @apply shadow-brutal;
+  }
+}

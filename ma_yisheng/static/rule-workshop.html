@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>马医生 · 规则工坊</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Neo-brutalist, matching the React app
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --cream: #fffbf0;
+  --black: #000;
+  --yellow: #ffe500;
+  --cyan: #00e5ff;
+  --purple: #6b00ff;
+  --red: #ff3b3b;
+  --gray: #e8e8e8;
+  --green: #22c55e;
+  --bw: 3px;
+  --sh: 4px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--cream);
+  color: var(--black);
+  -webkit-font-smoothing: antialiased;
+}
+
+main { max-width: 1520px; margin: 0 auto; padding: 24px 20px 48px; }
+
+/* ── Top bar ── */
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+}
+.topbar h1 {
+  margin: 0; font-size: 28px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+.topbar .subtitle { font-size: 13px; color: #555; margin-top: 2px; }
+.topbar nav { display: flex; gap: 12px; align-items: center; }
+.topbar nav a {
+  font-weight: 700; text-transform: uppercase; font-size: 12px;
+  color: var(--black); text-decoration: none;
+  padding: 6px 12px; border: var(--bw) solid var(--black);
+  box-shadow: var(--sh) var(--sh) 0 var(--black);
+  background: #fff; transition: all 0.1s;
+}
+.topbar nav a:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--black); }
+.topbar nav a:active { transform: translate(4px,4px); box-shadow: none; }
+.login-badge {
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border: var(--bw) solid var(--black); text-transform: uppercase;
+}
+
+/* ── Panels ── */
+.panels { display: grid; grid-template-columns: 370px 1fr 340px; gap: 16px; }
+
+/* ── Cards ── */
+.card {
+  background: #fff; border: var(--bw) solid var(--black);
+  box-shadow: var(--sh) var(--sh) 0 var(--black); padding: 18px;
+}
+.card h2 {
+  margin: 0 0 14px; font-size: 16px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: -0.02em;
+}
+.card h3 {
+  margin: 0 0 8px; font-size: 13px; font-weight: 900;
+  text-transform: uppercase;
+}
+
+/* ── Form elements ── */
+label {
+  display: block; margin: 10px 0 4px; font-weight: 700;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+input, select, textarea {
+  width: 100%; box-sizing: border-box;
+  border: var(--bw) solid var(--black); box-shadow: 2px 2px 0 var(--black);
+  padding: 8px 10px; font: inherit; font-size: 13px; background: #fff;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus { box-shadow: var(--sh) var(--sh) 0 var(--black); }
+select { cursor: pointer; appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 10px center; padding-right: 30px; }
+textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px; resize: vertical;
+}
+
+/* ── Buttons ── */
+button {
+  border: var(--bw) solid var(--black);
+  box-shadow: var(--sh) var(--sh) 0 var(--black);
+  padding: 8px 14px; font: inherit; font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  cursor: pointer; background: #fff; color: var(--black);
+  transition: all 0.1s; white-space: nowrap;
+}
+button:hover:not(:disabled) { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--black); }
+button:active:not(:disabled) { transform: translate(4px,4px); box-shadow: none; }
+button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-yellow { background: var(--yellow); }
+.btn-cyan { background: var(--cyan); }
+.btn-purple { background: var(--purple); color: #fff; }
+.btn-red { background: var(--red); color: #fff; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 10px; box-shadow: 2px 2px 0 var(--black); }
+.btn-sm:hover:not(:disabled) { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--black); }
+.btn-sm:active:not(:disabled) { transform: translate(2px,2px); box-shadow: none; }
+
+/* ── Tabs ── */
+.tabs { display: flex; margin-bottom: 14px; }
+.tab {
+  padding: 8px 16px; border: var(--bw) solid var(--black); background: #fff;
+  cursor: pointer; font-size: 12px; font-weight: 800; text-transform: uppercase;
+  transition: all 0.1s; margin-left: -3px;
+}
+.tab:first-child { margin-left: 0; }
+.tab.active { background: var(--black); color: #fff; }
+.tab:hover:not(.active) { background: var(--gray); }
+
+/* ── Lists ── */
+.list { max-height: 350px; overflow-y: auto; scrollbar-width: thin; }
+.list-item, .cve-item {
+  padding: 8px 10px; border: 2px solid #ddd; margin-bottom: 6px;
+  cursor: pointer; font-size: 12px; transition: all 0.1s; background: #fff;
+}
+.list-item:hover, .cve-item:hover { border-color: var(--black); }
+.list-item.selected, .cve-item.selected {
+  background: var(--yellow); border-color: var(--black);
+}
+.cve-item .ghsa { font-weight: 800; }
+.cve-item .desc { color: #555; margin-top: 2px; line-height: 1.4; font-size: 11px; }
+.cve-item .meta { color: #888; font-size: 10px; margin-top: 2px; }
+.severity {
+  display: inline-block; padding: 1px 6px; font-size: 10px; font-weight: 800;
+  border: 2px solid var(--black); text-transform: uppercase;
+}
+
+/* ── Status badges ── */
+.status { font-size: 11px; padding: 6px 10px; margin: 8px 0; font-weight: 700; }
+.status-info { background: var(--cream); border: 2px solid var(--black); }
+.status-ok { background: #d1fae5; border: 2px solid #15803d; }
+.status-err { background: #fee2e2; border: 2px solid #991b1b; color: #991b1b; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block; padding: 2px 8px; font-size: 10px; font-weight: 800;
+  border: 2px solid var(--black); text-transform: uppercase;
+}
+.badge-official { background: var(--cyan); }
+.badge-clone { background: var(--yellow); }
+.badge-generated { background: var(--green); color: #fff; }
+
+/* ── Rule cards ── */
+.rule-card {
+  border: 2px solid var(--black); padding: 8px 10px; margin-bottom: 6px;
+  font-size: 11px; background: #fff; transition: opacity 0.2s;
+}
+.rule-card.disabled { opacity: 0.4; }
+.rule-card .rule-id { font-weight: 800; text-transform: uppercase; }
+.rule-card .rule-meta { color: #888; font-size: 10px; margin: 2px 0; }
+.rule-actions { margin-top: 6px; display: flex; gap: 4px; }
+
+/* ── Spinner ── */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 3px solid var(--black); border-top-color: transparent;
+  border-radius: 50%; animation: spin 0.6s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Section divider ── */
+.section { margin-bottom: 14px; }
+
+/* ── Detail panel ── */
+.detail-panel {
+  display: none; margin-top: 12px; border-top: 3px solid var(--black);
+  padding-top: 12px;
+}
+
+/* ── Form area ── */
+.form-inline { display: none; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOP BAR
+     ═══════════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div>
+    <h1>规则工坊</h1>
+    <div class="subtitle">搜索 CVE 漏洞 → 自动生成检测规则 → 管理个人规则库 → 用于扫描</div>
+  </div>
+  <nav>
+    <span id="loginBadge" class="login-badge" style="background:#fee2e2;">未登录</span>
+    <a href="/">扫描主页</a>
+    <a href="/rule-generation">旧版</a>
+  </nav>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     THREE-PANEL LAYOUT
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panels">
+
+<!-- ── LEFT: CVE Search ── -->
+<div class="card" style="box-shadow: var(--sh) var(--sh) 0 var(--yellow);">
+  <h2>CVE 漏洞搜索</h2>
+  <div class="section">
+    <label>语言 / 生态</label>
+    <select id="cveLanguage">
+      <option value="python">Python (pip)</option>
+      <option value="java">Java (maven)</option>
+      <option value="go">Go</option>
+      <option value="js">JavaScript (npm)</option>
+      <option value="php">PHP (composer)</option>
+      <option value="c">C/C++ (CMake)</option>
+    </select>
+  </div>
+  <div class="section">
+    <label>漏洞类型</label>
+    <select id="cveVulnType">
+      <option value="">全部</option>
+      <option value="sql-injection">SQL 注入</option>
+      <option value="ssrf">SSRF</option>
+      <option value="command-injection">命令注入</option>
+      <option value="xss">XSS</option>
+      <option value="path-traversal">路径遍历</option>
+      <option value="deserialization">反序列化</option>
+      <option value="rce">RCE</option>
+    </select>
+  </div>
+  <div class="section">
+    <label>关键词</label>
+    <input id="cveKeyword" placeholder="例如：urllib、requests、flask">
+  </div>
+  <div class="section">
+    <label>数量</label>
+    <select id="cveCount">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+    </select>
+  </div>
+  <button id="searchBtn" class="btn-yellow" style="width:100%;">搜索 GitHub Advisory</button>
+  <div id="cveStatus"></div>
+  <div class="list" id="cveResults" style="margin-top:8px;">
+    <div style="color:#888;font-size:12px;">输入条件后点击搜索</div>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:6px;">
+    <button id="selectAllBtn" class="btn-sm" disabled>全选</button>
+    <button id="deselectAllBtn" class="btn-sm" disabled>取消</button>
+  </div>
+</div>
+
+<!-- ── CENTER: Detail + Generation + Results ── -->
+<div class="card" style="box-shadow: var(--sh) var(--sh) 0 var(--cyan);">
+  <div class="tabs">
+    <div class="tab active" data-tab="detail">CVE 详情</div>
+    <div class="tab" data-tab="generate">规则生成</div>
+    <div class="tab" data-tab="results">生成结果</div>
+  </div>
+
+  <!-- Tab: Detail -->
+  <div id="tab-detail" class="tab-panel">
+    <div class="status status-info">选中左侧 CVE 查看详情。可多选后批量生成规则。</div>
+    <div id="cveDetailContent" class="list" style="max-height:350px;overflow-y:auto;"></div>
+  </div>
+
+  <!-- Tab: Generate -->
+  <div id="tab-generate" class="tab-panel" style="display:none;">
+    <div class="section">
+      <label>目标规则集</label>
+      <select id="targetRuleSet"><option value="">-- 选择规则集 --</option></select>
+      <button id="createRuleSetBtn" class="btn-sm btn-purple" style="margin-top:6px;">+ 新建规则集</button>
+    </div>
+    <div id="newRuleSetForm" class="form-inline">
+      <label>规则集名称</label>
+      <input id="newRuleSetName" placeholder="例如：我的 SSRF 检测规则">
+      <label>语言</label>
+      <select id="newRuleSetLang">
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="go">Go</option>
+        <option value="js">JavaScript</option>
+        <option value="php">PHP</option>
+        <option value="c">C</option>
+      </select>
+      <label>描述</label>
+      <input id="newRuleSetDesc" placeholder="简短描述">
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <button id="saveNewRuleSet" class="btn-green btn-sm">确认创建</button>
+        <button id="cancelNewRuleSet" class="btn-sm">取消</button>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <button id="ingestBtn" class="btn-cyan">从选中 CVE 生成规则</button>
+    </div>
+    <div id="ingestStatus"></div>
+  </div>
+
+  <!-- Tab: Results -->
+  <div id="tab-results" class="tab-panel" style="display:none;">
+    <div id="ingestResults" class="list" style="max-height:450px;overflow-y:auto;">
+      <div style="color:#888;font-size:12px;">暂无生成结果</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RIGHT: Rule Sets ── -->
+<div class="card" style="box-shadow: var(--sh) var(--sh) 0 var(--purple);">
+  <h2>我的规则库</h2>
+  <button id="refreshBtn" class="btn-sm" style="margin-bottom:10px;">刷新</button>
+  <div class="list" id="ruleSetsList" style="max-height:500px;">
+    <div style="color:#888;font-size:12px;">加载中...</div>
+  </div>
+  <div style="margin-top:10px;">
+    <button id="cloneBtn" class="btn-purple btn-sm">克隆官方规则库</button>
+  </div>
+  <div id="cloneForm" class="form-inline">
+    <label>语言</label>
+    <select id="cloneLang">
+      <option value="python">Python</option>
+      <option value="java">Java</option>
+      <option value="go">Go</option>
+      <option value="js">JavaScript</option>
+      <option value="php">PHP</option>
+      <option value="c">C</option>
+    </select>
+    <label>模式</label>
+    <select id="cloneScene">
+      <option value="full">Full</option>
+      <option value="minimal">Minimal</option>
+    </select>
+    <div style="margin-top:8px;display:flex;gap:6px;">
+      <button id="confirmClone" class="btn-green btn-sm">确认克隆</button>
+      <button id="cancelClone" class="btn-sm">取消</button>
+    </div>
+  </div>
+
+  <!-- Rule set detail sub-panel -->
+  <div id="ruleSetDetail" class="detail-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h3 id="detailTitle">规则集详情</h3>
+      <button id="closeDetail" class="btn-sm">关闭</button>
+    </div>
+    <div id="detailRules" class="list" style="max-height:350px;"></div>
+  </div>
+</div>
+
+</div><!-- /panels -->
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  MODULE: API Client
+// ═══════════════════════════════════════════════════════════
+
+function getToken() {
+  const t = localStorage.getItem('token');
+  if (t) return t;
+  const m = document.cookie.match(/token=([^;]+)/);
+  return m ? m[1] : null;
+}
+
+function authHeaders() {
+  const token = getToken();
+  const h = { 'Content-Type': 'application/json' };
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+
+async function apiFetch(path, options = {}) {
+  const headers = { ...authHeaders(), ...(options.headers || {}) };
+  const res = await fetch(path, { ...options, headers });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  if (!res.ok) {
+    const detail = (data && data.detail) ? data.detail : text;
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: UI Helpers
+// ═══════════════════════════════════════════════════════════
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showStatus(el, type, msg) {
+  const cls = type === 'ok' ? 'status-ok' : type === 'err' ? 'status-err' : 'status-info';
+  el.innerHTML = `<div class="status ${cls}">${msg}</div>`;
+}
+
+function setLoading(el, text) {
+  el.innerHTML = `<span class="spinner"></span> ${text || '加载中...'}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: State
+// ═══════════════════════════════════════════════════════════
+
+const state = {
+  selectedCves: new Set(),
+  cveResults: [],
+  ruleSets: [],
+};
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: Auth
+// ═══════════════════════════════════════════════════════════
+
+(async function checkLogin() {
+  const badge = document.getElementById('loginBadge');
+  try {
+    const data = await apiFetch('/api/me');
+    badge.textContent = '已登录: ' + (data.username || data.email || data.user_id);
+    badge.style.background = '#d1fae5';
+    loadRuleSets();
+  } catch {
+    badge.textContent = '未登录 — 请先到主页登录';
+    badge.style.background = '#fee2e2';
+  }
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: Tabs
+// ═══════════════════════════════════════════════════════════
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('tab-' + tab.dataset.tab).style.display = 'block';
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: CVE Search
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById('searchBtn').addEventListener('click', async () => {
+  const lang = document.getElementById('cveLanguage').value;
+  const vulnType = document.getElementById('cveVulnType').value;
+  const keyword = document.getElementById('cveKeyword').value.trim();
+  const count = document.getElementById('cveCount').value;
+  const status = document.getElementById('cveStatus');
+
+  setLoading(status, '搜索中...');
+
+  try {
+    const params = new URLSearchParams({ language: lang, count, keyword });
+    if (vulnType) params.set('vuln_type', vulnType);
+    const data = await apiFetch('/api/cve/search?' + params.toString());
+    state.cveResults = data.results || [];
+    state.selectedCves.clear();
+
+    if (state.cveResults.length === 0) {
+      document.getElementById('cveResults').innerHTML =
+        '<div style="color:#888;font-size:12px;">无结果，尝试更换关键词或语言</div>';
+      showStatus(status, 'info', '未找到结果');
+    } else {
+      showStatus(status, 'ok', '找到 ' + state.cveResults.length + ' 条结果');
+      renderCveList();
+    }
+  } catch (e) {
+    showStatus(status, 'err', '搜索失败: ' + escapeHtml(String(e.message || e)));
+  }
+});
+
+function renderCveList() {
+  const div = document.getElementById('cveResults');
+  div.innerHTML = state.cveResults.map((item, i) => {
+    const sel = state.selectedCves.has(item.ghsa_id) ? ' selected' : '';
+    const sev = item.severity || '';
+    const sevColors = { CRITICAL: '#dc2626', HIGH: '#ea580c', MODERATE: '#ca8a04' };
+    const sevColor = sevColors[sev] || '#888';
+    return `<div class="cve-item${sel}" data-ghsa="${escapeHtml(item.ghsa_id)}">
+      <div class="ghsa">${escapeHtml(item.ghsa_id)}
+        ${sev ? ' <span class="severity" style="border-color:' + sevColor + ';color:' + sevColor + ';">' + escapeHtml(sev) + '</span>' : ''}
+      </div>
+      <div class="desc">${escapeHtml((item.description || item.summary || '').substring(0, 120))}</div>
+      <div class="meta">${escapeHtml(item.package_name || '')} ${item.cve_id ? '· ' + escapeHtml(item.cve_id) : ''}</div>
+    </div>`;
+  }).join('');
+
+  div.querySelectorAll('.cve-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const ghsa = el.dataset.ghsa;
+      if (state.selectedCves.has(ghsa)) {
+        state.selectedCves.delete(ghsa);
+        el.classList.remove('selected');
+      } else {
+        state.selectedCves.add(ghsa);
+        el.classList.add('selected');
+      }
+      if (state.selectedCves.size === 1) loadCveDetail(ghsa);
+    });
+  });
+
+  document.getElementById('selectAllBtn').disabled = false;
+  document.getElementById('deselectAllBtn').disabled = false;
+}
+
+document.getElementById('selectAllBtn').addEventListener('click', () => {
+  state.cveResults.forEach(item => state.selectedCves.add(item.ghsa_id));
+  renderCveList();
+});
+document.getElementById('deselectAllBtn').addEventListener('click', () => {
+  state.selectedCves.clear();
+  renderCveList();
+});
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: CVE Detail
+// ═══════════════════════════════════════════════════════════
+
+async function loadCveDetail(ghsaId) {
+  const content = document.getElementById('cveDetailContent');
+  setLoading(content, '加载详情...');
+  try {
+    const data = await apiFetch('/api/cve/detail/' + encodeURIComponent(ghsaId));
+    const d = data.detail || {};
+    const item = state.cveResults.find(r => r.ghsa_id === ghsaId) || {};
+    content.innerHTML = `
+      <div style="margin-bottom:8px;font-weight:800;font-size:14px;">
+        ${escapeHtml(ghsaId)}
+        ${d.severity ? ' <span class="severity" style="border-color:#dc2626;color:#dc2626;">' + escapeHtml(d.severity) + '</span>' : ''}
+      </div>
+      <div style="font-size:12px;line-height:1.5;color:#555;margin-bottom:8px;">${escapeHtml(d.description || d.summary || item.description || '无描述')}</div>
+      ${d.package_name ? '<div style="font-size:11px;"><strong>包:</strong> ' + escapeHtml(d.package_name) + '</div>' : ''}
+      ${d.cve_id ? '<div style="font-size:11px;"><strong>CVE:</strong> ' + escapeHtml(d.cve_id) + '</div>' : ''}
+      ${d.patched_versions ? '<div style="font-size:11px;"><strong>修复版本:</strong> ' + escapeHtml(d.patched_versions) + '</div>' : ''}
+      ${d.vuln_type ? '<div style="font-size:11px;"><strong>漏洞类型:</strong> ' + escapeHtml(d.vuln_type) + '</div>' : ''}
+      ${d.references ? '<div style="font-size:11px;margin-top:4px;"><strong>参考:</strong><br>' + escapeHtml(String(d.references).substring(0, 500)) + '</div>' : ''}
+    `;
+  } catch (e) {
+    content.innerHTML = '<div class="status status-err">加载详情失败: ' + escapeHtml(String(e.message || e)) + '</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: Rule Sets
+// ═══════════════════════════════════════════════════════════
+
+async function loadRuleSets() {
+  const list = document.getElementById('ruleSetsList');
+  try {
+    const data = await apiFetch('/api/rule-sets?include_official=true');
+    state.ruleSets = data.rule_sets || [];
+    renderRuleSetsList();
+    // Populate target select
+    const target = document.getElementById('targetRuleSet');
+    const personal = state.ruleSets.filter(s => !s.is_official);
+    target.innerHTML = '<option value="">-- 选择规则集 --</option>' +
+      personal.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.lang)}/${escapeHtml(s.scene || 'full')}) [${s.rule_count || 0} 条]</option>`).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="status status-err">加载失败: ' + escapeHtml(String(e.message || e)) + '</div>';
+  }
+}
+
+function renderRuleSetsList() {
+  const list = document.getElementById('ruleSetsList');
+  const sets = state.ruleSets;
+  if (sets.length === 0) {
+    list.innerHTML = '<div style="color:#888;font-size:12px;">暂无规则集。点击「克隆官方规则库」开始。</div>';
+    return;
+  }
+  list.innerHTML = sets.map(s => {
+    let badge;
+    if (s.is_official) badge = '<span class="badge badge-official">官方</span>';
+    else if (s.source_type === 'official_clone') badge = '<span class="badge badge-clone">克隆</span>';
+    else badge = '<span class="badge badge-generated">自建</span>';
+
+    return `<div class="list-item" data-id="${s.id}">
+      <div style="font-weight:800;">${badge} ${escapeHtml(s.name)}</div>
+      <div style="font-size:10px;color:#888;">${escapeHtml(s.lang)} / ${escapeHtml(s.scene || 'full')} · ${s.rule_count || 0} 条规则</div>
+      <div style="margin-top:4px;display:flex;gap:4px;">
+        <button class="btn-sm view-rules" data-id="${s.id}">查看</button>
+        ${!s.is_official ? '<button class="btn-sm btn-red delete-set" data-id="' + s.id + '">删除</button>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.view-rules').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); loadRuleSetDetail(btn.dataset.id); });
+  });
+  list.querySelectorAll('.delete-set').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm('确定删除此规则集？')) return;
+      try {
+        await apiFetch('/api/rule-sets/' + btn.dataset.id, { method: 'DELETE' });
+        document.getElementById('ruleSetDetail').style.display = 'none';
+        loadRuleSets();
+      } catch (err) { alert('删除失败: ' + (err.message || err)); }
+    });
+  });
+}
+
+async function loadRuleSetDetail(id) {
+  const panel = document.getElementById('ruleSetDetail');
+  const rulesDiv = document.getElementById('detailRules');
+  panel.style.display = 'block';
+  setLoading(rulesDiv, '加载中...');
+  try {
+    const data = await apiFetch('/api/rule-sets/' + id);
+    const rs = data.rule_set || {};
+    document.getElementById('detailTitle').textContent = rs.name || '规则集详情';
+    const rules = rs.rules || [];
+    if (rules.length === 0) {
+      rulesDiv.innerHTML = '<div style="color:#888;font-size:12px;">此规则集为空</div>';
+    } else {
+      rulesDiv.innerHTML = rules.map(r => {
+        let ruleData;
+        try { ruleData = typeof r.rule_data === 'string' ? JSON.parse(r.rule_data) : r.rule_data; }
+        catch { ruleData = {}; }
+        const meta = ruleData.metadata || {};
+        const disabled = r.is_enabled === 0 ? ' disabled' : '';
+        return `<div class="rule-card${disabled}">
+          <div class="rule-id">${escapeHtml(meta.ruleId || '?')}</div>
+          <div class="rule-meta">${escapeHtml((meta.description || '').substring(0, 100))}</div>
+          <details class="rule-detail" style="margin-top:6px;font-size:11px;">
+            <summary style="cursor:pointer;color:#888;font-weight:700;">查看规则定义</summary>
+            <pre style="background:#f8f8f8;padding:8px;border:2px solid #ddd;overflow-x:auto;max-height:300px;font-size:10px;line-height:1.4;">${escapeHtml(JSON.stringify(ruleData, null, 2))}</pre>
+          </details>
+          <div class="rule-actions">
+            <button class="btn-sm toggle-rule" data-db-id="${r.id}" data-enabled="${r.is_enabled}">${r.is_enabled ? '禁用' : '启用'}</button>
+            <button class="btn-sm btn-red delete-rule" data-db-id="${r.id}">删除</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      rulesDiv.querySelectorAll('.toggle-rule').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const newEnabled = btn.dataset.enabled === '1' ? 0 : 1;
+          try {
+            await apiFetch('/api/rule-sets/' + id + '/rules/' + btn.dataset.dbId + '/toggle', {
+              method: 'PUT', body: JSON.stringify({ is_enabled: newEnabled })
+            });
+            loadRuleSetDetail(id); loadRuleSets();
+          } catch (err) { alert('操作失败: ' + (err.message || err)); }
+        });
+      });
+      rulesDiv.querySelectorAll('.delete-rule').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('确定删除此规则？')) return;
+          try {
+            await apiFetch('/api/rule-sets/' + id + '/rules/' + btn.dataset.dbId, { method: 'DELETE' });
+            loadRuleSetDetail(id); loadRuleSets();
+          } catch (err) { alert('删除失败: ' + (err.message || err)); }
+        });
+      });
+    }
+  } catch (e) {
+    rulesDiv.innerHTML = '<div class="status status-err">加载失败: ' + escapeHtml(String(e.message || e)) + '</div>';
+  }
+}
+
+document.getElementById('closeDetail').addEventListener('click', () => {
+  document.getElementById('ruleSetDetail').style.display = 'none';
+});
+document.getElementById('refreshBtn').addEventListener('click', loadRuleSets);
+
+// ── Clone Official ──
+document.getElementById('cloneBtn').addEventListener('click', () => {
+  document.getElementById('cloneForm').style.display = 'block';
+});
+document.getElementById('cancelClone').addEventListener('click', () => {
+  document.getElementById('cloneForm').style.display = 'none';
+});
+document.getElementById('confirmClone').addEventListener('click', async () => {
+  const lang = document.getElementById('cloneLang').value;
+  const scene = document.getElementById('cloneScene').value;
+  const btn = document.getElementById('confirmClone');
+  btn.disabled = true; btn.textContent = '克隆中...';
+  try {
+    await apiFetch('/api/rule-sets/0/clone-official', {
+      method: 'POST', body: JSON.stringify({ lang, scene })
+    });
+    document.getElementById('cloneForm').style.display = 'none';
+    loadRuleSets();
+  } catch (e) { alert('克隆失败: ' + (e.message || e)); }
+  btn.disabled = false; btn.textContent = '确认克隆';
+});
+
+// ── New Rule Set ──
+document.getElementById('createRuleSetBtn').addEventListener('click', () => {
+  document.getElementById('newRuleSetForm').style.display = 'block';
+});
+document.getElementById('cancelNewRuleSet').addEventListener('click', () => {
+  document.getElementById('newRuleSetForm').style.display = 'none';
+});
+document.getElementById('saveNewRuleSet').addEventListener('click', async () => {
+  const name = document.getElementById('newRuleSetName').value.trim();
+  const lang = document.getElementById('newRuleSetLang').value;
+  const desc = document.getElementById('newRuleSetDesc').value.trim();
+  if (!name) { alert('请输入规则集名称'); return; }
+  try {
+    await apiFetch('/api/rule-sets', {
+      method: 'POST', body: JSON.stringify({ name, lang, scene: 'full', description: desc })
+    });
+    document.getElementById('newRuleSetForm').style.display = 'none';
+    document.getElementById('newRuleSetName').value = '';
+    document.getElementById('newRuleSetDesc').value = '';
+    loadRuleSets();
+  } catch (e) { alert('创建失败: ' + (e.message || e)); }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  MODULE: CVE Ingest → Rules
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById('ingestBtn').addEventListener('click', async () => {
+  const ruleSetId = parseInt(document.getElementById('targetRuleSet').value);
+  if (!ruleSetId) { alert('请先选择或创建一个目标规则集'); return; }
+  if (state.selectedCves.size === 0) { alert('请先在左侧选择至少一条 CVE'); return; }
+
+  const ghsaIds = Array.from(state.selectedCves);
+  const status = document.getElementById('ingestStatus');
+
+  // Switch to results tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="results"]').classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-results').style.display = 'block';
+
+  setLoading(status, '正在处理 ' + ghsaIds.length + ' 个 CVE，可能需要几分钟...');
+
+  try {
+    const data = await apiFetch('/api/cve/ingest', {
+      method: 'POST', body: JSON.stringify({ ghsa_ids: ghsaIds, rule_set_id: ruleSetId })
+    });
+
+    showStatus(status, 'ok', '处理完成！生成 ' + (data.generated || 0) + ' 条规则，失败 ' + (data.failed || 0) + ' 条');
+
+    const results = data.details || [];
+    let html = '<div style="font-size:12px;line-height:1.8;">';
+    html += '<strong>总 CVE:</strong> ' + ghsaIds.length + '<br>';
+    html += '<strong>生成规则:</strong> ' + (data.rules_generated || 0) + '<br>';
+    html += '<strong>加入规则集:</strong> ' + (data.generated || 0) + '<br><br>';
+
+    for (const r of results) {
+      const ok = r.status !== 'fetch_failed' && r.status !== 'pipeline_failed' && r.status !== 'generation_failed';
+      const bg = ok ? '#d1fae5' : '#fee2e2';
+      const border = ok ? '#15803d' : '#991b1b';
+      html += '<div style="padding:8px;border:2px solid ' + border + ';margin-bottom:6px;background:' + bg + ';">';
+      html += '<strong>' + escapeHtml(r.ghsa_id || '?') + '</strong>: ';
+      html += ok ? '成功 (' + (r.rules_added || 0) + ' 条规则)' : '失败: ' + escapeHtml(r.error || r.status || '未知错误');
+      html += '</div>';
+    }
+    html += '</div>';
+    document.getElementById('ingestResults').innerHTML = html;
+    loadRuleSets();
+  } catch (e) {
+    showStatus(status, 'err', '处理失败: ' + escapeHtml(String(e.message || e)));
+  }
+});
+</script>
+</body>
+</html>

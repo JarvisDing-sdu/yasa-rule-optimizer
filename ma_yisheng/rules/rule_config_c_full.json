@@ -1,0 +1,158 @@
+[
+  {
+    "checkerIds": [
+      "taint_flow_c_input"
+    ],
+    "sources": {
+      "FuncCallArgTaintSource": [
+        {
+          "fsig": "gets",
+          "args": [
+            "0"
+          ],
+          "kind": "C_INPUT"
+        },
+        {
+          "fsig": "fgets",
+          "args": [
+            "0"
+          ],
+          "kind": "C_INPUT"
+        },
+        {
+          "fsig": "scanf",
+          "args": [
+            "1:"
+          ],
+          "kind": "C_INPUT"
+        },
+        {
+          "fsig": "sscanf",
+          "args": [
+            "2:"
+          ],
+          "kind": "C_INPUT"
+        },
+        {
+          "fsig": "recv",
+          "args": [
+            "1"
+          ],
+          "kind": "C_INPUT"
+        },
+        {
+          "fsig": "read",
+          "args": [
+            "1"
+          ],
+          "kind": "C_INPUT"
+        }
+      ],
+      "FuncCallReturnValueTaintSource": [
+        {
+          "fsig": "getenv",
+          "values": [
+            "0"
+          ],
+          "kind": "C_INPUT"
+        }
+      ]
+    },
+    "sinks": {
+      "FuncCallTaintSink": [
+        {
+          "fsig": "system",
+          "args": [
+            "0"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "popen",
+          "args": [
+            "0"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "execl",
+          "args": [
+            "0:"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "execlp",
+          "args": [
+            "0:"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "execle",
+          "args": [
+            "0:"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "execv",
+          "args": [
+            "0:"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "execvp",
+          "args": [
+            "0:"
+          ],
+          "attribute": "CCommandInjection"
+        },
+        {
+          "fsig": "strcpy",
+          "args": [
+            "1"
+          ],
+          "attribute": "CBufferOverflow"
+        },
+        {
+          "fsig": "strcat",
+          "args": [
+            "1"
+          ],
+          "attribute": "CBufferOverflow"
+        },
+        {
+          "fsig": "sprintf",
+          "args": [
+            "1:"
+          ],
+          "attribute": "CFormatOrBufferOverflow"
+        },
+        {
+          "fsig": "vsprintf",
+          "args": [
+            "1:"
+          ],
+          "attribute": "CFormatOrBufferOverflow"
+        },
+        {
+          "fsig": "printf",
+          "args": [
+            "0"
+          ],
+          "attribute": "CFormatString"
+        },
+        {
+          "fsig": "fprintf",
+          "args": [
+            "1"
+          ],
+          "attribute": "CFormatString"
+        }
+      ]
+    },
+    "sanitizers": []
+  }
+]

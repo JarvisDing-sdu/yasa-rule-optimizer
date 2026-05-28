@@ -1,0 +1,35 @@
+import axios from 'axios'
+
+export const API_BASE = window.location.origin
+
+const client = axios.create({
+  baseURL: API_BASE,
+  timeout: 180000,
+})
+
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+client.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('email')
+      window.location.href = '/login'
+    }
+    // 把后端 detail 转成 Error message，方便页面直接展示
+    const detail = err.response?.data?.detail
+    if (detail) {
+      return Promise.reject(new Error(typeof detail === 'string' ? detail : JSON.stringify(detail)))
+    }
+    return Promise.reject(err)
+  }
+)
+
+export default client

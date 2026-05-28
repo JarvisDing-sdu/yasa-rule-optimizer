@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="马医生 Code Security Scanner — 智能代码安全扫描平台，自动检测漏洞并生成修复建议" />
+    <title>马医生 Code Security Scanner</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function(){
+        var t = localStorage.getItem('token') || (document.cookie.match(/token=([^;]+)/)||[])[1];
+        if (t) { document.body.classList.add('authenticated'); }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,152 @@
+{
+  "project": "test-go-cases",
+  "scan_path": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-go-cases",
+  "language": "go",
+  "raw_output": "[YASA] Begin execution\n[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_go_minimal.json\n[YASA][init] EntrypointMode set: BOTH\n[YASA][init] Specified checker pack IDs: [taint-flow-golang-default]\nversion: 0.3.1 (build 20260526, commit local-c-extension)\nv8 heap_size_limit: 11312 MB\nmain file:/snapshot/Downloads/YASA-Engine-main/dist/main.js\n[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-go-cases/\n[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-go-cases/test-go-cases_go_20260528_151357\n[YASA][init] Analysis language: golang\n[YASA][init] Analysis analyzer: GoAnalyzer\n[YASA][init] Loading checker: taint_flow_gin_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/gin-default-taint-checker.js\n[YASA][init] Loading checker: taint_flow_go_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/go-default-taint-checker.js\n[YASA][init] Loading checker: cobra.Command-builtIn from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/cobra-command-checker.js\n[YASA][init] Loading checker: go-restful-entryPoints-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/restful-entrypoint-collect-checker.js\n[YASA][init] Loading checker: beego-entrypoint-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/beego-entrypoint-collect-checker.js\n[YASA][init] Loading checker: gorilla-mux-entrypoint-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/gorilla-mux-entrypoint-collect-checker.js\n[YASA][init] Loading checker: gRpc-entryPoint-collect-checker from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/gRpc-entrypoint-collect-checker.js\n[YASA][init] Loading checker: go-main-entryPoints-collection from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/main-entrypoint-collect-checker.js\n[YASA][init] Loading checker: sync.Once.Do-builtIn from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/sync-once-do-checker.js\n[YASA][init] Loading checker: urfave-cli-builtIn from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/go/urfave-cli-checker.js\n[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js\n[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js\n[YASA][init] Successfully loaded 12 checker(s): [taint_flow_gin_input, taint_flow_go_input, cobra.Command-builtIn, go-restful-entryPoints-collect-checker, beego-entrypoint-collect-checker, gorilla-mux-entrypoint-collect-checker, gRpc-entryPoint-collect-checker, go-main-entryPoints-collection, sync.Once.Do-builtIn, urfave-cli-builtIn, callgraph, sanitizer]\n[YASA] Executing preProcess\n[YASA][preProcess] Executing parseCode\n[YASA][preProcess] Completed parseCode, cost: 85ms, heap: 52.83/71.98 MB, rss: 120.7 MB, arrayBuffers: 6.87 MB\n[YASA][preProcess] Executing processModule\n[YASA][preProcess] Completed processModule, cost: 1ms, heap: 53.23/72.23 MB, rss: 120.91 MB, arrayBuffers: 6.87 MB\n[YASA] Completed preProcess, cost: 86ms, heap: 53.24/72.23 MB, rss: 120.91 MB, arrayBuffers: 6.87 MB\n[YASA] Executing startAnalyze\n[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)\nmakeAllCG-start\n\tmakeAllCG-10%\n\tmakeAllCG-30%\n\tmakeAllCG-70%\n\tmakeAllCG-100%\n[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 8ms, heap: 42.29/71.73 MB, rss: 120.34 MB, arrayBuffers: 0.58 MB\n[YASA] Completed startAnalyze, cost: 9ms, heap: 42.34/71.73 MB, rss: 120.36 MB, arrayBuffers: 0.58 MB\n[YASA] Executing symbolInterpret\nEntryPoint [/vulnerable.main] is executing\n[YASA] Completed symbolInterpret, cost: 13ms, heap: 47.1/72.23 MB, rss: 124.8 MB, arrayBuffers: 0.58 MB\nFound 4 potential output strategy files\nRegistered strategy: callchain from callchain-output-strategy.js\nRegistered strategy: callgraph from callgraph-output-strategy.js\nRegistered strategy: interactive from interactive-output-strategy.js\nRegistered strategy: taintflow from taint-output-strategy.js\nSuccessfully registered 4 output strategies\n\n=======================  outputFindings  =======================\n\n======================== Findings ======================== \n\n-------------  1 :  taint_flow_gin_input ------------- \nDescription: Gin taint_flow checker，不会使用CallGraph边界制作entrypoint\nFile: /vulnerable.go\nLine 12: exec.Command(cmd)\nSINK RULE: exec.Command\nSINK Attribute: GoCommandExec\nentrypoint: \n{\n  filePath: '/vulnerable.go',\n  functionName: 'main',\n  attribute: 'HTTP',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: undefined\n}\nTrace: \n /vulnerable.go\n  AffectedNodeName: r.FormValue(\"cmd\")\n  11:  SOURCE:  \tcmd := r.FormValue(\"cmd\")\n /vulnerable.go\n  AffectedNodeName: commandInjectionCase\n  35:  CALL:  \tcommandInjectionCase(r)\n /vulnerable.go\n  AffectedNodeName: commandInjectionCase\n  10:  ARG PASS:  func commandInjectionCase(r *http.Request) {\n /vulnerable.go\n  AffectedNodeName: cmd\n  11:  Var Pass:  \tcmd := r.FormValue(\"cmd\")\n /vulnerable.go\n  AffectedNodeName: exec.Command\n  12:  SINK:  \texec.Command(cmd).Run()\n\n-------------  2 :  taint_flow_gin_input ------------- \nDescription: Gin taint_flow checker，不会使用CallGraph边界制作entrypoint\nFile: /vulnerable.go\nLine 18: db.Query(query)\nSINK RULE: Query\nSINK Attribute: GoSqlInjection\nentrypoint: \n{\n  filePath: '/vulnerable.go',\n  functionName: 'main',\n  attribute: 'HTTP',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: undefined\n}\nTrace: \n /vulnerable.go\n  AffectedNodeName: r.FormValue(\"id\")\n  16:  SOURCE:  \tid := r.FormValue(\"id\")\n /vulnerable.go\n  AffectedNodeName: sqlInjectionCase\n  36:  CALL:  \tsqlInjectionCase(r, db)\n /vulnerable.go\n  AffectedNodeName: sqlInjectionCase\n  15:  ARG PASS:  func sqlInjectionCase(r *http.Request, db *sql.DB) {\n /vulnerable.go\n  AffectedNodeName: id\n  16:  Var Pass:  \tid := r.FormValue(\"id\")\n /vulnerable.go\n  AffectedNodeName: query\n  17:  Var Pass:  \tquery := \"SELECT * FROM users WHERE id = \" + id\n /vulnerable.go\n  AffectedNodeName: db.Query\n  18:  SINK:  \tdb.Query(query)\n\n-------------  3 :  taint_flow_gin_input ------------- \nDescription: Gin taint_flow checker，不会使用CallGraph边界制作entrypoint\nFile: /vulnerable.go\nLine 28: http.Get(url)\nSINK RULE: http.Get\nSINK Attribute: GoSSRF\nentrypoint: \n{\n  filePath: '/vulnerable.go',\n  functionName: 'main',\n  attribute: 'HTTP',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: undefined\n}\nTrace: \n /vulnerable.go\n  AffectedNodeName: r.FormValue(\"url\")\n  27:  SOURCE:  \turl := r.FormValue(\"url\")\n /vulnerable.go\n  AffectedNodeName: ssrfCase\n  38:  CALL:  \tssrfCase(r)\n /vulnerable.go\n  AffectedNodeName: ssrfCase\n  26:  ARG PASS:  func ssrfCase(r *http.Request) {\n /vulnerable.go\n  AffectedNodeName: url\n  27:  Var Pass:  \turl := r.FormValue(\"url\")\n /vulnerable.go\n  AffectedNodeName: http.Get\n  28:  SINK:  \thttp.Get(url)\n==========================================================\n  # Total-findings : 3\n========================================================== \n\nreport is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-go-cases/test-go-cases_go_20260528_151357/report.sarif\n================================================================\n\nanalyze done\n[YASA] Execution completed, cost: 169ms, heap: 48.49/72.48 MB, rss: 126.13 MB, arrayBuffers: 0.69 MB\n\n======================  Analysis Overview  =====================\nLanguage                           : golang\nFiles analyzed                     : 1\nLines of code                      : 40\nTotal time                         : 0s164ms\nExecuted instruction               : 102\nExecution count                    : 311\nSources marked                     : 16\nSinks matched                      : 0\nValid entrypoints                  : 1\nFindings                           : 3\nAvg execution time per instruction : 0.00ms\nAvg instruction execution count    : 3.05\nExecution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms\nExecution times 70%/99%/100%       : 4.00/12.00/18.00\n================================================================\n\n\n===================  Performance Statistics  ===================\ntotal cost: 0s169ms\npreProcess cost: 0s86ms (50.9%)\n  parseCode cost: 0s85ms (98.8%)\n  processModule cost: 0s1ms (1.2%)\nstartAnalyze cost: 0s9ms (5.3%)\n  makeFullCallGraph(BySymbolInterpret) cost: 0s8ms (88.9%)\n  other cost: 0s1ms (11.1%)\nsymbolInterpret cost: 0s13ms (7.7%)\nother cost: 0s61ms (36.1%)\n================================================================\n\n",
+  "findings": [
+    {
+      "file": "vulnerable.go",
+      "line": 12,
+      "column": 2,
+      "sink_rule": "exec.Command",
+      "sink_attribute": "GoCommandExec",
+      "vuln_name": "命令执行",
+      "severity": "高危",
+      "message": "Gin taint_flow checker，不会使用CallGraph边界制作entrypoint",
+      "snippet": "exec.Command(cmd)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 11,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: r.FormValue(\"cmd\")\n  11:  SOURCE:  \tcmd := r"
+        },
+        {
+          "step": "Step 1",
+          "line": 35,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: commandInjectionCase\n  35:  CALL:  \tcommandI"
+        },
+        {
+          "step": "Step 2",
+          "line": 10,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: commandInjectionCase\n  10:  ARG PASS:  func "
+        },
+        {
+          "step": "Step 3",
+          "line": 11,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: cmd\n  11:  Var Pass:  \tcmd := r.FormValue(\"c"
+        },
+        {
+          "step": "Step 4",
+          "line": 12,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: exec.Command\n  12:  SINK:  \texec.Command(cmd"
+        }
+      ],
+      "fingerprint": "c04037ad5772dc3a"
+    },
+    {
+      "file": "vulnerable.go",
+      "line": 18,
+      "column": 2,
+      "sink_rule": "Query",
+      "sink_attribute": "GoSqlInjection",
+      "vuln_name": "SQL 注入",
+      "severity": "高危",
+      "message": "Gin taint_flow checker，不会使用CallGraph边界制作entrypoint",
+      "snippet": "db.Query(query)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 16,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: r.FormValue(\"id\")\n  16:  SOURCE:  \tid := r.F"
+        },
+        {
+          "step": "Step 1",
+          "line": 36,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: sqlInjectionCase\n  36:  CALL:  \tsqlInjection"
+        },
+        {
+          "step": "Step 2",
+          "line": 15,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: sqlInjectionCase\n  15:  ARG PASS:  func sqlI"
+        },
+        {
+          "step": "Step 3",
+          "line": 16,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: id\n  16:  Var Pass:  \tid := r.FormValue(\"id\""
+        },
+        {
+          "step": "Step 4",
+          "line": 17,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: query\n  17:  Var Pass:  \tquery := \"SELECT * "
+        }
+      ],
+      "fingerprint": "6e427f1a61baf9d6"
+    },
+    {
+      "file": "vulnerable.go",
+      "line": 28,
+      "column": 2,
+      "sink_rule": "http.Get",
+      "sink_attribute": "GoSSRF",
+      "vuln_name": "SSRF",
+      "severity": "高危",
+      "message": "Gin taint_flow checker，不会使用CallGraph边界制作entrypoint",
+      "snippet": "http.Get(url)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 27,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: r.FormValue(\"url\")\n  27:  SOURCE:  \turl := r"
+        },
+        {
+          "step": "Step 1",
+          "line": 38,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: ssrfCase\n  38:  CALL:  \tssrfCase(r)\n"
+        },
+        {
+          "step": "Step 2",
+          "line": 26,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: ssrfCase\n  26:  ARG PASS:  func ssrfCase(r *"
+        },
+        {
+          "step": "Step 3",
+          "line": 27,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: url\n  27:  Var Pass:  \turl := r.FormValue(\"u"
+        },
+        {
+          "step": "Step 4",
+          "line": 28,
+          "snippet": " /vulnerable.go\n  AffectedNodeName: http.Get\n  28:  SINK:  \thttp.Get(url)\n"
+        }
+      ],
+      "fingerprint": "7a901ecaa165013f"
+    }
+  ],
+  "findings_count": 3,
+  "diagnostics": [
+    {
+      "log_key": "scan_init",
+      "log_time": "2026-05-28 15:13:58",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "test-go-cases",
+      "string3": "golang",
+      "number1": null,
+      "number2": null,
+      "number3": null,
+      "date1": null,
+      "date2": null
+    },
+    {
+      "log_key": "scan_summary",
+      "log_time": "2026-05-28 15:13:58",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "test-go-cases",
+      "string3": "{\"projectName\":\"test-go-cases\",\"projectPath\":\"/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-go-cases/\",\"yasaVersion\":\"0.3.1 (build 20260526, commit local-c-extension)\",\"parallelWorkers\":1,\"cgAlgorithm\":\"DEFAULT\",\"dumpAllCG\":false,\"dumpAST\":false,\"scanStartTime\":\"2026-05-28T07:13:58.140Z\",\"scanEndTime\":\"2026-05-28T07:13:58.309Z\",\"findingCount\":3,\"language\":\"golang\",\"fileCount\":1,\"lineCount\":40,\"totalTimeMs\":169,\"markedSourceCount\":16,\"matchedSinkCount\":0,\"entryPointCount\":1,\"parseMs\":86,\"parseCodeMs\":85,\"preloadMs\":0,\"processModuleMs\":1,\"startAnalyzeMs\":9,\"symbolInterpretMs\":13,\"execCount\":311,\"execInstCount\":102,\"avgExecTimePerInst\":0,\"avgInstExecCount\":3.049019607843137,\"execTimeP70Ms\":0,\"execTimeP99Ms\":0,\"execTimeP100Ms\":0,\"execTimesP70\":4,\"execTimesP99\":12,\"execTimesP100\":18}",
+      "number1": 169,
+      "number2": 40,
+      "number3": 3,
+      "date1": "2026-05-28 15:13:58",
+      "date2": "2026-05-28 15:13:58"
+    }
+  ]
+}

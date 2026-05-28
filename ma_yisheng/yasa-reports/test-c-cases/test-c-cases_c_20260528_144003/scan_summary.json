@@ -1,0 +1,193 @@
+{
+  "projectName": "test-c-cases",
+  "projectPath": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/",
+  "yasaVersion": "0.3.1 (build 20260526, commit local-c-extension)",
+  "parallelWorkers": 1,
+  "cgAlgorithm": "DEFAULT",
+  "dumpAllCG": false,
+  "dumpAST": false,
+  "scanStartTime": "2026-05-28T06:40:08.141Z",
+  "scanEndTime": "2026-05-28T06:40:08.231Z",
+  "findingCount": 0,
+  "language": "c",
+  "fileCount": 1,
+  "lineCount": 35,
+  "totalTimeMs": 90,
+  "markedSourceCount": 0,
+  "matchedSinkCount": 0,
+  "entryPointCount": 2,
+  "parseMs": 34,
+  "parseCodeMs": 6,
+  "preloadMs": 0,
+  "processModuleMs": 2,
+  "startAnalyzeMs": 0,
+  "symbolInterpretMs": 9,
+  "execCount": 82,
+  "execInstCount": 66,
+  "avgExecTimePerInst": 0,
+  "avgInstExecCount": 1.2424242424242424,
+  "execTimeP70Ms": 0,
+  "execTimeP99Ms": 0,
+  "execTimeP100Ms": 0,
+  "execTimesP70": 1,
+  "execTimesP99": 4,
+  "execTimesP100": 4,
+  "ruleConfig": [
+    {
+      "checkerIds": [
+        "taint_flow_c_input"
+      ],
+      "sources": {
+        "FuncCallArgTaintSource": [
+          {
+            "fsig": "gets",
+            "args": [
+              "0"
+            ],
+            "kind": "C_INPUT"
+          },
+          {
+            "fsig": "fgets",
+            "args": [
+              "0"
+            ],
+            "kind": "C_INPUT"
+          },
+          {
+            "fsig": "scanf",
+            "args": [
+              "1:"
+            ],
+            "kind": "C_INPUT"
+          },
+          {
+            "fsig": "sscanf",
+            "args": [
+              "2:"
+            ],
+            "kind": "C_INPUT"
+          },
+          {
+            "fsig": "recv",
+            "args": [
+              "1"
+            ],
+            "kind": "C_INPUT"
+          },
+          {
+            "fsig": "read",
+            "args": [
+              "1"
+            ],
+            "kind": "C_INPUT"
+          }
+        ],
+        "FuncCallReturnValueTaintSource": [
+          {
+            "fsig": "getenv",
+            "values": [
+              "0"
+            ],
+            "kind": "C_INPUT"
+          }
+        ]
+      },
+      "sinks": {
+        "FuncCallTaintSink": [
+          {
+            "fsig": "system",
+            "args": [
+              "0"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "popen",
+            "args": [
+              "0"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "execl",
+            "args": [
+              "0:"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "execlp",
+            "args": [
+              "0:"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "execle",
+            "args": [
+              "0:"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "execv",
+            "args": [
+              "0:"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "execvp",
+            "args": [
+              "0:"
+            ],
+            "attribute": "CCommandInjection"
+          },
+          {
+            "fsig": "strcpy",
+            "args": [
+              "1"
+            ],
+            "attribute": "CBufferOverflow"
+          },
+          {
+            "fsig": "strcat",
+            "args": [
+              "1"
+            ],
+            "attribute": "CBufferOverflow"
+          },
+          {
+            "fsig": "sprintf",
+            "args": [
+              "1:"
+            ],
+            "attribute": "CFormatOrBufferOverflow"
+          },
+          {
+            "fsig": "vsprintf",
+            "args": [
+              "1:"
+            ],
+            "attribute": "CFormatOrBufferOverflow"
+          },
+          {
+            "fsig": "printf",
+            "args": [
+              "0"
+            ],
+            "attribute": "CFormatString"
+          },
+          {
+            "fsig": "fprintf",
+            "args": [
+              "1"
+            ],
+            "attribute": "CFormatString"
+          }
+        ]
+      },
+      "sanitizers": []
+    }
+  ]
+}

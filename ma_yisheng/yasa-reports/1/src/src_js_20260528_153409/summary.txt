@@ -1,0 +1,260 @@
+============================================================
+【结构化漏洞报告】
+共 5 条（已去重）
+============================================================
+
+## 高危 (3 条)
+----------------------------------------
+
+1. 【代码执行】 vulnerable.js:7
+   代码: child_process.exec(cmd)...
+   污点路径: L6 -> L6 -> L7
+
+2. 【SQL 注入】 vulnerable.js:14
+   代码: connection.query(sql)...
+   污点路径: L12 -> L12 -> L13 -> L14
+
+3. 【SSRF】 vulnerable.js:24
+   代码: axios.get(url)...
+   污点路径: L23 -> L23 -> L24
+
+## 中危 (2 条)
+----------------------------------------
+
+1. 【响应写入】 ⚠️ 需人工确认 vulnerable.js:8
+   马医生: 缺少L6的赋值代码，无法确认cmd是否来自不可信输入或已做校验，需查看完整上下文
+   代码: res.send(cmd)...
+   污点路径: L6 -> L6 -> L8
+
+2. 【路径遍历】 ⚠️ 需人工确认 vulnerable.js:19
+   马医生: 污点路径摘要未披露 source 细节，仅凭 fileName 变量无法确认数据来源是否外部可控
+   代码: fs.readFileSync(fileName)...
+   污点路径: L18 -> L18 -> L19
+
+============================================================
+
+--- 原始 YASA 输出 ---
+
+[YASA] Begin execution
+[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_js_minimal.json
+[YASA][init] Specified checker pack IDs: [taint-flow-javascript-default]
+version: 0.3.1 (build 20260526, commit local-c-extension)
+v8 heap_size_limit: 11312 MB
+main file:/snapshot/Downloads/YASA-Engine-main/dist/main.js
+[YASA][init] Source path: /var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-zfpc8tqi/src/
+[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_js_20260528_153409
+[YASA][init] Analysis language: javascript
+[YASA][init] Analysis analyzer: JavaScriptAnalyzer
+[YASA][init] Loading checker: taint_flow_js_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/js/js-taint-checker.js
+[YASA][init] Loading checker: taint_flow_egg_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/js/egg-taint-checker.js
+[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js
+[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js
+[YASA][init] Successfully loaded 4 checker(s): [taint_flow_js_input, taint_flow_egg_input, callgraph, sanitizer]
+[YASA] Executing preProcess
+[YASA][preProcess] Executing parseCode
+[YASA][preProcess] Completed parseCode, cost: 70ms, heap: 43.6/71.48 MB, rss: 120.69 MB, arrayBuffers: 0.53 MB
+[YASA][preProcess] Executing processModule
+[YASA][preProcess] Completed processModule, cost: 3ms, heap: 44.11/71.48 MB, rss: 121.44 MB, arrayBuffers: 0.53 MB
+[YASA] Completed preProcess, cost: 74ms, heap: 44.12/71.48 MB, rss: 121.45 MB, arrayBuffers: 0.53 MB
+[YASA] Executing startAnalyze
+[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)
+makeAllCG-start
+	makeAllCG-10%
+	makeAllCG-30%
+	makeAllCG-70%
+	makeAllCG-100%
+[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 3ms, heap: 44.78/71.73 MB, rss: 122.02 MB, arrayBuffers: 0.54 MB
+[YASA] Completed startAnalyze, cost: 3ms, heap: 44.8/71.73 MB, rss: 122.03 MB, arrayBuffers: 0.54 MB
+[YASA] Executing symbolInterpret
+EntryPoint [/vulnerable.commandInjectionCase] is executing
+EntryPoint [/vulnerable.sqlInjectionCase] is executing
+EntryPoint [/vulnerable.pathTraversalCase] is executing
+EntryPoint [/vulnerable.ssrfCase] is executing
+EntryPoint [/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-zfpc8tqi/src/vulnerable.js] is executing 
+[YASA] Completed symbolInterpret, cost: 8ms, heap: 47.03/72.23 MB, rss: 124.45 MB, arrayBuffers: 0.54 MB
+Found 4 potential output strategy files
+Registered strategy: callchain from callchain-output-strategy.js
+Registered strategy: callgraph from callgraph-output-strategy.js
+Registered strategy: interactive from interactive-output-strategy.js
+Registered strategy: taintflow from taint-output-strategy.js
+Successfully registered 4 output strategies
+
+=======================  outputFindings  =======================
+
+======================== Findings ======================== 
+
+-------------  1 :  taint_flow_js_input ------------- 
+Description: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.js
+Line 7: child_process.exec(cmd)
+SINK RULE: child_process.exec
+SINK Attribute: NodejsExec
+entrypoint: 
+{
+  filePath: '/vulnerable.js',
+  functionName: 'commandInjectionCase',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.js
+  AffectedNodeName: req.query
+  6:   SOURCE:    const cmd = req.query.cmd;
+ /vulnerable.js
+  AffectedNodeName: cmd
+  6:   Var Pass:    const cmd = req.query.cmd;
+ /vulnerable.js
+  AffectedNodeName: child_process.exec
+  7:   SINK:    child_process.exec(cmd);
+
+-------------  2 :  taint_flow_js_input ------------- 
+Description: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.js
+Line 8: res.send(cmd)
+SINK RULE: res.send
+SINK Attribute: NodejsResponseWrite
+entrypoint: 
+{
+  filePath: '/vulnerable.js',
+  functionName: 'commandInjectionCase',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.js
+  AffectedNodeName: req.query
+  6:   SOURCE:    const cmd = req.query.cmd;
+ /vulnerable.js
+  AffectedNodeName: cmd
+  6:   Var Pass:    const cmd = req.query.cmd;
+ /vulnerable.js
+  AffectedNodeName: res.send
+  8:   SINK:    res.send(cmd);
+
+-------------  3 :  taint_flow_js_input ------------- 
+Description: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.js
+Line 14: connection.query(sql)
+SINK RULE: connection.query
+SINK Attribute: NodejsSqlInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.js',
+  functionName: 'sqlInjectionCase',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.js
+  AffectedNodeName: req.query
+  12:  SOURCE:    const id = req.query.id;
+ /vulnerable.js
+  AffectedNodeName: id
+  12:  Var Pass:    const id = req.query.id;
+ /vulnerable.js
+  AffectedNodeName: sql
+  13:  Var Pass:    const sql = 'SELECT * FROM users WHERE id = ' + id;
+ /vulnerable.js
+  AffectedNodeName: connection.query
+  14:  SINK:    connection.query(sql);
+
+-------------  4 :  taint_flow_js_input ------------- 
+Description: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.js
+Line 19: fs.readFileSync(fileName)
+SINK RULE: fs.readFileSync
+SINK Attribute: NodejsPathTraversal
+entrypoint: 
+{
+  filePath: '/vulnerable.js',
+  functionName: 'pathTraversalCase',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.js
+  AffectedNodeName: req.query
+  18:  SOURCE:    const fileName = req.query.file;
+ /vulnerable.js
+  AffectedNodeName: fileName
+  18:  Var Pass:    const fileName = req.query.file;
+ /vulnerable.js
+  AffectedNodeName: fs.readFileSync
+  19:  SINK:    fs.readFileSync(fileName);
+
+-------------  5 :  taint_flow_js_input ------------- 
+Description: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.js
+Line 24: axios.get(url)
+SINK RULE: axios.get
+SINK Attribute: NodejsSSRF
+entrypoint: 
+{
+  filePath: '/vulnerable.js',
+  functionName: 'ssrfCase',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.js
+  AffectedNodeName: req.query
+  23:  SOURCE:    const url = req.query.url;
+ /vulnerable.js
+  AffectedNodeName: url
+  23:  Var Pass:    const url = req.query.url;
+ /vulnerable.js
+  AffectedNodeName: axios.get
+  24:  SINK:    axios.get(url);
+==========================================================
+  # Total-findings : 5
+========================================================== 
+
+report is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_js_20260528_153409/report.sarif
+================================================================
+
+analyze done
+[YASA] Execution completed, cost: 142ms, heap: 48.71/72.48 MB, rss: 125.86 MB, arrayBuffers: 0.65 MB
+
+======================  Analysis Overview  =====================
+Language                           : javascript
+Files analyzed                     : 1
+Lines of code                      : 33
+Total time                         : 0s137ms
+Executed instruction               : 91
+Execution count                    : 183
+Sources marked                     : 8
+Sinks matched                      : 5
+Valid entrypoints                  : 5
+Findings                           : 5
+Avg execution time per instruction : 0.00ms
+Avg instruction execution count    : 2.01
+Execution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms
+Execution times 70%/99%/100%       : 2.00/4.00/4.00
+================================================================
+
+
+===================  Performance Statistics  ===================
+total cost: 0s142ms
+preProcess cost: 0s74ms (52.1%)
+  parseCode cost: 0s70ms (94.6%)
+    loadFiles cost: 0s2ms (2.9%)
+    parseFiles cost: 0s6ms (8.6%)
+    other cost: 0s62ms (88.6%)
+  processModule cost: 0s3ms (4.1%)
+  other cost: 0s1ms (1.4%)
+startAnalyze cost: 0s3ms (2.1%)
+  makeFullCallGraph(BySymbolInterpret) cost: 0s3ms (100.0%)
+symbolInterpret cost: 0s8ms (5.6%)
+other cost: 0s57ms (40.1%)
+================================================================
+

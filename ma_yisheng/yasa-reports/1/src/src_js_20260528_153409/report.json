@@ -1,0 +1,195 @@
+{
+  "project": "src",
+  "scan_path": "/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-zfpc8tqi/src",
+  "language": "js",
+  "raw_output": "[YASA] Begin execution\n[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_js_minimal.json\n[YASA][init] Specified checker pack IDs: [taint-flow-javascript-default]\nversion: 0.3.1 (build 20260526, commit local-c-extension)\nv8 heap_size_limit: 11312 MB\nmain file:/snapshot/Downloads/YASA-Engine-main/dist/main.js\n[YASA][init] Source path: /var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-zfpc8tqi/src/\n[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_js_20260528_153409\n[YASA][init] Analysis language: javascript\n[YASA][init] Analysis analyzer: JavaScriptAnalyzer\n[YASA][init] Loading checker: taint_flow_js_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/js/js-taint-checker.js\n[YASA][init] Loading checker: taint_flow_egg_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/js/egg-taint-checker.js\n[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js\n[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js\n[YASA][init] Successfully loaded 4 checker(s): [taint_flow_js_input, taint_flow_egg_input, callgraph, sanitizer]\n[YASA] Executing preProcess\n[YASA][preProcess] Executing parseCode\n[YASA][preProcess] Completed parseCode, cost: 70ms, heap: 43.6/71.48 MB, rss: 120.69 MB, arrayBuffers: 0.53 MB\n[YASA][preProcess] Executing processModule\n[YASA][preProcess] Completed processModule, cost: 3ms, heap: 44.11/71.48 MB, rss: 121.44 MB, arrayBuffers: 0.53 MB\n[YASA] Completed preProcess, cost: 74ms, heap: 44.12/71.48 MB, rss: 121.45 MB, arrayBuffers: 0.53 MB\n[YASA] Executing startAnalyze\n[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)\nmakeAllCG-start\n\tmakeAllCG-10%\n\tmakeAllCG-30%\n\tmakeAllCG-70%\n\tmakeAllCG-100%\n[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 3ms, heap: 44.78/71.73 MB, rss: 122.02 MB, arrayBuffers: 0.54 MB\n[YASA] Completed startAnalyze, cost: 3ms, heap: 44.8/71.73 MB, rss: 122.03 MB, arrayBuffers: 0.54 MB\n[YASA] Executing symbolInterpret\nEntryPoint [/vulnerable.commandInjectionCase] is executing\nEntryPoint [/vulnerable.sqlInjectionCase] is executing\nEntryPoint [/vulnerable.pathTraversalCase] is executing\nEntryPoint [/vulnerable.ssrfCase] is executing\nEntryPoint [/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-zfpc8tqi/src/vulnerable.js] is executing \n[YASA] Completed symbolInterpret, cost: 8ms, heap: 47.03/72.23 MB, rss: 124.45 MB, arrayBuffers: 0.54 MB\nFound 4 potential output strategy files\nRegistered strategy: callchain from callchain-output-strategy.js\nRegistered strategy: callgraph from callgraph-output-strategy.js\nRegistered strategy: interactive from interactive-output-strategy.js\nRegistered strategy: taintflow from taint-output-strategy.js\nSuccessfully registered 4 output strategies\n\n=======================  outputFindings  =======================\n\n======================== Findings ======================== \n\n-------------  1 :  taint_flow_js_input ------------- \nDescription: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.js\nLine 7: child_process.exec(cmd)\nSINK RULE: child_process.exec\nSINK Attribute: NodejsExec\nentrypoint: \n{\n  filePath: '/vulnerable.js',\n  functionName: 'commandInjectionCase',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.js\n  AffectedNodeName: req.query\n  6:   SOURCE:    const cmd = req.query.cmd;\n /vulnerable.js\n  AffectedNodeName: cmd\n  6:   Var Pass:    const cmd = req.query.cmd;\n /vulnerable.js\n  AffectedNodeName: child_process.exec\n  7:   SINK:    child_process.exec(cmd);\n\n-------------  2 :  taint_flow_js_input ------------- \nDescription: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.js\nLine 8: res.send(cmd)\nSINK RULE: res.send\nSINK Attribute: NodejsResponseWrite\nentrypoint: \n{\n  filePath: '/vulnerable.js',\n  functionName: 'commandInjectionCase',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.js\n  AffectedNodeName: req.query\n  6:   SOURCE:    const cmd = req.query.cmd;\n /vulnerable.js\n  AffectedNodeName: cmd\n  6:   Var Pass:    const cmd = req.query.cmd;\n /vulnerable.js\n  AffectedNodeName: res.send\n  8:   SINK:    res.send(cmd);\n\n-------------  3 :  taint_flow_js_input ------------- \nDescription: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.js\nLine 14: connection.query(sql)\nSINK RULE: connection.query\nSINK Attribute: NodejsSqlInjection\nentrypoint: \n{\n  filePath: '/vulnerable.js',\n  functionName: 'sqlInjectionCase',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.js\n  AffectedNodeName: req.query\n  12:  SOURCE:    const id = req.query.id;\n /vulnerable.js\n  AffectedNodeName: id\n  12:  Var Pass:    const id = req.query.id;\n /vulnerable.js\n  AffectedNodeName: sql\n  13:  Var Pass:    const sql = 'SELECT * FROM users WHERE id = ' + id;\n /vulnerable.js\n  AffectedNodeName: connection.query\n  14:  SINK:    connection.query(sql);\n\n-------------  4 :  taint_flow_js_input ------------- \nDescription: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.js\nLine 19: fs.readFileSync(fileName)\nSINK RULE: fs.readFileSync\nSINK Attribute: NodejsPathTraversal\nentrypoint: \n{\n  filePath: '/vulnerable.js',\n  functionName: 'pathTraversalCase',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.js\n  AffectedNodeName: req.query\n  18:  SOURCE:    const fileName = req.query.file;\n /vulnerable.js\n  AffectedNodeName: fileName\n  18:  Var Pass:    const fileName = req.query.file;\n /vulnerable.js\n  AffectedNodeName: fs.readFileSync\n  19:  SINK:    fs.readFileSync(fileName);\n\n-------------  5 :  taint_flow_js_input ------------- \nDescription: JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint\nFile: /vulnerable.js\nLine 24: axios.get(url)\nSINK RULE: axios.get\nSINK Attribute: NodejsSSRF\nentrypoint: \n{\n  filePath: '/vulnerable.js',\n  functionName: 'ssrfCase',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.js\n  AffectedNodeName: req.query\n  23:  SOURCE:    const url = req.query.url;\n /vulnerable.js\n  AffectedNodeName: url\n  23:  Var Pass:    const url = req.query.url;\n /vulnerable.js\n  AffectedNodeName: axios.get\n  24:  SINK:    axios.get(url);\n==========================================================\n  # Total-findings : 5\n========================================================== \n\nreport is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_js_20260528_153409/report.sarif\n================================================================\n\nanalyze done\n[YASA] Execution completed, cost: 142ms, heap: 48.71/72.48 MB, rss: 125.86 MB, arrayBuffers: 0.65 MB\n\n======================  Analysis Overview  =====================\nLanguage                           : javascript\nFiles analyzed                     : 1\nLines of code                      : 33\nTotal time                         : 0s137ms\nExecuted instruction               : 91\nExecution count                    : 183\nSources marked                     : 8\nSinks matched                      : 5\nValid entrypoints                  : 5\nFindings                           : 5\nAvg execution time per instruction : 0.00ms\nAvg instruction execution count    : 2.01\nExecution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms\nExecution times 70%/99%/100%       : 2.00/4.00/4.00\n================================================================\n\n\n===================  Performance Statistics  ===================\ntotal cost: 0s142ms\npreProcess cost: 0s74ms (52.1%)\n  parseCode cost: 0s70ms (94.6%)\n    loadFiles cost: 0s2ms (2.9%)\n    parseFiles cost: 0s6ms (8.6%)\n    other cost: 0s62ms (88.6%)\n  processModule cost: 0s3ms (4.1%)\n  other cost: 0s1ms (1.4%)\nstartAnalyze cost: 0s3ms (2.1%)\n  makeFullCallGraph(BySymbolInterpret) cost: 0s3ms (100.0%)\nsymbolInterpret cost: 0s8ms (5.6%)\nother cost: 0s57ms (40.1%)\n================================================================\n\n",
+  "findings": [
+    {
+      "file": "vulnerable.js",
+      "line": 7,
+      "column": 3,
+      "sink_rule": "child_process.exec",
+      "sink_attribute": "NodejsExec",
+      "vuln_name": "代码执行",
+      "severity": "高危",
+      "message": "JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "child_process.exec(cmd)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 6,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: req.query\n  6:   SOURCE:    const cmd = req."
+        },
+        {
+          "step": "Step 1",
+          "line": 6,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: cmd\n  6:   Var Pass:    const cmd = req.quer"
+        },
+        {
+          "step": "Step 2",
+          "line": 7,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: child_process.exec\n  7:   SINK:    child_pro"
+        }
+      ],
+      "fingerprint": "bf536d9774b58507"
+    },
+    {
+      "file": "vulnerable.js",
+      "line": 14,
+      "column": 3,
+      "sink_rule": "connection.query",
+      "sink_attribute": "NodejsSqlInjection",
+      "vuln_name": "SQL 注入",
+      "severity": "高危",
+      "message": "JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "connection.query(sql)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 12,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: req.query\n  12:  SOURCE:    const id = req.q"
+        },
+        {
+          "step": "Step 1",
+          "line": 12,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: id\n  12:  Var Pass:    const id = req.query."
+        },
+        {
+          "step": "Step 2",
+          "line": 13,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: sql\n  13:  Var Pass:    const sql = 'SELECT "
+        },
+        {
+          "step": "Step 3",
+          "line": 14,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: connection.query\n  14:  SINK:    connection."
+        }
+      ],
+      "fingerprint": "c5ce3d716c197118"
+    },
+    {
+      "file": "vulnerable.js",
+      "line": 24,
+      "column": 3,
+      "sink_rule": "axios.get",
+      "sink_attribute": "NodejsSSRF",
+      "vuln_name": "SSRF",
+      "severity": "高危",
+      "message": "JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "axios.get(url)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 23,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: req.query\n  23:  SOURCE:    const url = req."
+        },
+        {
+          "step": "Step 1",
+          "line": 23,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: url\n  23:  Var Pass:    const url = req.quer"
+        },
+        {
+          "step": "Step 2",
+          "line": 24,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: axios.get\n  24:  SINK:    axios.get(url);\n"
+        }
+      ],
+      "fingerprint": "f0d399b6918dc33e"
+    },
+    {
+      "file": "vulnerable.js",
+      "line": 8,
+      "column": 3,
+      "sink_rule": "res.send",
+      "sink_attribute": "NodejsResponseWrite",
+      "vuln_name": "响应写入",
+      "severity": "中危",
+      "message": "JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "res.send(cmd)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 6,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: req.query\n  6:   SOURCE:    const cmd = req."
+        },
+        {
+          "step": "Step 1",
+          "line": 6,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: cmd\n  6:   Var Pass:    const cmd = req.quer"
+        },
+        {
+          "step": "Step 2",
+          "line": 8,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: res.send\n  8:   SINK:    res.send(cmd);\n"
+        }
+      ],
+      "fingerprint": "db2d9fe50e0eb4c8",
+      "llm_verdict": "needs_review",
+      "llm_reason": "缺少L6的赋值代码，无法确认cmd是否来自不可信输入或已做校验，需查看完整上下文",
+      "llm_reviewed_at": "2026-05-28T16:07:35.948640",
+      "fix_explanation": "直接将用户可控的变量 cmd 通过 res.send() 输出，未进行任何编码或转义，导致反射型跨站脚本（XSS）漏洞。攻击者可构造恶意脚本作为 cmd 参数值，使响应中嵌入攻击代码。",
+      "fix_code": "const sanitized = require('escape-html')(cmd);\nres.send(sanitized);",
+      "attack_scenario": "攻击者诱使用户访问 http://example.com/?cmd=<script>alert(document.cookie)</script>，页面将执行恶意脚本，窃取用户 Cookie 或其他敏感信息。",
+      "fix_generated_at": "2026-05-28T16:07:45.767649"
+    },
+    {
+      "file": "vulnerable.js",
+      "line": 19,
+      "column": 3,
+      "sink_rule": "fs.readFileSync",
+      "sink_attribute": "NodejsPathTraversal",
+      "vuln_name": "路径遍历",
+      "severity": "中危",
+      "message": "JavaScript原生污点分析checker，会使用CallGraph边界制作entrypoint",
+      "snippet": "fs.readFileSync(fileName)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 18,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: req.query\n  18:  SOURCE:    const fileName ="
+        },
+        {
+          "step": "Step 1",
+          "line": 18,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: fileName\n  18:  Var Pass:    const fileName "
+        },
+        {
+          "step": "Step 2",
+          "line": 19,
+          "snippet": " /vulnerable.js\n  AffectedNodeName: fs.readFileSync\n  19:  SINK:    fs.readFileS"
+        }
+      ],
+      "fingerprint": "23a8ff21b7572ab6",
+      "llm_verdict": "needs_review",
+      "llm_reason": "污点路径摘要未披露 source 细节，仅凭 fileName 变量无法确认数据来源是否外部可控",
+      "llm_reviewed_at": "2026-05-28T16:07:20.561391"
+    }
+  ],
+  "findings_count": 5,
+  "diagnostics": [
+    {
+      "log_key": "scan_init",
+      "log_time": "2026-05-28 15:34:10",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "src",
+      "string3": "javascript",
+      "number1": null,
+      "number2": null,
+      "number3": null,
+      "date1": null,
+      "date2": null
+    },
+    {
+      "log_key": "scan_summary",
+      "log_time": "2026-05-28 15:34:10",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "src",
+      "string3": "{\"projectName\":\"src\",\"projectPath\":\"/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-zfpc8tqi/src/\",\"yasaVersion\":\"0.3.1 (build 20260526, commit local-c-extension)\",\"parallelWorkers\":1,\"cgAlgorithm\":\"DEFAULT\",\"dumpAllCG\":false,\"dumpAST\":false,\"scanStartTime\":\"2026-05-28T07:34:09.984Z\",\"scanEndTime\":\"2026-05-28T07:34:10.126Z\",\"findingCount\":5,\"language\":\"javascript\",\"fileCount\":1,\"lineCount\":33,\"totalTimeMs\":142,\"markedSourceCount\":8,\"matchedSinkCount\":5,\"entryPointCount\":5,\"parseMs\":74,\"parseCodeMs\":70,\"preloadMs\":0,\"processModuleMs\":3,\"startAnalyzeMs\":3,\"symbolInterpretMs\":8,\"execCount\":183,\"execInstCount\":91,\"avgExecTimePerInst\":0,\"avgInstExecCount\":2.010989010989011,\"execTimeP70Ms\":0,\"execTimeP99Ms\":0,\"execTimeP100Ms\":0,\"execTimesP70\":2,\"execTimesP99\":4,\"execTimesP100\":4}",
+      "number1": 142,
+      "number2": 33,
+      "number3": 5,
+      "date1": "2026-05-28 15:34:09",
+      "date2": "2026-05-28 15:34:10"
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "projectName": "test-js-cases",
+  "projectPath": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-js-cases/",
+  "yasaVersion": "0.3.1 (build 20260526, commit local-c-extension)",
+  "parallelWorkers": 1,
+  "cgAlgorithm": "DEFAULT",
+  "dumpAllCG": false,
+  "dumpAST": false,
+  "scanStartTime": "2026-05-28T07:07:23.930Z",
+  "scanEndTime": "2026-05-28T07:07:24.058Z",
+  "findingCount": 5,
+  "language": "javascript",
+  "fileCount": 1,
+  "lineCount": 33,
+  "totalTimeMs": 128,
+  "markedSourceCount": 8,
+  "matchedSinkCount": 5,
+  "entryPointCount": 5,
+  "parseMs": 70,
+  "parseCodeMs": 66,
+  "preloadMs": 0,
+  "processModuleMs": 3,
+  "startAnalyzeMs": 3,
+  "symbolInterpretMs": 7,
+  "execCount": 183,
+  "execInstCount": 91,
+  "avgExecTimePerInst": 0,
+  "avgInstExecCount": 2.010989010989011,
+  "execTimeP70Ms": 0,
+  "execTimeP99Ms": 0,
+  "execTimeP100Ms": 0,
+  "execTimesP70": 2,
+  "execTimesP99": 4,
+  "execTimesP100": 4,
+  "ruleConfig": [
+    {
+      "checkerIds": [
+        "taint_flow_js_input",
+        "taint_flow_egg_input",
+        "taint_flow_express_input"
+      ],
+      "sources": {
+        "TaintSource": [
+          {
+            "path": "req.query",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "req.params",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "req.body",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "req.headers",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "process.argv",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "process.env",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "ctx.query",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "ctx.params",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "path": "ctx.request.body",
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          }
+        ]
+      },
+      "sinks": {
+        "FuncCallTaintSink": [
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsExec",
+            "fsig": "child_process.exec"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsExec",
+            "fsig": "child_process.execSync"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsExec",
+            "fsig": "child_process.spawn"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsExec",
+            "fsig": "eval"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsSqlInjection",
+            "fsig": "connection.query"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsSqlInjection",
+            "fsig": "sequelize.query"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsSqlInjection",
+            "fsig": "prisma.$queryRawUnsafe"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsSSRF",
+            "fsig": "axios.get"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "NodejsSSRF",
+            "fsig": "axios.post"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsPathTraversal",
+            "fsig": "fs.readFileSync"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsPathTraversal",
+            "fsig": "fs.writeFileSync"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsPathTraversal",
+            "fsig": "fs.createReadStream"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsResponseWrite",
+            "fsig": "res.send"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "NodejsResponseWrite",
+            "fsig": "res.json"
+          }
+        ]
+      }
+    }
+  ]
+}

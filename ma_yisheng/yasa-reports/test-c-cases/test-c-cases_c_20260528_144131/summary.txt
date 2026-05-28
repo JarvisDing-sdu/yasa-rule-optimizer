@@ -1,0 +1,193 @@
+============================================================
+【结构化漏洞报告】
+共 3 条（已去重）
+============================================================
+
+## 高危 (3 条)
+----------------------------------------
+
+1. 【缓冲区溢出】 vulnerable.c:10
+   代码: strcpy(name, input)...
+   污点路径: L9 -> L30 -> L5 -> L10
+
+2. 【命令注入】 vulnerable.c:19
+   代码: system(command)...
+   污点路径: L18 -> L31 -> L15 -> L19
+
+3. 【格式化字符串漏洞】 vulnerable.c:26
+   代码: printf(format)...
+   污点路径: L25 -> L32 -> L22 -> L26
+
+============================================================
+
+--- 原始 YASA 输出 ---
+[YASA] Begin execution
+[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_c_minimal.json
+[YASA][init] Specified checker IDs: [taint_flow_c_input]
+version: 0.3.1 (build 20260526, commit local-c-extension)
+v8 heap_size_limit: 11312 MB
+main file:/snapshot/Downloads/YASA-Engine-main/dist/main.js
+[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/
+[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-c-cases/test-c-cases_c_20260528_144131
+[YASA][init] Analysis language: c
+[YASA][init] Analysis analyzer: CAnalyzer
+[YASA][init] Loading checker: taint_flow_c_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/c/c-default-taint-checker.js
+[YASA][init] Successfully loaded 1 checker(s): [taint_flow_c_input]
+[YASA] Executing preProcess
+[YASA][preProcess] Executing parseCode
+[YASA][preProcess] Completed parseCode, cost: 5ms, heap: 29.68/64.84 MB, rss: 114.5 MB, arrayBuffers: 2.18 MB
+[YASA][preProcess] Executing processModule
+[YASA][preProcess] Completed processModule, cost: 1ms, heap: 29.85/64.84 MB, rss: 114.59 MB, arrayBuffers: 2.18 MB
+[YASA] Completed preProcess, cost: 33ms, heap: 29.86/64.84 MB, rss: 114.59 MB, arrayBuffers: 2.18 MB
+[YASA] Executing startAnalyze
+[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)
+makeAllCG-start
+	makeAllCG-10%
+	makeAllCG-30%
+	makeAllCG-70%
+	makeAllCG-100%
+[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 6ms, heap: 30.47/64.84 MB, rss: 120.38 MB, arrayBuffers: 2.18 MB
+[YASA] Completed startAnalyze, cost: 6ms, heap: 30.49/64.84 MB, rss: 120.92 MB, arrayBuffers: 2.18 MB
+[YASA] Executing symbolInterpret
+EntryPoint [/vulnerable.c.main] is executing
+EntryPoint [/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-c-cases/vulnerable.c] is executing
+[YASA] Completed symbolInterpret, cost: 4ms, heap: 31.38/65.09 MB, rss: 129.86 MB, arrayBuffers: 2.19 MB
+Found 4 potential output strategy files
+Registered strategy: callchain from callchain-output-strategy.js
+Registered strategy: callgraph from callgraph-output-strategy.js
+Registered strategy: interactive from interactive-output-strategy.js
+Registered strategy: taintflow from taint-output-strategy.js
+Successfully registered 4 output strategies
+
+=======================  outputFindings  =======================
+
+======================== Findings ======================== 
+
+-------------  1 :  taint_flow_c_input ------------- 
+Description: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数
+File: /vulnerable.c
+Line 10: strcpy(name, input)
+SINK RULE: strcpy
+SINK Attribute: CBufferOverflow
+entrypoint: 
+{
+  filePath: '/vulnerable.c',
+  functionName: 'main',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.c
+  AffectedNodeName: gets(input)
+  9:   SOURCE:      gets(input);
+ /vulnerable.c
+  AffectedNodeName: buffer_overflow_case
+  30:  CALL:      buffer_overflow_case();
+ /vulnerable.c
+  AffectedNodeName: buffer_overflow_case
+  5:   ARG PASS:  void buffer_overflow_case(void) {
+ /vulnerable.c
+  AffectedNodeName: strcpy
+  10:  SINK:      strcpy(name, input);
+
+-------------  2 :  taint_flow_c_input ------------- 
+Description: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数
+File: /vulnerable.c
+Line 19: system(command)
+SINK RULE: system
+SINK Attribute: CCommandInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.c',
+  functionName: 'main',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.c
+  AffectedNodeName: gets(command)
+  18:  SOURCE:      gets(command);
+ /vulnerable.c
+  AffectedNodeName: direct_command_injection_case
+  31:  CALL:      direct_command_injection_case();
+ /vulnerable.c
+  AffectedNodeName: direct_command_injection_case
+  15:  ARG PASS:  void direct_command_injection_case(void) {
+ /vulnerable.c
+  AffectedNodeName: system
+  19:  SINK:      system(command);
+
+-------------  3 :  taint_flow_c_input ------------- 
+Description: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数
+File: /vulnerable.c
+Line 26: printf(format)
+SINK RULE: printf
+SINK Attribute: CFormatString
+entrypoint: 
+{
+  filePath: '/vulnerable.c',
+  functionName: 'main',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.c
+  AffectedNodeName: scanf(%255s, format)
+  25:  SOURCE:      scanf("%255s", format);
+ /vulnerable.c
+  AffectedNodeName: format_string_case
+  32:  CALL:      format_string_case();
+ /vulnerable.c
+  AffectedNodeName: format_string_case
+  22:  ARG PASS:  void format_string_case(void) {
+ /vulnerable.c
+  AffectedNodeName: printf
+  26:  SINK:      printf(format);
+==========================================================
+  # Total-findings : 3
+========================================================== 
+
+report is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-c-cases/test-c-cases_c_20260528_144131/report.sarif
+================================================================
+
+analyze done
+[YASA] Execution completed, cost: 98ms, heap: 32.61/65.34 MB, rss: 133.72 MB, arrayBuffers: 2.28 MB
+
+======================  Analysis Overview  =====================
+Language                           : c
+Files analyzed                     : 1
+Lines of code                      : 35
+Total time                         : 0s94ms
+Executed instruction               : 66
+Execution count                    : 140
+Sources marked                     : 3
+Sinks matched                      : 0
+Valid entrypoints                  : 2
+Findings                           : 3
+Avg execution time per instruction : 0.00ms
+Avg instruction execution count    : 2.12
+Execution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms
+Execution times 70%/99%/100%       : 2.00/4.00/4.00
+================================================================
+
+
+===================  Performance Statistics  ===================
+total cost: 0s98ms
+preProcess cost: 0s33ms (33.7%)
+  parseCode cost: 0s5ms (15.2%)
+    loadFiles cost: 0s1ms (20.0%)
+    parseFiles cost: 0s4ms (80.0%)
+  processModule cost: 0s1ms (3.0%)
+  other cost: 0s27ms (81.8%)
+startAnalyze cost: 0s6ms (6.1%)
+  makeFullCallGraph(BySymbolInterpret) cost: 0s6ms (100.0%)
+symbolInterpret cost: 0s4ms (4.1%)
+other cost: 0s55ms (56.1%)
+================================================================
+

@@ -1,0 +1,34 @@
+{
+  "project": "test-php-cases",
+  "scan_path": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-php-cases",
+  "language": "php",
+  "raw_output": "[YASA] Begin execution\n[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_php_minimal.json\n[YASA][init] EntrypointMode set: BOTH\n[YASA][init] Specified checker pack IDs: [taint-flow-php-default]\nversion: 0.3.1 (build 20260526, commit local-c-extension)\nv8 heap_size_limit: 11312 MB\nmain file:/snapshot/Downloads/YASA-Engine-main/dist/main.js\n[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-php-cases/\n[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-php-cases/test-php-cases_php_20260528_145930\n[YASA][init] Analysis language: php\n[YASA][init] Analysis analyzer: PhpAnalyzer\n[YASA][init] Loading checker: taint_flow_php_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/php/php-default-taint-checker.js\n[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js\n[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js\n[YASA][init] Successfully loaded 3 checker(s): [taint_flow_php_input, callgraph, sanitizer]\n[YASA] Executing preProcess\n[YASA][preProcess] Executing parseCode\n[YASA][preProcess] Completed parseCode, cost: 8ms, heap: 28.91/63.98 MB, rss: 116.75 MB, arrayBuffers: 3.43 MB\n[YASA][preProcess] Executing processModule\n[YASA][preProcess] Completed processModule, cost: 12ms, heap: 29.87/64.23 MB, rss: 121.63 MB, arrayBuffers: 3.43 MB\n[YASA] Completed preProcess, cost: 47ms, heap: 29.88/64.23 MB, rss: 122.42 MB, arrayBuffers: 3.43 MB\n[YASA] Executing startAnalyze\n[SpartaEntrypoint] 发现 0 个 Controller action entrypoints\n[SoaServiceEntrypoint] 发现 0 个 SOA Service entrypoints\n[CustomMvcController] 发现 0 个 MVC Controller action entrypoints\n[CustomDataBucket] 发现 0 个 DataBucket entrypoints\n[YASA] Completed startAnalyze, cost: 0ms, heap: 30.02/64.23 MB, rss: 123.88 MB, arrayBuffers: 3.44 MB\n[YASA] Executing symbolInterpret\n[symbolInterpret]：EntryPoints are not found\n[YASA] Completed symbolInterpret, cost: 0ms, heap: 30.05/64.23 MB, rss: 124.47 MB, arrayBuffers: 3.44 MB\nFound 4 potential output strategy files\nRegistered strategy: callchain from callchain-output-strategy.js\nRegistered strategy: callgraph from callgraph-output-strategy.js\nRegistered strategy: interactive from interactive-output-strategy.js\nRegistered strategy: taintflow from taint-output-strategy.js\nSuccessfully registered 4 output strategies\n\n=======================  outputFindings  =======================\n================================================================\n\nanalyze done\n[YASA] Execution completed, cost: 112ms, heap: 30.87/64.48 MB, rss: 131.22 MB, arrayBuffers: 3.52 MB\n\n======================  Analysis Overview  =====================\nLanguage                           : php\nFiles analyzed                     : 1\nLines of code                      : 39\nTotal time                         : 0s106ms\nExecuted instruction               : 60\nExecution count                    : 65\nSources marked                     : 0\nSinks matched                      : 0\nValid entrypoints                  : 0\nFindings                           : 0\nAvg execution time per instruction : 0.00ms\nAvg instruction execution count    : 1.08\nExecution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms\nExecution times 70%/99%/100%       : 1.00/2.00/2.00\n================================================================\n\n\n===================  Performance Statistics  ===================\ntotal cost: 0s112ms\npreProcess cost: 0s47ms (42.0%)\n  parseCode cost: 0s8ms (17.0%)\n    loadFiles cost: 0s1ms (12.5%)\n    parseFiles cost: 0s7ms (87.5%)\n  processModule cost: 0s12ms (25.5%)\n  other cost: 0s27ms (57.4%)\nstartAnalyze cost: 0s0ms (0.0%)\nsymbolInterpret cost: 0s0ms (0.0%)\nother cost: 0s65ms (58.0%)\n================================================================\n\n",
+  "findings": [],
+  "findings_count": 0,
+  "diagnostics": [
+    {
+      "log_key": "scan_init",
+      "log_time": "2026-05-28 14:59:30",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "test-php-cases",
+      "string3": "php",
+      "number1": null,
+      "number2": null,
+      "number3": null,
+      "date1": null,
+      "date2": null
+    },
+    {
+      "log_key": "scan_summary",
+      "log_time": "2026-05-28 14:59:30",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "test-php-cases",
+      "string3": "{\"projectName\":\"test-php-cases\",\"projectPath\":\"/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-php-cases/\",\"yasaVersion\":\"0.3.1 (build 20260526, commit local-c-extension)\",\"parallelWorkers\":1,\"cgAlgorithm\":\"DEFAULT\",\"dumpAllCG\":false,\"dumpAST\":false,\"scanStartTime\":\"2026-05-28T06:59:30.562Z\",\"scanEndTime\":\"2026-05-28T06:59:30.674Z\",\"findingCount\":0,\"language\":\"php\",\"fileCount\":1,\"lineCount\":39,\"totalTimeMs\":112,\"markedSourceCount\":0,\"matchedSinkCount\":0,\"entryPointCount\":0,\"parseMs\":47,\"parseCodeMs\":8,\"preloadMs\":0,\"processModuleMs\":12,\"startAnalyzeMs\":0,\"symbolInterpretMs\":0,\"execCount\":65,\"execInstCount\":60,\"avgExecTimePerInst\":0,\"avgInstExecCount\":1.0833333333333333,\"execTimeP70Ms\":0,\"execTimeP99Ms\":0,\"execTimeP100Ms\":0,\"execTimesP70\":1,\"execTimesP99\":2,\"execTimesP100\":2}",
+      "number1": 112,
+      "number2": 39,
+      "number3": 0,
+      "date1": "2026-05-28 14:59:30",
+      "date2": "2026-05-28 14:59:30"
+    }
+  ]
+}

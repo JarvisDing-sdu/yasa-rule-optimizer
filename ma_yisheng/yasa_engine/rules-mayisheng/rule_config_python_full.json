@@ -1,0 +1,218 @@
+[
+  {
+    "checkerIds": ["taint_flow_python_input", "taint_flow_python_input_inner", "taint_flow_python_django_input"],
+    "sources": {
+      "FuncCallReturnValueTaintSource": [
+        {
+          "fsig": "read",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "urlopen",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "parse_qs",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "loads",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "load",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "get_json",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "get_argument",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "get_arguments",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "input",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "fsig": "parse_args",
+          "values": ["0"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        }
+      ],
+      "FuncCallArgTaintSource": [
+        {
+          "fsig": "request",
+          "args": ["*"],
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        }
+      ],
+      "TaintSource": [
+        {
+          "path": "request.args",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "request.form",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "request.files",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "request.json",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "request.data",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "request.headers",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "request.cookies",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "sys.argv",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "body",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "query_params",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "path_params",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "GET",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "POST",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "FILES",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        },
+        {
+          "path": "COOKIES",
+          "scopeFile": "all",
+          "scopeFunc": "all"
+        }
+      ]
+    },
+    "sinks": {
+      "FuncCallTaintSink": [
+        {
+          "args": ["*"],
+          "attribute": "PythonSqlInjection",
+          "fregex": ".*\\.execute"
+        },
+        {
+          "args": ["*"],
+          "attribute": "PythonSqlInjection",
+          "fsig": "db.execute_sql"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonCommandExec",
+          "fsig": "os.system"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonCommandExec",
+          "fsig": "os.popen"
+        },
+        {
+          "args": ["*"],
+          "attribute": "PythonCommandExec",
+          "fregex": "subprocess\\.(run|call|Popen)"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonCodeExec",
+          "fsig": "eval"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonCodeExec",
+          "fsig": "exec"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonDeserialization",
+          "fsig": "pickle.loads"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonDeserialization",
+          "fsig": "yaml.load"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonSSRF",
+          "fregex": "requests\\.(get|post|put|delete|patch)"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonSSRF",
+          "fsig": "urllib.request.urlopen"
+        },
+        {
+          "args": ["0"],
+          "attribute": "PythonPathTraversal",
+          "fsig": "open"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,132 @@
+{
+  "projectName": "test-python-cases",
+  "projectPath": "/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-python-cases/",
+  "yasaVersion": "0.3.1 (build 20260526, commit local-c-extension)",
+  "parallelWorkers": 1,
+  "cgAlgorithm": "DEFAULT",
+  "dumpAllCG": false,
+  "dumpAST": false,
+  "scanStartTime": "2026-05-28T07:06:57.522Z",
+  "scanEndTime": "2026-05-28T07:07:04.482Z",
+  "findingCount": 8,
+  "language": "python",
+  "fileCount": 1,
+  "lineCount": 33,
+  "totalTimeMs": 6960,
+  "markedSourceCount": 8,
+  "matchedSinkCount": 24,
+  "entryPointCount": 5,
+  "parseMs": 6871,
+  "parseCodeMs": 6852,
+  "preloadMs": 0,
+  "processModuleMs": 15,
+  "startAnalyzeMs": 2,
+  "symbolInterpretMs": 17,
+  "execCount": 237,
+  "execInstCount": 86,
+  "avgExecTimePerInst": 0,
+  "avgInstExecCount": 2.755813953488372,
+  "execTimeP70Ms": 0,
+  "execTimeP99Ms": 0,
+  "execTimeP100Ms": 0,
+  "execTimesP70": 3,
+  "execTimesP99": 4,
+  "execTimesP100": 4,
+  "ruleConfig": [
+    {
+      "checkerIds": [
+        "taint_flow_python_input",
+        "taint_flow_python_input_inner"
+      ],
+      "sources": {
+        "FuncCallReturnValueTaintSource": [
+          {
+            "fsig": "input",
+            "values": [
+              "0"
+            ],
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          },
+          {
+            "fsig": "parse_args",
+            "values": [
+              "0"
+            ],
+            "scopeFile": "all",
+            "scopeFunc": "all"
+          }
+        ],
+        "FuncCallArgTaintSource": [],
+        "TaintSource": []
+      },
+      "sinks": {
+        "FuncCallTaintSink": [
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "PythonSqlInjection",
+            "fsig": "cursor.execute"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "PythonSqlInjection",
+            "fsig": "db.execute_sql"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "PythonCommandExec",
+            "fsig": "os.system"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "PythonCommandExec",
+            "fsig": "os.popen"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "PythonCommandExec",
+            "fsig": "subprocess.call"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "PythonCommandExec",
+            "fsig": "subprocess.run"
+          },
+          {
+            "args": [
+              "*"
+            ],
+            "attribute": "PythonCommandExec",
+            "fsig": "subprocess.Popen"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "PythonCodeExec",
+            "fsig": "eval"
+          },
+          {
+            "args": [
+              "0"
+            ],
+            "attribute": "PythonCodeExec",
+            "fsig": "exec"
+          }
+        ]
+      }
+    }
+  ]
+}

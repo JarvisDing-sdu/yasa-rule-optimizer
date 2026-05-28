@@ -1,0 +1,15 @@
+# 服务器端依赖（不含 GUI 相关库）
+openai>=1.0.0
+python-dotenv>=1.0.0
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+python-multipart>=0.0.6
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-core>=0.1.0
+bcrypt>=4.0.0
+PyJWT>=2.8.0
+email-validator>=2.0.0
+semgrep>=1.70.0
+sqlalchemy>=2.0.0
+slowapi>=0.1.9

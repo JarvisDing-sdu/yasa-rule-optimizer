@@ -1,0 +1,221 @@
+============================================================
+【结构化漏洞报告】
+共 4 条（已去重）
+============================================================
+
+## 高危 (2 条)
+----------------------------------------
+
+1. 【命令注入】 vulnerable.php:8
+   代码: system(cmd)...
+   污点路径: L7 -> L7 -> L8
+
+2. 【SQL 注入】 vulnerable.php:15
+   代码: mysqli_query(GLOBALS.db, sql)...
+   污点路径: L13 -> L13 -> L14 -> L15
+
+## 中危 (2 条)
+----------------------------------------
+
+1. 【XSS】 vulnerable.php:21
+   代码: echo(name)...
+   污点路径: L20 -> L20 -> L21
+
+2. 【路径遍历】 vulnerable.php:33
+   代码: file_get_contents(url)...
+   污点路径: L32 -> L32 -> L33
+
+============================================================
+
+--- 原始 YASA 输出 ---
+[YASA] Begin execution
+[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_php_minimal.json
+[YASA][init] Specified checker pack IDs: [taint-flow-php-default]
+version: 0.3.1 (build 20260526, commit local-c-extension)
+v8 heap_size_limit: 11312 MB
+main file:/snapshot/Downloads/YASA-Engine-main/dist/main.js
+[YASA][init] Source path: /var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-2wzcigy3/src/
+[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_php_20260528_150342
+[YASA][init] Analysis language: php
+[YASA][init] Analysis analyzer: PhpAnalyzer
+[YASA][init] Loading checker: taint_flow_php_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/php/php-default-taint-checker.js
+[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js
+[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js
+[YASA][init] Successfully loaded 3 checker(s): [taint_flow_php_input, callgraph, sanitizer]
+[YASA] Executing preProcess
+[YASA][preProcess] Executing parseCode
+[YASA][preProcess] Completed parseCode, cost: 7ms, heap: 28.95/64.23 MB, rss: 117.83 MB, arrayBuffers: 3.43 MB
+[YASA][preProcess] Executing processModule
+[YASA][preProcess] Completed processModule, cost: 1ms, heap: 29.36/64.48 MB, rss: 118.27 MB, arrayBuffers: 3.43 MB
+[YASA] Completed preProcess, cost: 27ms, heap: 29.37/64.48 MB, rss: 118.27 MB, arrayBuffers: 3.43 MB
+[YASA] Executing startAnalyze
+[SpartaEntrypoint] 发现 5 个 Controller action entrypoints
+[SoaServiceEntrypoint] 发现 0 个 SOA Service entrypoints
+[CustomMvcController] 发现 5 个 MVC Controller action entrypoints
+[CustomDataBucket] 发现 0 个 DataBucket entrypoints
+[YASA] Completed startAnalyze, cost: 1ms, heap: 29.55/64.48 MB, rss: 119.03 MB, arrayBuffers: 3.44 MB
+[YASA] Executing symbolInterpret
+EntryPoint [/vulnerable.php.commandAction] is executing
+EntryPoint [/vulnerable.php.sqlAction] is executing
+EntryPoint [/vulnerable.php.xssAction] is executing
+EntryPoint [/vulnerable.php.pathTraversalAction] is executing
+EntryPoint [/vulnerable.php.ssrfAction] is executing
+[YASA] Completed symbolInterpret, cost: 7ms, heap: 31.52/64.73 MB, rss: 133.41 MB, arrayBuffers: 3.44 MB
+Found 4 potential output strategy files
+Registered strategy: callchain from callchain-output-strategy.js
+Registered strategy: callgraph from callgraph-output-strategy.js
+Registered strategy: interactive from interactive-output-strategy.js
+Registered strategy: taintflow from taint-output-strategy.js
+Successfully registered 4 output strategies
+
+=======================  outputFindings  =======================
+
+======================== Findings ======================== 
+
+-------------  1 :  taint_flow_php_input ------------- 
+Description: PHP污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.php
+Line 8: system(cmd)
+SINK RULE: system
+SINK Attribute: PhpCommandInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.php',
+  functionName: 'commandAction',
+  attribute: 'CustomMvcController',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.php
+  AffectedNodeName: _REQUEST
+  7:   SOURCE:          $cmd = $_REQUEST['cmd'];
+ /vulnerable.php
+  AffectedNodeName: cmd
+  7:   Var Pass:         $cmd = $_REQUEST['cmd'];
+ /vulnerable.php
+  AffectedNodeName: system
+  8:   SINK:          system($cmd);
+
+-------------  2 :  taint_flow_php_input ------------- 
+Description: PHP污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.php
+Line 15: mysqli_query(GLOBALS.db, sql)
+SINK RULE: mysqli_query
+SINK Attribute: PhpSqlInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.php',
+  functionName: 'sqlAction',
+  attribute: 'CustomMvcController',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.php
+  AffectedNodeName: _GET
+  13:  SOURCE:          $id = $_GET['id'];
+ /vulnerable.php
+  AffectedNodeName: id
+  13:  Var Pass:         $id = $_GET['id'];
+ /vulnerable.php
+  AffectedNodeName: sql
+  14:  Var Pass:         $sql = "SELECT * FROM users WHERE id = " . $id;
+ /vulnerable.php
+  AffectedNodeName: mysqli_query
+  15:  SINK:          mysqli_query($GLOBALS['db'], $sql);
+
+-------------  3 :  taint_flow_php_input ------------- 
+Description: PHP污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.php
+Line 21: echo(name)
+SINK RULE: echo
+SINK Attribute: PhpXSS
+entrypoint: 
+{
+  filePath: '/vulnerable.php',
+  functionName: 'xssAction',
+  attribute: 'CustomMvcController',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.php
+  AffectedNodeName: _POST
+  20:  SOURCE:          $name = $_POST['name'];
+ /vulnerable.php
+  AffectedNodeName: name
+  20:  Var Pass:         $name = $_POST['name'];
+ /vulnerable.php
+  AffectedNodeName: echo
+  21:  SINK:          echo $name;
+
+-------------  4 :  taint_flow_php_input ------------- 
+Description: PHP污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.php
+Line 33: file_get_contents(url)
+SINK RULE: file_get_contents
+SINK Attribute: PhpPathTraversal
+entrypoint: 
+{
+  filePath: '/vulnerable.php',
+  functionName: 'ssrfAction',
+  attribute: 'CustomMvcController',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.php
+  AffectedNodeName: _GET
+  32:  SOURCE:          $url = $_GET['url'];
+ /vulnerable.php
+  AffectedNodeName: url
+  32:  Var Pass:         $url = $_GET['url'];
+ /vulnerable.php
+  AffectedNodeName: file_get_contents
+  33:  SINK:          file_get_contents($url);
+==========================================================
+  # Total-findings : 4
+========================================================== 
+
+report is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_php_20260528_150342/report.sarif
+================================================================
+
+analyze done
+[YASA] Execution completed, cost: 88ms, heap: 32.96/64.98 MB, rss: 136.36 MB, arrayBuffers: 3.54 MB
+
+======================  Analysis Overview  =====================
+Language                           : php
+Files analyzed                     : 1
+Lines of code                      : 36
+Total time                         : 0s84ms
+Executed instruction               : 89
+Execution count                    : 105
+Sources marked                     : 20
+Sinks matched                      : 0
+Valid entrypoints                  : 5
+Findings                           : 4
+Avg execution time per instruction : 0.00ms
+Avg instruction execution count    : 1.18
+Execution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms
+Execution times 70%/99%/100%       : 1.00/2.00/2.00
+================================================================
+
+
+===================  Performance Statistics  ===================
+total cost: 0s88ms
+preProcess cost: 0s27ms (30.7%)
+  parseCode cost: 0s7ms (25.9%)
+    parseFiles cost: 0s6ms (85.7%)
+    other cost: 0s1ms (14.3%)
+  processModule cost: 0s1ms (3.7%)
+  other cost: 0s19ms (70.4%)
+startAnalyze cost: 0s1ms (1.1%)
+symbolInterpret cost: 0s7ms (8.0%)
+other cost: 0s53ms (60.2%)
+================================================================
+

@@ -1,0 +1,69 @@
+{
+  "project": "src",
+  "scan_path": "/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-j5nvrqx7/src",
+  "language": "c",
+  "raw_output": "[YASA] Begin execution\n[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_c_minimal.json\n[YASA][init] Specified checker IDs: [taint_flow_c_input]\nversion: 0.3.1 (build 20260526, commit local-c-extension)\nv8 heap_size_limit: 11312 MB\nmain file:/snapshot/Downloads/YASA-Engine-main/dist/main.js\n[YASA][init] Source path: /var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-j5nvrqx7/src/\n[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_c_20260528_145025\n[YASA][init] Analysis language: c\n[YASA][init] Analysis analyzer: CAnalyzer\n[YASA][init] Loading checker: taint_flow_c_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/c/c-default-taint-checker.js\n[YASA][init] Successfully loaded 1 checker(s): [taint_flow_c_input]\n[YASA] Executing preProcess\n[YASA][preProcess] Executing parseCode\n[YASA][preProcess] Completed parseCode, cost: 8ms, heap: 29.74/64.84 MB, rss: 118.78 MB, arrayBuffers: 2.19 MB\n[YASA][preProcess] Executing processModule\n[YASA][preProcess] Completed processModule, cost: 1ms, heap: 29.93/64.84 MB, rss: 119.66 MB, arrayBuffers: 2.19 MB\n[YASA] Completed preProcess, cost: 38ms, heap: 29.94/64.84 MB, rss: 119.7 MB, arrayBuffers: 2.19 MB\n[YASA] Executing startAnalyze\n[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)\nmakeAllCG-start\n\tmakeAllCG-10%\n\tmakeAllCG-30%\n\tmakeAllCG-70%\n\tmakeAllCG-100%\n[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 12ms, heap: 30.63/64.84 MB, rss: 131.22 MB, arrayBuffers: 2.19 MB\n[YASA] Completed startAnalyze, cost: 13ms, heap: 30.65/64.84 MB, rss: 133.33 MB, arrayBuffers: 2.19 MB\n[YASA] Executing symbolInterpret\nEntryPoint [/vulnerable.c.main] is executing\nEntryPoint [/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-j5nvrqx7/src/vulnerable.c] is executing\n[YASA] Completed symbolInterpret, cost: 7ms, heap: 31.64/65.09 MB, rss: 137.64 MB, arrayBuffers: 2.19 MB\nFound 4 potential output strategy files\nRegistered strategy: callchain from callchain-output-strategy.js\nRegistered strategy: callgraph from callgraph-output-strategy.js\nRegistered strategy: interactive from interactive-output-strategy.js\nRegistered strategy: taintflow from taint-output-strategy.js\nSuccessfully registered 4 output strategies\n\n=======================  outputFindings  =======================\n\n======================== Findings ======================== \n\n-------------  1 :  taint_flow_c_input ------------- \nDescription: C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数\nFile: /vulnerable.c\nLine 10: strcpy(name, input)\nSINK RULE: strcpy\nSINK Attribute: CBufferOverflow\nentrypoint: \n{\n  filePath: '/vulnerable.c',\n  functionName: 'main',\n  attribute: 'fullCallGraphMade',\n  type: 'functionCall',\n  packageName: undefined,\n  funcReceiverType: ''\n}\nTrace: \n /vulnerable.c\n  AffectedNodeName: gets(input)\n  9:   SOURCE:      gets(input);\n /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  35:  CALL:      buffer_overflow_case();\n /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  5:   ARG PASS:  void buffer_overflow_case(void) {\n /vulnerable.c\n  AffectedNodeName: strcpy\n  10:  SINK:      strcpy(name, input);\n==========================================================\n  # Total-findings : 1\n========================================================== \n\nreport is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/1/src/src_c_20260528_145025/report.sarif\n================================================================\n\nanalyze done\n[YASA] Execution completed, cost: 107ms, heap: 32.65/65.34 MB, rss: 137.81 MB, arrayBuffers: 2.27 MB\n\n======================  Analysis Overview  =====================\nLanguage                           : c\nFiles analyzed                     : 1\nLines of code                      : 40\nTotal time                         : 0s104ms\nExecuted instruction               : 82\nExecution count                    : 172\nSources marked                     : 3\nSinks matched                      : 0\nValid entrypoints                  : 2\nFindings                           : 1\nAvg execution time per instruction : 0.00ms\nAvg instruction execution count    : 2.10\nExecution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms\nExecution times 70%/99%/100%       : 2.00/4.00/4.00\n================================================================\n\n\n===================  Performance Statistics  ===================\ntotal cost: 0s107ms\npreProcess cost: 0s38ms (35.5%)\n  parseCode cost: 0s8ms (21.1%)\n    loadFiles cost: 0s1ms (12.5%)\n    parseFiles cost: 0s7ms (87.5%)\n  processModule cost: 0s1ms (2.6%)\n  other cost: 0s29ms (76.3%)\nstartAnalyze cost: 0s13ms (12.1%)\n  makeFullCallGraph(BySymbolInterpret) cost: 0s12ms (92.3%)\n  other cost: 0s1ms (7.7%)\nsymbolInterpret cost: 0s7ms (6.5%)\nother cost: 0s49ms (45.8%)\n================================================================\n\n",
+  "findings": [
+    {
+      "file": "vulnerable.c",
+      "line": 10,
+      "column": 5,
+      "sink_rule": "strcpy",
+      "sink_attribute": "CBufferOverflow",
+      "vuln_name": "缓冲区溢出",
+      "severity": "高危",
+      "message": "C污点分析checker，覆盖命令执行、危险拷贝、格式化输出等基础C风险函数",
+      "snippet": "strcpy(name, input)",
+      "code_flow": [
+        {
+          "step": "Step 0",
+          "line": 9,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: gets(input)\n  9:   SOURCE:      gets(input);\n"
+        },
+        {
+          "step": "Step 1",
+          "line": 35,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  35:  CALL:      buffer"
+        },
+        {
+          "step": "Step 2",
+          "line": 5,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: buffer_overflow_case\n  5:   ARG PASS:  void b"
+        },
+        {
+          "step": "Step 3",
+          "line": 10,
+          "snippet": " /vulnerable.c\n  AffectedNodeName: strcpy\n  10:  SINK:      strcpy(name, input);"
+        }
+      ],
+      "fingerprint": "aa073e8327f6d649"
+    }
+  ],
+  "findings_count": 1,
+  "diagnostics": [
+    {
+      "log_key": "scan_init",
+      "log_time": "2026-05-28 14:50:25",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "src",
+      "string3": "c",
+      "number1": null,
+      "number2": null,
+      "number3": null,
+      "date1": null,
+      "date2": null
+    },
+    {
+      "log_key": "scan_summary",
+      "log_time": "2026-05-28 14:50:25",
+      "string1": "0.3.1 (build 20260526, commit local-c-extension)",
+      "string2": "src",
+      "string3": "{\"projectName\":\"src\",\"projectPath\":\"/var/folders/r5/d760dwfj5z91ghq7ndvsjyn00000gn/T/yasa-upload-j5nvrqx7/src/\",\"yasaVersion\":\"0.3.1 (build 20260526, commit local-c-extension)\",\"parallelWorkers\":1,\"cgAlgorithm\":\"DEFAULT\",\"dumpAllCG\":false,\"dumpAST\":false,\"scanStartTime\":\"2026-05-28T06:50:25.828Z\",\"scanEndTime\":\"2026-05-28T06:50:25.935Z\",\"findingCount\":1,\"language\":\"c\",\"fileCount\":1,\"lineCount\":40,\"totalTimeMs\":107,\"markedSourceCount\":3,\"matchedSinkCount\":0,\"entryPointCount\":2,\"parseMs\":38,\"parseCodeMs\":8,\"preloadMs\":0,\"processModuleMs\":1,\"startAnalyzeMs\":13,\"symbolInterpretMs\":7,\"execCount\":172,\"execInstCount\":82,\"avgExecTimePerInst\":0,\"avgInstExecCount\":2.097560975609756,\"execTimeP70Ms\":0,\"execTimeP99Ms\":0,\"execTimeP100Ms\":0,\"execTimesP70\":2,\"execTimesP99\":4,\"execTimesP100\":4}",
+      "number1": 107,
+      "number2": 40,
+      "number3": 1,
+      "date1": "2026-05-28 14:50:25",
+      "date2": "2026-05-28 14:50:25"
+    }
+  ]
+}

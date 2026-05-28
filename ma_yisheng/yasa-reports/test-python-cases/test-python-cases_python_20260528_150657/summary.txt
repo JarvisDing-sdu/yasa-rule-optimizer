@@ -1,0 +1,332 @@
+============================================================
+【结构化漏洞报告】
+共 4 条（已去重）
+============================================================
+
+## 高危 (4 条)
+----------------------------------------
+
+1. 【命令执行】 vulnerable.py:8
+   代码: os.system(cmd)...
+   污点路径: L7 -> L7 -> L8
+
+2. 【命令执行】 vulnerable.py:13
+   代码: subprocess.run(cmd, var shell:any=true)...
+   污点路径: L12 -> L12 -> L13
+
+3. 【代码执行】 vulnerable.py:18
+   代码: eval(expression)...
+   污点路径: L17 -> L17 -> L18
+
+4. 【SQL 注入】 vulnerable.py:25
+   代码: cursor.execute(sql)...
+   污点路径: L22 -> L22 -> L23 -> L25
+
+============================================================
+
+--- 原始 YASA 输出 ---
+[YASA] Begin execution
+[YASA][init] Using rule config file: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/rules/rule_config_python_minimal.json
+[YASA][init] EntrypointMode set: BOTH
+[YASA][init] Specified checker pack IDs: [taint-flow-python-default]
+version: 0.3.1 (build 20260526, commit local-c-extension)
+v8 heap_size_limit: 11312 MB
+main file:/snapshot/Downloads/YASA-Engine-main/dist/main.js
+[YASA][init] Source path: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-python-cases/
+[YASA][init] Report directory: /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-python-cases/test-python-cases_python_20260528_150657
+[YASA][init] Analysis language: python
+[YASA][init] Analysis analyzer: PythonAnalyzer
+[YASA][init] Loading checker: taint_flow_python_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/python/python-default-taint-checker.js
+[YASA][init] Loading checker: taint_flow_python_django_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/python/django-taint-checker.js
+[YASA][init] Loading checker: taint_flow_python_tornado_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/python/tornado-taint-checker.js
+[YASA][init] Loading checker: taint_flow_python_httpserver_input from /snapshot/Downloads/YASA-Engine-main/dist/checker/taint/python/httpserver-taint-checker.js
+[YASA][init] Loading checker: callgraph from /snapshot/Downloads/YASA-Engine-main/dist/checker/callgraph/callgraph-checker.js
+[YASA][init] Loading checker: sanitizer from /snapshot/Downloads/YASA-Engine-main/dist/checker/sanitizer/sanitizer-checker.js
+[YASA][init] Successfully loaded 6 checker(s): [taint_flow_python_input, taint_flow_python_django_input, taint_flow_python_tornado_input, taint_flow_python_httpserver_input, callgraph, sanitizer]
+[YASA] Executing preProcess
+[YASA][preProcess] Executing parseCode
+[YASA][preProcess] Completed parseCode, cost: 6852ms, heap: 37.97/63.89 MB, rss: 102.52 MB, arrayBuffers: 2.88 MB
+[YASA][preProcess] Executing preload
+[YASA][preProcess] Completed preload, cost: 0ms, heap: 37.99/63.89 MB, rss: 102.52 MB, arrayBuffers: 2.88 MB
+[YASA][preProcess] Executing processModule
+[YASA][preProcess] Completed processModule, cost: 15ms, heap: 40.45/64.39 MB, rss: 104.3 MB, arrayBuffers: 2.89 MB
+[YASA] Completed preProcess, cost: 6871ms, heap: 40.46/64.39 MB, rss: 104.3 MB, arrayBuffers: 2.89 MB
+[YASA] Executing startAnalyze
+[YASA][startAnalyze] Executing makeFullCallGraph(BySymbolInterpret)
+makeAllCG-start
+	makeAllCG-10%
+	makeAllCG-30%
+	makeAllCG-70%
+	makeAllCG-100%
+[YASA][startAnalyze] Completed makeFullCallGraph(BySymbolInterpret), cost: 0ms, heap: 40.58/64.39 MB, rss: 104.44 MB, arrayBuffers: 2.89 MB
+[YASA] Completed startAnalyze, cost: 2ms, heap: 40.6/64.39 MB, rss: 104.47 MB, arrayBuffers: 2.89 MB
+[YASA] Executing symbolInterpret
+EntryPoint [/vulnerable.command_injection_case] is executing
+EntryPoint [/vulnerable.subprocess_case] is executing
+EntryPoint [/vulnerable.code_execution_case] is executing
+EntryPoint [/vulnerable.sql_injection_case] is executing
+EntryPoint [/Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/test-python-cases/vulnerable.py] is executing 
+[YASA] Completed symbolInterpret, cost: 17ms, heap: 44.9/64.64 MB, rss: 108.98 MB, arrayBuffers: 2.89 MB
+Found 4 potential output strategy files
+Registered strategy: callchain from callchain-output-strategy.js
+Registered strategy: callgraph from callgraph-output-strategy.js
+Registered strategy: interactive from interactive-output-strategy.js
+Registered strategy: taintflow from taint-output-strategy.js
+Successfully registered 4 output strategies
+
+=======================  outputFindings  =======================
+
+======================== Findings ======================== 
+
+-------------  1 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 8: os.system(cmd)
+SINK RULE: os.system
+SINK Attribute: PythonCommandExec
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: 'command_injection_case',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(cmd: )
+  7:   SOURCE:      cmd = input("cmd: ")
+ /vulnerable.py
+  AffectedNodeName: cmd
+  7:   Var Pass:      cmd = input("cmd: ")
+ /vulnerable.py
+  AffectedNodeName: os.system
+  8:   SINK:      os.system(cmd)
+
+-------------  2 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 13: subprocess.run(cmd, var shell:any=true)
+SINK RULE: subprocess.run
+SINK Attribute: PythonCommandExec
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: 'subprocess_case',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(subprocess cmd: )
+  12:  SOURCE:      cmd = input("subprocess cmd: ")
+ /vulnerable.py
+  AffectedNodeName: cmd
+  12:  Var Pass:      cmd = input("subprocess cmd: ")
+ /vulnerable.py
+  AffectedNodeName: subprocess.run
+  13:  SINK:      subprocess.run(cmd, shell=True)
+
+-------------  3 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 18: eval(expression)
+SINK RULE: eval
+SINK Attribute: PythonCodeExec
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: 'code_execution_case',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(expr: )
+  17:  SOURCE:      expression = input("expr: ")
+ /vulnerable.py
+  AffectedNodeName: expression
+  17:  Var Pass:      expression = input("expr: ")
+ /vulnerable.py
+  AffectedNodeName: eval
+  18:  SINK:      eval(expression)
+
+-------------  4 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 25: cursor.execute(sql)
+SINK RULE: cursor.execute
+SINK Attribute: PythonSqlInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: 'sql_injection_case',
+  attribute: 'fullCallGraphMade',
+  type: 'functionCall',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(id: )
+  22:  SOURCE:      user_id = input("id: ")
+ /vulnerable.py
+  AffectedNodeName: user_id
+  22:  Var Pass:      user_id = input("id: ")
+ /vulnerable.py
+  AffectedNodeName: sql
+  23:  Var Pass:      sql = "SELECT * FROM users WHERE id = " + user_id
+ /vulnerable.py
+  AffectedNodeName: cursor.execute
+  25:  SINK:      cursor.execute(sql)
+
+-------------  5 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 8: os.system(cmd)
+SINK RULE: os.system
+SINK Attribute: PythonCommandExec
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: undefined,
+  attribute: 'fullfileManagerMade',
+  type: 'fileBegin',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(cmd: )
+  7:   SOURCE:      cmd = input("cmd: ")
+ /vulnerable.py
+  AffectedNodeName: cmd
+  7:   Var Pass:      cmd = input("cmd: ")
+ /vulnerable.py
+  AffectedNodeName: os.system
+  8:   SINK:      os.system(cmd)
+
+-------------  6 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 13: subprocess.run(cmd, var shell:any=true)
+SINK RULE: subprocess.run
+SINK Attribute: PythonCommandExec
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: undefined,
+  attribute: 'fullfileManagerMade',
+  type: 'fileBegin',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(subprocess cmd: )
+  12:  SOURCE:      cmd = input("subprocess cmd: ")
+ /vulnerable.py
+  AffectedNodeName: cmd
+  12:  Var Pass:      cmd = input("subprocess cmd: ")
+ /vulnerable.py
+  AffectedNodeName: subprocess.run
+  13:  SINK:      subprocess.run(cmd, shell=True)
+
+-------------  7 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 18: eval(expression)
+SINK RULE: eval
+SINK Attribute: PythonCodeExec
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: undefined,
+  attribute: 'fullfileManagerMade',
+  type: 'fileBegin',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(expr: )
+  17:  SOURCE:      expression = input("expr: ")
+ /vulnerable.py
+  AffectedNodeName: expression
+  17:  Var Pass:      expression = input("expr: ")
+ /vulnerable.py
+  AffectedNodeName: eval
+  18:  SINK:      eval(expression)
+
+-------------  8 :  taint_flow_python_input ------------- 
+Description: Python污点分析checker，会使用CallGraph边界制作entrypoint
+File: /vulnerable.py
+Line 25: cursor.execute(sql)
+SINK RULE: cursor.execute
+SINK Attribute: PythonSqlInjection
+entrypoint: 
+{
+  filePath: '/vulnerable.py',
+  functionName: undefined,
+  attribute: 'fullfileManagerMade',
+  type: 'fileBegin',
+  packageName: undefined,
+  funcReceiverType: ''
+}
+Trace: 
+ /vulnerable.py
+  AffectedNodeName: input(id: )
+  22:  SOURCE:      user_id = input("id: ")
+ /vulnerable.py
+  AffectedNodeName: user_id
+  22:  Var Pass:      user_id = input("id: ")
+ /vulnerable.py
+  AffectedNodeName: sql
+  23:  Var Pass:      sql = "SELECT * FROM users WHERE id = " + user_id
+ /vulnerable.py
+  AffectedNodeName: cursor.execute
+  25:  SINK:      cursor.execute(sql)
+==========================================================
+  # Total-findings : 8
+========================================================== 
+
+report is write to /Users/infinite/Documents/yasa-rule-optimizer/ma_yisheng/yasa-reports/test-python-cases/test-python-cases_python_20260528_150657/report.sarif
+================================================================
+
+analyze done
+[YASA] Execution completed, cost: 6960ms, heap: 46.97/65.14 MB, rss: 110.89 MB, arrayBuffers: 3 MB
+
+======================  Analysis Overview  =====================
+Language                           : python
+Files analyzed                     : 1
+Lines of code                      : 33
+Total time                         : 6s953ms
+Executed instruction               : 86
+Execution count                    : 237
+Sources marked                     : 8
+Sinks matched                      : 24
+Valid entrypoints                  : 5
+Findings                           : 8
+Avg execution time per instruction : 0.00ms
+Avg instruction execution count    : 2.76
+Execution time 70%/99%/100%        : 0.00ms/0.00ms/0.00ms
+Execution times 70%/99%/100%       : 3.00/4.00/4.00
+================================================================
+
+
+===================  Performance Statistics  ===================
+total cost: 6s960ms
+preProcess cost: 6s871ms (98.7%)
+  parseCode cost: 6s852ms (99.7%)
+  processModule cost: 0s15ms (0.2%)
+  other cost: 0s4ms (0.1%)
+startAnalyze cost: 0s2ms (0.0%)
+symbolInterpret cost: 0s17ms (0.2%)
+other cost: 0s70ms (1.0%)
+================================================================
+
