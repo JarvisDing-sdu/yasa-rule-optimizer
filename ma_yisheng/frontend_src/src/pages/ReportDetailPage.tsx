@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { getFindings, logicAudit } from '../api/reports'
+import { getFindings } from '../api/reports'
 import { chainAnalysis } from '../api/scan'
 import type { Finding } from '../api/reports'
 import { FindingItem } from '../components/report/FindingItem'
@@ -18,13 +18,6 @@ export default function ReportDetailPage() {
   const [findings, setFindings] = useState<Finding[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
-  // Logic audit state
-  const [auditing, setAuditing] = useState(false)
-  const [auditResult, setAuditResult] = useState<{
-    files_analyzed: number; chars_analyzed: number
-    issues: string[]; issues_count: number; summary: string
-  } | null>(null)
 
   // Chain analysis state
   const [chainLoading, setChainLoading] = useState(false)
@@ -46,27 +39,6 @@ export default function ReportDetailPage() {
     '高危': findings.filter(f => f.severity === '高危').length,
     '中危': findings.filter(f => f.severity === '中危').length,
     '低危': findings.filter(f => f.severity === '低危').length,
-  }
-
-  const handleLogicAudit = async () => {
-    setAuditing(true)
-    setAuditResult(null)
-    try {
-      const res = await logicAudit(reportPath)
-      const d = res.data
-      setAuditResult({
-        files_analyzed: d.files_analyzed,
-        chars_analyzed: d.chars_analyzed,
-        issues: d.issues,
-        issues_count: d.issues_count,
-        summary: d.summary,
-      })
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '未知错误'
-      alert(`业务逻辑审计失败: ${msg}`)
-    } finally {
-      setAuditing(false)
-    }
   }
 
   const handleChainAnalysis = async () => {
@@ -133,16 +105,8 @@ export default function ReportDetailPage() {
             </Card>
           </div>
 
-          {/* 审计/分析按钮 */}
+          {/* 分析按钮 */}
           <div className="flex gap-3 flex-wrap">
-            <Button
-              variant="purple"
-              size="md"
-              onClick={handleLogicAudit}
-              disabled={auditing}
-            >
-              {auditing ? '审计中...' : '业务逻辑审计'}
-            </Button>
             {taskId && (
               <Button
                 variant="yellow"
@@ -154,22 +118,6 @@ export default function ReportDetailPage() {
               </Button>
             )}
           </div>
-
-          {/* Logic audit result */}
-          {auditResult && (
-            <Card className="p-4 border-brutal-purple shadow-brutal-purple">
-              <p className="text-xs font-black uppercase text-brutal-purple mb-2">审计结果</p>
-              <p className="text-sm mb-2">{auditResult.summary}</p>
-              <p className="text-xs text-gray-500">分析了 {auditResult.files_analyzed} 个文件，发现 {auditResult.issues_count} 个逻辑漏洞</p>
-              {auditResult.issues.length > 0 && (
-                <div className="mt-2 flex flex-col gap-1">
-                  {auditResult.issues.map((issue, i) => (
-                    <div key={i} className="text-xs border border-brutal-purple bg-purple-50 p-2">{issue}</div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          )}
 
           {/* Chain analysis result */}
           {chainResult && (
