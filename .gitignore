@@ -4,3 +4,7 @@ __pycache__/
 *.pptx
 outputs/
 .env
+users.db*
+yasa-reports/
+.DS_Store
+frontend_dist/
