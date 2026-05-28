@@ -2,282 +2,234 @@
 
 [语言：**中文** | [English](README.en.md)]
 
-基于 YASA 静态分析引擎 + LLM 的代码安全扫描平台。支持多语言漏洞扫描、CVE 驱动的规则自动生成、个人规则库管理，以及 AI Agent 对话式交互。
+基于 YASA 静态分析引擎 + LLM 的代码安全扫描平台。
+**核心创新：规则工坊 —— LLM 辅助的跨语言静态分析规则自动生成与迭代优化。**
 
-## 核心功能
+## 规则工坊（Rule Workshop）★
 
-- **代码漏洞扫描** — YASA（污点追踪）+ Semgrep（模式匹配）双引擎，支持 Python / Java / Go / JavaScript / PHP / C
-- **AI Agent 对话** — 支持工具调用的 Agent 循环，可搜索 GitHub Advisory、生成规则、扫描项目，全程对话式交互
-- **CVE 驱动的规则生成** — 搜索 GitHub Advisory Database → 选中 CVE → LLM 4 阶段管道自动生成 YASA 检测规则，支持 23 种漏洞类型（SQL 注入、命令注入、路径遍历、反序列化、SSRF、XSS、XXE、SSTI 等），覆盖 CWE ID 精确匹配 + 关键词模糊匹配
-- **个人规则库** — 每个用户拥有独立规则空间，可克隆官方规则、自行生成规则、启用/禁用单条规则
-- **扫描时规则选择** — 用户可从官方 + 个人规则库中自由选择要使用的规则集
-- **报告系统** — JSON / SARIF / TXT 多格式报告，支持收藏、导出 HTML、AI 二次研判
+规则工坊是本项目的学术创新点，实现了 **基于 LLM 的 4 阶段规则生成管道 + YASA 真实扫描评估 + 迭代优化闭环**。将论文中"LLM 辅助静态分析规则生成与优化"方法落地为完整工程系统。
+
+### 核心管线
+
+```
+漏洞案例 / CVE 描述
+  │
+  ├─[Stage 1] LLM 分析     → 结构化漏洞描述（source/sink/触发条件/数据流）
+  ├─[Stage 2] LLM 生成     → YASA 规则 JSON（checkerIds/sources/sinks/bridge）
+  ├─[Stage 3] YASA 扫描评估 → 跑真实引擎、对比测试集 → TP/FP/FN/Precision/Recall/F1
+  ├─[Stage 4] LLM 优化     → 根据评估数据精准调整 fsig/args/attribute/scope
+  │
+  └─ 迭代 Stage 3→4 直到 F1 ≥ 0.85 或 3 轮无改进
+```
+
+### 为什么 Stage 3 是关键
+
+传统 LLM 方案只做"生成→自评"，LLM 不知道生成的规则在实际引擎上跑出来是什么效果。
+规则工坊的 Stage 3 把生成的规则写入临时 JSON → 调 YASA 引擎（466MB 二进制）对测试用例做真实扫描 → 解析 SARIF 报告 → 与预期结果对比 → 算出精准的 TP/FP/FN。
+**LLM 拿到的是"3 个正确检出、1 个误报在第 25 行 os.system()、0 个漏报"这种具体数据，而非泛泛的"规则可能有问题"。**
+
+### 规则工坊使用流程
+
+```
+访问 /rule-workshop
+  │
+  ├─ 左侧面板：搜索 CVE
+  │   └─ 按语言/漏洞类型/关键词搜索 GitHub Advisory
+  │       CWE ID 精确匹配 + 23 种漏洞类型覆盖
+  │
+  ├─ 中间面板：生成规则
+  │   ├─ 勾选目标 CVE → 查看详情（描述/影响版本/修复方案）
+  │   ├─ 选择或新建规则集
+  │   └─ 点击生成 → 后端自动：抓取CVE详情 → 4阶段管道 → 校验 → 入库
+  │
+  └─ 右侧面板：管理规则
+      ├─ 规则集列表（官方 + 个人）
+      ├─ 克隆官方规则 / 创建空规则集
+      ├─ 查看单条规则详情（source/sink 定义）
+      └─ 启用/禁用/删除单条规则
+```
+
+### 评估模式
+
+| 模式 | Stage 3 | 适用场景 |
+|------|---------|---------|
+| 完整评估 | YASA 真实扫描 + 测试集对比 | 论文实验、规则质量验证 |
+| 快速模式 | 仅 LLM 自评 | CVE 摄入、快速预览 |
+
+配置测试集：在 `test-{lang}-cases/` 目录下放置源码 + `expected.json`，定义预期的漏洞类型和数量。无测试集时自动降级为快速模式。
+
+### 效率设计
+
+- 规则哈希缓存：同规则不重复扫描
+- 测试用例单文件小样本：秒级扫描
+- 迭代有明确停止条件（F1 达标 / 无改进）
+- Stage 3 可选：`build_rule_pipeline_simple()` 跳过扫描
+
+---
+
+## 代码扫描
+
+### 双引擎
+
+| 引擎 | 方法 | 特点 |
+|------|------|------|
+| YASA | 污点追踪（Taint Analysis） | 深但慢，追踪 source→sink 完整数据流 |
+| Semgrep | 模式匹配（Pattern Matching） | 快但浅，正则+AST 模式 |
+
+### 支持语言
+
+Python / Java / Go / JavaScript / TypeScript / PHP / C
+
+### 扫描流程
+
+```
+登录 → 输入项目路径（或上传 zip）→ 选择引擎/语言/规则模式
+   → 可选：勾选个人规则集 → 扫描 → 查看结构化漏洞报告
+   → AI 二次研判 / 生成修复建议 / 导出 HTML
+```
+
+---
+
+## AI Agent 对话
+
+```
+聊天框描述需求 → Agent 调用工具 → 返回结果
+```
+
+- 「查 Python SSRF 最新 CVE」→ GitHub Advisory 搜索
+- 「根据 CVE-2024-xxx 生成规则」→ 4 阶段管道
+- 「扫描 /home/user/project」→ 调用扫描引擎
+- 「这份报告有哪些高危漏洞」→ 报告分析
+
+---
 
 ## 快速开始
 
-### 1. 配置环境
+### 1. 获取引擎
+
+引擎二进制约 466MB，从 [GitHub Release](https://github.com/JarvisDing-sdu/yasa-rule-optimizer/releases) 获取，放到独立目录。
+
+### 2. 配置
 
 ```bash
 cd ma_yisheng
 cp .env.example .env
-# 编辑 .env，填写 LLM_API_KEY、SMTP 等必要配置
 nano .env
 ```
 
-必需配置项：
+必需：`LLM_API_KEY`、`LLM_MODEL`、`YASA_BUNDLE_PATH`、`JWT_SECRET`、SMTP 配置。
 
-| 配置               | 说明                              |
-| ------------------ | --------------------------------- |
-| `LLM_API_KEY`      | LLM API 密钥（DeepSeek / OpenAI） |
-| `LLM_BASE_URL`     | LLM API 地址                      |
-| `LLM_MODEL`        | 模型名称                          |
-| `YASA_BUNDLE_PATH` | YASA 引擎包路径                   |
-| `JWT_SECRET`       | JWT 签名密钥（随机字符串）        |
-| `SMTP_HOST`        | SMTP 邮件服务器（发送验证码）     |
-| `SMTP_USER`        | SMTP 邮箱账号                     |
-| `SMTP_PASSWORD`    | SMTP 密码 / App Password          |
+可选：`GITHUB_TOKEN`（提升 API 限流）、`SEMGREP_RULES_PATH`（离线规则）、`SCAN_TIMEOUT`。
 
-可选配置：
-
-| 配置                 | 说明                                              |
-| -------------------- | ------------------------------------------------- |
-| `GITHUB_TOKEN`       | GitHub Personal Access Token（提升 API 速率限制） |
-| `SEMGREP_RULES_PATH` | Semgrep 离线规则目录（留空则联网拉取）            |
-| `SCAN_TIMEOUT`       | 扫描超时秒数（默认 300）                          |
-| `DISABLE_SWAGGER`    | 设为 1 关闭 /docs（生产环境建议开启）             |
-
-### 2. 安装依赖
+### 3. 安装与启动
 
 ```bash
-# 使用项目自带的虚拟环境
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r server_requirements.txt
+bash start_server.sh     # → http://localhost:8000
 ```
-
-### 3. 启动服务
-
-```bash
-source .venv/bin/activate
-python3 main.py --host 0.0.0.0 --port 8000
-```
-
-或使用启动脚本：
-
-```bash
-bash start_server.sh
-```
-
-服务默认监听 `http://0.0.0.0:8000`。启动后访问：
 
 - 扫描主页：`http://localhost:8000/`
-- 规则工坊：`http://localhost:8000/rule-workshop`
-- API 文档：`http://localhost:8000/docs`（生产环境建议 `DISABLE_SWAGGER=1` 关闭）
+- **规则工坊**：`http://localhost:8000/rule-workshop`
+- API 文档：`http://localhost:8000/docs`
 
-> **注意**：`users.db` 首次启动或首次注册时自动创建，无需手动建库。
-
-## 工作流程
-
-### 流程一：代码扫描
-
-```
-登录 → 选择扫描路径（本地路径或上传 zip）→ 选择语言/引擎/规则集 → 开始扫描 → 查看报告
-```
-
-1. 在主页登录（邮箱验证码注册 / 密码登录）
-2. 输入项目路径（如 `/home/user/my-project`）或上传 zip 包
-3. 选择扫描引擎（YASA 深但慢 / Semgrep 快但浅）和语言
-4. 可选：勾选个人规则集（规则工坊中创建的）
-5. 等待扫描完成，查看漏洞报告
-6. 可对单条漏洞做 AI 二次研判、生成修复建议、导出 HTML 报告
-
-### 流程二：CVE 驱动的规则构建
-
-```
-规则工坊 → 搜索 CVE → 选择目标 CVE → 选择/创建规则集 → 自动生成规则 → 去主页扫描
-```
-
-1. 访问 `/rule-workshop` 进入规则工坊
-2. 左侧面板：选择语言和漏洞类型（支持 23 种），搜索 GitHub Advisory（自动分页拉取 500 条，CWE ID 精确匹配）
-3. 勾选感兴趣的 CVE（支持多选）
-4. 中间面板：查看 CVE 详情，选择或新建目标规则集
-5. 点击「从选中 CVE 生成规则」→ 后端自动抓取 CVE 详情 → LLM 4 阶段管道生成规则 → 入库
-6. 右侧面板可查看/管理规则集（启用/禁用/删除单条规则）
-7. 回到主页扫描时，就能在规则集选择器中看到刚创建的规则
-
-### 流程三：AI Agent 对话式操作
-
-```
-在聊天框描述需求 → Agent 判断并调用工具 → 返回结果 → 确认并执行
-```
-
-典型对话示例：
-
-- 「帮我查一下 Python SSRF 的最新 CVE」→ Agent 自动调用 GitHub Advisory 搜索
-- 「根据这几条 CVE 生成规则」→ Agent 调用规则构建管道，保存到个人规则库
-- 「扫描 /home/user/my-project」→ Agent 调用扫描引擎，返回漏洞报告
-- 「这份报告里有哪些高危漏洞？」→ Agent 读取报告，总结关键发现
-
-Agent 会主动确认模糊描述（如「你指的是 Python 的 SQL 注入还是命令注入？」），不会凭猜测操作。
+---
 
 ## 项目结构
 
 ```
-ma_yisheng/
-├── main.py                     # FastAPI 应用入口
-├── config.py                   # 配置管理
-├── auth.py                     # 用户认证（JWT + 邮箱验证码）
-├── database.py                 # SQLite 数据库初始化
-├── scanner.py                  # YASA / Semgrep 扫描核心
-├── sarif_parser.py             # SARIF 报告解析 + 去重
-├── llm.py                      # LLM 调用封装
-├── report.py                   # 报告管理（JSON/TXT/HTML）
-├── agent.py                    # Agent tool calling 循环
-├── agent_tools.py              # Agent 工具定义
-├── cve_intel.py                # CVE 情报（NVD/EPSS/KEV/OSV）
-├── rule_generation_api.py      # 规则生成 API
-├── email_service.py            # 邮件发送服务
-├── git_tools.py                # Git 操作工具
-├── chat.py                     # 旧版对话模块
-├── scan.py                     # 旧版扫描模块
-├── scan_service.py             # 扫描后台任务调度
-├── app/                        # FastAPI 应用模块
-│   ├── database.py             # SQLAlchemy 数据库配置
-│   ├── deps.py                 # 共享依赖（DB、认证、任务存储）
-│   ├── middleware/              # 中间件
-│   │   ├── rate_limit.py       # 限流中间件
-│   │   └── security.py         # 安全头中间件
-│   ├── models/                 # SQLAlchemy 模型
-│   │   ├── user.py             # 用户模型
-│   │   ├── user_rule.py        # 规则集/规则模型
-│   │   ├── conversation.py     # 对话记忆模型
-│   │   └── scan_task.py        # 扫描任务模型
-│   ├── routers/                # API 路由
-│   │   ├── auth.py             # /api/auth/* 认证接口
-│   │   ├── scan.py             # /api/scan/* 扫描接口
-│   │   ├── report.py           # /api/reports/* 报告接口
-│   │   ├── chat.py             # /api/chat/* 对话/Agent 接口
-│   │   ├── rule_sets.py        # /api/rule-sets/* 规则集 CRUD
-│   │   ├── cve.py              # /api/cve/* CVE 搜索/摄入
-│   │   ├── health.py           # /api/health/* 健康检查
-│   │   └── conversation.py     # 对话记忆管理
-│   ├── schemas/                # Pydantic 请求/响应模型
-│   │   ├── auth.py
-│   │   ├── scan.py
-│   │   └── rule_set.py
-│   └── services/               # 业务逻辑
-│       ├── scan_service.py     # 扫描后台任务
-│       ├── rule_service.py     # 规则管理/CVE搜索/规则合并
-│       └── memory.py           # 对话记忆管理
-├── rules/                      # 官方规则库（JSON）
-│   ├── rule_config_python_full.json
-│   ├── rule_config_python_minimal.json
-│   ├── rule_config_php_full.json
-│   ├── rule_config_php_minimal.json
-│   ├── rule_config_c_full.json
-│   ├── rule_config_c_minimal.json
-│   ├── rule_config_java_full.json
-│   ├── rule_config_java_minimal.json
-│   ├── rule_config_go_full.json
-│   ├── rule_config_go_minimal.json
-│   ├── rule_config_js_full.json
-│   └── rule_config_js_minimal.json
-├── static/                     # 静态文件
-│   └── rule-workshop.html      # 规则工坊页面
-├── frontend_src/               # 前端 React 源码（Vite）
-├── frontend_dist/              # 前端构建产物
-│   ├── index.html              # React SPA 主页
-│   └── rule-workshop.html      # 规则工坊
-├── uploads/                    # 上传文件临时目录
-├── yasa_engine/                # YASA 引擎 SDK
-├── .env                        # 环境配置（不入库）
-├── .env.example                # 环境配置模板
-├── server_requirements.txt     # Python 依赖
-└── start_server.sh             # 启动脚本
+ma_yisheng/                        # 所有运行代码
+├── main.py                        # FastAPI 入口
+├── config.py                      # 配置管理
+├── scanner.py                     # 双引擎扫描核心
+├── sarif_parser.py                # SARIF 解析 + 去重
+├── llm.py                         # LLM 调用（4-stage 管道函数）
+├── rule_evaluator.py              # ★ 规则评估器（YASA扫描→对比预期→F1）
+├── rule_generation_api.py         # 规则生成独立端点
+├── agent.py / agent_tools.py      # Agent + 工具定义
+├── report.py                      # 报告管理
+├── auth.py / email_service.py     # 认证 + 邮件
+│
+├── app/
+│   ├── routers/                   # API 路由
+│   │   ├── auth.py, scan.py, report.py, chat.py
+│   │   ├── cve.py                 # CVE 搜索/摄入
+│   │   └── rule_sets.py           # 规则集 CRUD
+│   ├── services/
+│   │   ├── rule_service.py        # ★ 规则管道 + 迭代优化
+│   │   └── scan_service.py        # 后台扫描调度
+│   ├── models/                    # SQLAlchemy 模型
+│   └── middleware/                # rate_limit / security
+│
+├── rules/                         # 官方规则库（6 语言 × full/minimal）
+├── test-python-cases/             # 测试用例 + expected.json
+├── frontend_src/                  # React 前端（Vite）
+├── .env.example
+├── server_requirements.txt
+└── start_server.sh
 ```
+
+---
 
 ## API 概览
 
-所有 API 默认前缀 `/api`，需携带 JWT Token（`Authorization: Bearer <token>`）。
+### 规则工坊
 
-### 认证
-
-| 接口                            | 说明           |
-| ------------------------------- | -------------- |
-| `POST /api/auth/send-code`      | 发送邮箱验证码 |
-| `POST /api/auth/register`       | 验证码注册     |
-| `POST /api/auth/login`          | 密码登录       |
-| `POST /api/auth/reset-password` | 重置密码       |
+| 接口 | 说明 |
+|------|------|
+| `GET /api/cve/search` | 搜索 GitHub Advisory（CWE/关键词/语言） |
+| `GET /api/cve/detail/{ghsa_id}` | CVE 详情 |
+| `POST /api/cve/ingest` | 批量摄入 CVE → 4 阶段管道 → 入库 |
+| `POST /api/cve/generate-rules` | 从漏洞描述直接生成规则 |
+| `GET /api/rule-sets` | 列出规则集 |
+| `POST /api/rule-sets` | 创建规则集 |
+| `POST /api/rule-sets/{id}/clone-official` | 克隆官方规则 |
+| `PUT /api/rule-sets/{id}/rules/{db_id}/toggle` | 启用/禁用 |
 
 ### 扫描
 
-| 接口                                      | 说明             |
-| ----------------------------------------- | ---------------- |
-| `POST /api/scan`                          | 扫描本地路径     |
-| `POST /api/scan/upload`                   | 上传 zip 扫描    |
-| `GET /api/scan/{task_id}`                 | 查询扫描进度     |
-| `GET /api/tasks`                          | 历史任务列表     |
-| `POST /api/scan/{task_id}/chain-analysis` | 跨文件漏洞链分析 |
+| 接口 | 说明 |
+|------|------|
+| `POST /api/scan` | 扫描路径 |
+| `POST /api/scan/upload` | 上传 zip 扫描 |
+| `GET /api/scan/{task_id}` | 查询进度 |
+| `GET /api/tasks` | 历史列表 |
 
 ### 报告
 
-| 接口                                       | 说明           |
-| ------------------------------------------ | -------------- |
-| `GET /api/reports`                         | 报告列表       |
-| `GET /api/reports/{path}/content`          | 报告内容       |
-| `GET /api/reports/{path}/findings`         | 结构化漏洞列表 |
-| `POST /api/reports/{path}/findings/review` | AI 二次研判    |
-| `POST /api/reports/{path}/findings/fix`    | 修复建议       |
-| `GET /api/reports/{path}/export`           | 导出 HTML      |
-| `POST /api/reports/{path}/chat`            | 报告对话       |
-| `GET /api/reports/{path}/chat/stream`      | 报告流式对话   |
-
-### 规则集
-
-| 接口                                           | 说明                |
-| ---------------------------------------------- | ------------------- |
-| `GET /api/rule-sets`                           | 列出官方+个人规则集 |
-| `POST /api/rule-sets`                          | 创建规则集          |
-| `GET /api/rule-sets/{id}`                      | 规则集详情+规则列表 |
-| `DELETE /api/rule-sets/{id}`                   | 删除规则集          |
-| `POST /api/rule-sets/{id}/clone-official`      | 克隆官方规则        |
-| `PUT /api/rule-sets/{id}/rules/{db_id}/toggle` | 启用/禁用规则       |
-| `DELETE /api/rule-sets/{id}/rules/{db_id}`     | 删除规则            |
-
-### CVE
-
-| 接口                            | 说明                                                         |
-| ------------------------------- | ------------------------------------------------------------ |
-| `GET /api/cve/search`           | 搜索 GitHub Advisory（支持 vuln_type/keyword/language/count） |
-| `GET /api/cve/detail/{ghsa_id}` | CVE 详情                                                     |
-| `POST /api/cve/ingest`          | 批量摄入 CVE 生成规则                                        |
-| `POST /api/cve/generate-rules`  | 从漏洞描述直接生成规则                                       |
+| 接口 | 说明 |
+|------|------|
+| `GET /api/reports` | 报告列表 |
+| `GET /api/reports/{path}/findings` | 结构化的漏洞列表 |
+| `POST /api/reports/{path}/findings/review` | AI 二次研判 |
+| `GET /api/reports/{path}/export` | 导出 HTML |
 
 ### Agent
 
-| 接口                          | 说明                    |
-| ----------------------------- | ----------------------- |
-| `POST /api/chat/agent`        | Agent 对话（JSON 响应） |
-| `POST /api/chat/agent/stream` | Agent 对话（SSE 流式）  |
-| `POST /api/chat`              | 普通 LLM 对话           |
-| `POST /api/chat/upload`       | 上传文件供 Agent 分析   |
+| 接口 | 说明 |
+|------|------|
+| `POST /api/chat/agent` | Agent 对话 |
+| `POST /api/chat/agent/stream` | Agent 流式 |
+| `POST /api/chat/upload` | 上传文件分析 |
 
-### 健康检查
+### 认证
 
-| 接口                        | 说明                             |
-| --------------------------- | -------------------------------- |
-| `GET /api/health`           | 服务健康状态（含数据库连接检查） |
-| `GET /api/health/readiness` | 就绪检查                         |
+| 接口 | 说明 |
+|------|------|
+| `POST /api/auth/send-code` | 发送验证码 |
+| `POST /api/auth/register` | 注册 |
+| `POST /api/auth/login` | 登录 |
+
+---
 
 ## 部署注意事项
 
-1. **YASA 引擎**：确保 `YASA_BUNDLE_PATH` 指向正确的引擎目录，引擎二进制需有执行权限
-2. **邮件服务**：SMTP 配置必须正确，否则用户无法注册（Gmail 需使用 App Password）
-3. **GitHub Token**：建议配置 `GITHUB_TOKEN`，未认证 API 限流为 60 次/小时，认证后 5000 次/小时
-4. **JWT_SECRET**：生产环境务必修改为强随机字符串
-5. **Swagger 文档**：生产环境建议 `DISABLE_SWAGGER=1` 关闭 `/docs`
-6. **数据库**：`users.db` 自动创建，无需手动初始化；数据库文件不入版本控制
-7. **前端**：前端构建产物在 `frontend_dist/`，由 FastAPI 直接 serve；源码在 `frrontend_src/` 使用 Vite 构建
+1. **引擎**：466MB 二进制，从 GitHub Release 获取；包含 C/PHP checker 支持
+2. **测试集**：规则工坊 Stage 3 评估需要 `test-*-cases/expected.json`，无则自动降级
+3. **GitHub Token**：未认证限流 60/h，认证后 5000/h
+4. **SMTP**：Gmail 需 App Password
+5. **JWT_SECRET**：生产环境务必修改
 
 ## License
 

@@ -772,14 +772,32 @@ async def fetch_cve_detail(ghsa_id: str, github_token: str = "") -> Optional[Dic
 
 def build_rule_pipeline(vuln_case: Dict, provider: str = "deepseek",
                         model: Optional[str] = None,
-                        api_key: Optional[str] = None) -> Optional[List[Dict]]:
+                        api_key: Optional[str] = None,
+                        test_dirs: Optional[List[str]] = None,
+                        max_iterations: int = 3,
+                        target_f1: float = 0.85,
+                        on_progress=None) -> Optional[Dict[str, Any]]:
     """
-    Run the full 4-stage rule generation pipeline on a vulnerability case.
+    运行完整的 4 阶段规则生成管道 + 迭代优化（论文方法）。
+
     Stages:
-      1. Structured vulnerability description (LLM)
-      2. Generate candidate rule (LLM)
-      3. Analyze rule quality (LLM)
-      4. Optimize rule based on analysis (LLM)
+      1. 结构化漏洞描述 (LLM)
+      2. 生成候选规则 (LLM)
+      3. YASA 扫描评估 → TP/FP/FN (真实扫描 + 对比预期)
+      4. 基于评估结果优化规则 (LLM)
+      迭代: 重复 3→4 直到 F1 达标或达到最大轮次
+
+    Args:
+        vuln_case: 漏洞案例字典
+        test_dirs: 测试目录列表，用于 Stage 3 评估。不传则跳过扫描评估（降级到 LLM 自评）
+        max_iterations: 最大迭代次数
+        target_f1: 目标 F1 分数，达到后停止
+        on_progress: 回调 on_progress(stage, message)
+
+    Returns:
+        { "rules": [...], "best_rule": {...}, "best_f1": float,
+          "iterations": [...], "evaluations": [...] }
+        失败返回 None
     """
     from llm import generate_rule_from_case, analyze_rule_quality, optimize_rule
 
@@ -792,7 +810,9 @@ def build_rule_pipeline(vuln_case: Dict, provider: str = "deepseek",
     lang = str(vuln_case.get("language") or "python")
     code_snippet = vuln_case.get("source_code_before") or ""
 
-    # Stage 1+2: Generate initial rule
+    # ── Stage 1+2: 生成初始规则 ──────────────────────────────────────────
+    if on_progress:
+        on_progress("generate", f"Stage 1+2: 生成 {lang} 规则...")
     rules = generate_rule_from_case(
         vuln_description=f"{vuln_case.get('vulnerability_type')}: {vuln_case.get('notes') or vuln_case.get('summary') or ''}",
         lang=lang,
@@ -801,22 +821,108 @@ def build_rule_pipeline(vuln_case: Dict, provider: str = "deepseek",
     if not rules:
         return None
 
-    # Stage 3+4: Analyze and optimize (one iteration)
-    for i, rule in enumerate(rules):
-        quality = analyze_rule_quality(rule, [])
-        if quality and quality.get("issues"):
+    best_rule = rules[0]
+    best_f1 = 0.0
+    iterations_log = []
+    evaluations_log = []
+
+    # ── Stage 3+4 迭代循环 ──────────────────────────────────────────────
+    for iteration in range(max_iterations):
+        if on_progress:
+            on_progress("iterate", f"迭代 {iteration + 1}/{max_iterations}...")
+
+        improved = False
+        for i, rule in enumerate(rules):
+            # Stage 3: 评估
+            evaluation = None
+            if test_dirs:
+                # 真实 YASA 扫描评估 ✨
+                if on_progress:
+                    on_progress("eval", f"Stage 3: YASA 扫描评估规则...")
+                from rule_evaluator import evaluate_rule_multi_test
+                evaluation = evaluate_rule_multi_test(
+                    rule, lang, test_dirs,
+                    timeout=180,
+                    use_cache=False,  # 迭代时不缓存,每次可能规则不同
+                    on_progress=on_progress,
+                )
+                evaluations_log.append({
+                    "iteration": iteration, "rule_index": i,
+                    "f1": evaluation["f1"], "tp": evaluation["tp"],
+                    "fp": evaluation["fp"], "fn": evaluation["fn"],
+                })
+
+            # Stage 3: LLM 分析（喂真实评估数据）
+            if on_progress:
+                on_progress("analyze", f"Stage 3: 分析评估结果...")
+            scan_findings = evaluation.get("findings", []) if evaluation else []
+            quality = analyze_rule_quality(
+                rule, scan_findings,
+                evaluation=evaluation,
+            )
+            if not quality or not quality.get("issues"):
+                continue
+
+            # Stage 4: 优化
+            if on_progress:
+                on_progress("optimize", f"Stage 4: 优化规则...")
             optimized = optimize_rule(rule, quality, lang)
             if optimized and len(optimized) > 0:
                 rules[i] = optimized[0] if isinstance(optimized, list) else optimized
+                improved = True
 
-    # Add generation metadata
+            # 检查是否已经足够好（深拷贝避免后续优化覆盖）
+            if evaluation and evaluation["f1"] > best_f1:
+                best_f1 = evaluation["f1"]
+                best_rule = json.loads(json.dumps(rule, ensure_ascii=False))
+            elif evaluation is None:
+                best_rule = rule  # 无评估时保留最后一次
+
+        iterations_log.append({
+            "iteration": iteration,
+            "improved": improved,
+            "best_f1": best_f1,
+        })
+
+        # 提前退出条件
+        if best_f1 >= target_f1:
+            if on_progress:
+                on_progress("done", f"F1={best_f1:.3f} 已达标 (≥{target_f1})，停止迭代")
+            break
+        if not improved:
+            if on_progress:
+                on_progress("done", "本轮无改进，停止迭代")
+            break
+
+    # ── 添加元数据 ──────────────────────────────────────────────────────
     for rule in rules:
         meta = rule.setdefault("metadata", {})
         meta.setdefault("generatedAt", datetime.now(timezone.utc).isoformat())
         meta.setdefault("generatedBy", "ma_yisheng_rule_workshop")
         meta.setdefault("caseId", vuln_case.get("case_id", ""))
+        meta.setdefault("bestF1", best_f1)
 
-    return rules
+    return {
+        "rules": rules,
+        "best_rule": best_rule,
+        "best_f1": best_f1,
+        "iterations": iterations_log,
+        "evaluations": evaluations_log,
+    }
+
+
+def build_rule_pipeline_simple(vuln_case: Dict, provider: str = "deepseek",
+                               model: Optional[str] = None,
+                               api_key: Optional[str] = None) -> Optional[List[Dict]]:
+    """
+    快速模式：仅 Stage 1+2 + LLM 自评，不跑 YASA 扫描。
+    用于没有测试集的场景或快速预览。
+    """
+    result = build_rule_pipeline(
+        vuln_case, provider=provider, model=model, api_key=api_key,
+        test_dirs=None, max_iterations=1,
+    )
+    return result["rules"] if result else None
 
 
 def ingest_cves_to_rules(user_id: int, rule_set_id: int, ghsa_ids: List[str],
@@ -871,9 +977,11 @@ def ingest_cves_to_rules(user_id: int, rule_set_id: int, ghsa_ids: List[str],
         if on_progress:
             on_progress("generate", f"为 {ghsa_id} 生成规则...")
 
-        # Run pipeline
+        # Run pipeline (快速模式，无测试集评估)
         try:
-            rules = build_rule_pipeline(vuln_case, provider, model, api_key)
+            result = build_rule_pipeline(vuln_case, provider, model, api_key,
+                                         test_dirs=None, max_iterations=1)
+            rules = result["rules"] if result else None
         except Exception as e:
             results["details"].append({
                 "ghsa_id": ghsa_id, "status": "pipeline_failed",

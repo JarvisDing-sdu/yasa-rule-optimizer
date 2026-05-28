@@ -1,0 +1,8 @@
+{
+  "description": "Python 漏洞测试预期结果 - 对应 vulnerable.py 中的 4 个漏洞",
+  "expected_findings": [
+    {"vuln_type": "PythonCommandExec", "file": "vulnerable.py", "min_count": 2},
+    {"vuln_type": "PythonCodeExec", "file": "vulnerable.py", "min_count": 1},
+    {"vuln_type": "PythonSqlInjection", "file": "vulnerable.py", "min_count": 1}
+  ]
+}

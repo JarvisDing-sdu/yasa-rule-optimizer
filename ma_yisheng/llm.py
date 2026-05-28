@@ -829,47 +829,76 @@ def analyze_rule_quality(
     scan_findings: List[Dict[str, Any]],
     false_positives=None,
     false_negatives=None,
+    evaluation: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
-    分析扫描结果的误报/漏报，给出改进方向（对应 GitHub 管道 LLM-3）。
+    分析扫描结果的误报/漏报，给出改进方向（对应论文 Stage 3 LLM-3）。
     rule: 当前使用的规则 JSON
     scan_findings: 扫描找出的漏洞列表
     false_positives: 用户标记为误报的漏洞摘要（可选）
     false_negatives: 用户标记为漏报的漏洞摘要（可选）
+    evaluation: rule_evaluator 返回的评估结果（含 TP/FP/FN/precision/recall/f1）
     返回 {"issues": [...], "recommendation": str}，失败返回 None。
     """
     if not LLM_API_KEY:
         return None
 
-    summary = f"规则扫描到 {len(scan_findings)} 个潜在漏洞。"
+    # 优先使用真实 YASA 扫描评估结果
+    eval_text = ""
+    if evaluation and evaluation.get("success"):
+        eval_text = (
+            f"## 真实扫描评估\n"
+            f"- TP（正确检出）: {evaluation['tp']}\n"
+            f"- FP（误报）: {evaluation['fp']}\n"
+            f"- FN（漏报）: {evaluation['fn']}\n"
+            f"- Precision: {evaluation['precision']}\n"
+            f"- Recall: {evaluation['recall']}\n"
+            f"- F1: {evaluation['f1']}\n"
+            f"- 扫描耗时: {evaluation.get('scan_time', '?')}s\n"
+        )
+        # 附上具体的 FP/FN 详情，帮助 LLM 精准定位
+        if evaluation.get("unmatched"):
+            eval_text += "\n## 误报详情（扫描发现但不在预期中）\n"
+            for item in evaluation["unmatched"][:5]:
+                f = item.get("finding", {})
+                eval_text += f"- [{f.get('vuln_name', '?')}] {f.get('file', '')}:{f.get('line', 0)} — {item.get('reason', '')}\n"
+        if evaluation.get("missed"):
+            eval_text += "\n## 漏报详情（预期但未扫描到）\n"
+            for item in evaluation["missed"][:5]:
+                e = item.get("expected", {})
+                eval_text += f"- {e.get('vuln_type', '?')} @ {e.get('file', '?')} — {item.get('reason', '')}\n"
+
     fp_text = ""
     fn_text = ""
-
     if false_positives:
         fp_text = "## 已确认误报\n" + "\n".join(f"- {x}" for x in false_positives)
     if false_negatives:
         fn_text = "## 已确认漏报\n" + "\n".join(f"- {x}" for x in false_negatives)
 
-    if not fp_text and not fn_text:
+    if not fp_text and not fn_text and not eval_text:
+        summary = f"规则扫描到 {len(scan_findings)} 个潜在漏洞。"
         fp_text = "## 扫描结果概述\n" + "\n".join(
             f"- [{f.get('severity', '?')}] {f.get('vuln_name', '')} @ {f.get('file', '')}:{f.get('line', 0)}"
             for f in scan_findings[:15]
         )
+        eval_text = summary + "\n\n" + fp_text
 
-    system = """你是 YASA 静态分析规则优化专家。分析当前规则的误报/漏报问题，给出精准的改进方案。
+    system = """你是 YASA 静态分析规则优化专家。根据真实扫描评估数据（TP/FP/FN/Precision/Recall），分析当前规则的问题并给出精准改进方案。
+
 关注点：
 - source/sink 的 fsig 是否过于宽泛？是否匹配到了不应匹配的函数？
-- 是否需要增加 sanitizer？
+- 是否需要增加 sanitizer 排除安全路径？
 - sink 的 attribute 是否正确归类？
-- 是否有遗漏的 source 入口？
+- 是否有遗漏的 source 入口导致漏报？
+- 根据 FP/FN 详情，哪些具体函数签名需要调整？
 
 只输出一个 JSON 对象，不要 markdown：
 {"issues":[{"problem":"具体问题","severity":"高|中|低","suggestion":"改进方案"}],"recommendation":"总体优化方向（1-2句）"}"""
 
     user = (
         f"## 当前规则\n```json\n{json.dumps(rule, ensure_ascii=False, indent=2)}\n```\n\n"
-        f"{summary}\n\n{fp_text}\n\n{fn_text}\n\n"
-        "请分析规则质量，给出改进建议。"
+        f"{eval_text}\n\n{fp_text}\n\n{fn_text}\n\n"
+        "请根据以上真实评估数据，分析规则质量，给出改进建议。"
     )
 
     result = call_llm(system, user)

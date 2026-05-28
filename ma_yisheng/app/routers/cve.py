@@ -89,7 +89,9 @@ async def generate_rules_from_case(
     model = body.get("model")
     api_key = body.get("api_key")
 
-    rules = build_rule_pipeline(vuln_case, provider, model, api_key)
+    result = build_rule_pipeline(vuln_case, provider, model, api_key,
+                                 test_dirs=None, max_iterations=1)
+    rules = result["rules"] if result else None
     if not rules:
         raise HTTPException(status_code=500, detail="规则生成失败，LLM 返回为空")
 
