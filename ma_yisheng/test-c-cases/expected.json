@@ -1,0 +1,8 @@
+{
+  "vulnerabilities": [
+    {
+      "type": "command-injection",
+      "count": 1
+    }
+  ]
+}

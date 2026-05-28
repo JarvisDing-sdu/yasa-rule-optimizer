@@ -21,9 +21,10 @@ client.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('email')
-      window.location.href = '/login'
+      // 不 reject，避免调用方显示错误（本拦截器已处理跳转）
+      setTimeout(() => { window.location.href = '/login' }, 0)
+      return Promise.resolve({ data: null } as any)
     }
-    // 把后端 detail 转成 Error message，方便页面直接展示
     const detail = err.response?.data?.detail
     if (detail) {
       return Promise.reject(new Error(typeof detail === 'string' ? detail : JSON.stringify(detail)))
