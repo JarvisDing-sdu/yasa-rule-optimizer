@@ -1,8 +1,0 @@
-2026-05-25 21:02:01.976 INFO version: 0.2.19-inner-dev
-2026-05-25 21:02:01.976 INFO v8 heap_size_limit: 13360 MB
-2026-05-25 21:02:01.976 INFO main file:/snapshot/YASA-Engine/dist/main.js
-2026-05-25 21:02:01.977 INFO [YASA] Begin execution
-2026-05-25 21:02:01.977 INFO [YASA][init] Source path: /Users/infinite/Downloads/yasa-macos-arm64/test.py
-2026-05-25 21:02:01.978 INFO dump file AST: /Users/infinite/Downloads/yasa-macos-arm64/test.py
-2026-05-25 21:02:06.094 INFO [python-ast-builder] 解析python AST时发生错误
-2026-05-25 21:02:06.099 INFO ERROR occurred in main.run!!
