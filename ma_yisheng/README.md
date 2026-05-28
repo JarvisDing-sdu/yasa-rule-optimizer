@@ -80,13 +80,89 @@
 
 Python / Java / Go / JavaScript / TypeScript / PHP / C
 
-### 扫描流程
+### 扫描架构
 
 ```
-登录 → 输入项目路径（或上传 zip）→ 选择引擎/语言/规则模式
-   → 可选：勾选个人规则集 → 扫描 → 查看结构化漏洞报告
-   → AI 二次研判 / 生成修复建议 / 导出 HTML
+用户请求 POST /api/scan
+  │
+  ▼
+app/routers/scan.py          ← 认证、创建任务、启动后台扫描
+  │
+  ▼
+app/services/scan_service.py ← 调度层：判语言/判引擎/汇总结果
+  │
+  ├─ engine=yasa ───────────────────────────────────────┐
+  │  scanner.run_yasa_scan()  /  run_multi_lang_scan()   │
+  │    │                                                  │
+  │    ├─ config.get_rule_config_path(lang, scene)       │  规则文件路径
+  │    ├─ config.get_uast_sdk_path(lang)                │  uast 解析器路径
+  │    ├─ config.get_checker_pack_and_analyzer(lang)    │  checker/analyzer
+  │    │                                                  │
+  │    ├─ 拼命令: yasa-engine-linux-x64 \                 │
+  │    │    --ruleConfigFile rules/rule_config_py_minimal.json \
+  │    │    --sourcePath /path/to/project \               │
+  │    │    --language python \                            │
+  │    │    --checkerPackIds taint-flow-python-default \   │
+  │    │    --analyzer PythonAnalyzer \                    │
+  │    │    --uastSDKPath /path/to/uast4py \               │
+  │    │    --report yasa-reports/{user_id}/{project}/...  │
+  │    │                                                  │
+  │    ├─ 源码 → uast4py 解析 → 统一 UAST 中间表示       │
+  │    ├─ Checker 在 UAST 上做污点追踪                   │
+  │    └─ 输出 SARIF 报告到 report_dir                   │
+  │                                                      │
+  ├─ engine=semgrep ────────────────────────────────────┤
+  │  scanner.run_semgrep_scan()                           │
+  │    ├─ 优先读本地 SEMGREP_RULES_PATH（离线规则）      │
+  │    ├─ 否则联网拉 p/python、p/owasp-top-ten 等         │
+  │    └─ 输出标准 SARIF 报告                            │
+  │                                                      │
+  ▼                                                      │
+report.save_report(report_dir)   ← 解析 SARIF → JSON + TXT
+  └─ sarif_parser.parse_sarif() ← 去重 + 严重度分类 + 结构化
+  │
+  ▼
+任务状态 → "done"，前端轮询获取结构化漏洞列表 → 展示
 ```
+
+### YASA 引擎内部链路
+
+```
+源码 (.py / .java / .go / .js / .php / .c)
+      ↓ uast4py / uast4go / 内嵌 parser (npm pkg)
+统一 UAST（中间表示 Abstract Syntax Tree）
+      ↓
+Checker 框架在 UAST 上跑规则
+  ├─ TaintChecker: 污点追踪（source → propagation → sink）
+  ├─ 规则 JSON 定义 source/sink/sanitizer（函数签名 + 参数位置）
+  └─ 桥接（bridge）处理跨函数/跨文件数据流
+      ↓
+SARIF 报告（含 sinkAttribute / codeFlows / 文件行号 / snippet）
+```
+
+### 规则模式
+
+| 模式 | 规则数 | 适用场景 |
+|------|--------|---------|
+| minimal | 精简核心规则 | 日常扫描，速度快 |
+| full | 完整规则集 | 全面审计，检出率高 |
+
+### 扫描流程（用户操作）
+
+1. **登录** — 邮箱验证码注册 / 密码登录
+2. **输入目标** — 本地路径（如 `/home/user/project`）或上传 zip 包
+3. **选择参数**
+   - 引擎：YASA（深，推荐安全审计）/ Semgrep（快，推荐日常检查）
+   - 语言：auto 自动检测 / 手动指定
+   - 规则模式：minimal / full
+   - 可选：勾选个人规则集（规则工坊中创建的）
+4. **等待扫描** — 后台异步执行，前端轮询进度
+5. **查看报告** — 结构化漏洞列表（去重、按严重度排序、含污点路径）
+6. **AI 辅助**
+   - 单条漏洞 AI 二次研判（判断真漏洞/误报）
+   - 生成修复建议
+   - 导出 HTML 报告
+   - 跨文件漏洞链分析
 
 ---
 
