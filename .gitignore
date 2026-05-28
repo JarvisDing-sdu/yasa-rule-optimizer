@@ -8,3 +8,4 @@ users.db*
 yasa-reports/
 .DS_Store
 frontend_dist/
+logs/

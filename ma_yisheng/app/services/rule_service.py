@@ -389,6 +389,10 @@ def merge_rules_for_scan(user_id: int, lang: str,
 
 # ── CVE search ──────────────────────────────────────────────────────────────
 
+# 缓存 GitHub Advisory 搜索结果（5分钟过期，避免重复请求）
+_advisory_cache: Dict[str, tuple] = {}  # key -> (timestamp, results)
+_CACHE_TTL = 300  # 5 分钟
+
 def search_github_advisories_sync(language: str, vuln_type: str = "",
                                    count: int = 10, keyword: str = "",
                                    github_token: str = "") -> List[Dict]:
@@ -401,6 +405,15 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
     import urllib.request
     import urllib.parse
     import ssl
+
+    # 缓存: 同语言 5 分钟内复用
+    cache_key = f"advisory_{language}"
+    if cache_key in _advisory_cache:
+        ts, cached = _advisory_cache[cache_key]
+        if _time.time() - ts < _CACHE_TTL:
+            all_advisories = cached
+        else:
+            del _advisory_cache[cache_key]
 
     ecosystem_map = {"python": "pip", "java": "maven", "javascript": "npm", "js": "npm", "go": "go", "php": "composer"}
     ecosystem = ecosystem_map.get(language.lower(), "")
@@ -657,6 +670,9 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
         if page < max_pages:
             _time.sleep(0.5)
 
+    # 缓存原始结果
+    _advisory_cache[cache_key] = (_time.time(), list(all_advisories))
+
     # ── Keyword filter (on full advisory text) ────────────────────────────
     results = all_advisories
     if keyword:
@@ -664,7 +680,7 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
         results = [r for r in results
                    if kw in r["summary"].lower()
                    or kw in r["description"].lower()
-                   or kw in r.get("cve_id", "").lower()]
+                   or kw in (r.get("cve_id") or "").lower()]
 
     # ── Vuln type filter (CWE first, then keyword fallback) ───────────────
     if vuln_type:
