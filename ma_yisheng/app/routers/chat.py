@@ -5,7 +5,7 @@ import json as _json
 from typing import Any, Dict, List
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query, Body
 from fastapi.responses import StreamingResponse
 from app.deps import get_current_user
 from app.schemas.scan import ChatRequest
@@ -204,8 +204,8 @@ def report_chat_endpoint(report_path: str, req: ChatRequest, user: Dict = Depend
     return {"reply": reply}
 
 
-@router.get("/reports/{report_path:path}/chat/stream", summary="报告流式对话")
-def report_chat_stream_endpoint(report_path: str, messages: str, user: Dict = Depends(get_current_user)):
+@router.post("/reports/{report_path:path}/chat/stream", summary="报告流式对话")
+def report_chat_stream_endpoint(report_path: str, messages: str = Body(..., embed=True), user: Dict = Depends(get_current_user)):
     from app.routers.report import _assert_report_owner
     _assert_report_owner(report_path, user["user_id"])
     from llm import chat_with_report_stream

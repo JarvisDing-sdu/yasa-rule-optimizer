@@ -106,8 +106,25 @@ _WEAK_JWT_DEFAULTS = {
 }
 if _JWT_SECRET_RAW in _WEAK_JWT_DEFAULTS:
     import secrets as _secrets
-    _JWT_SECRET_RAW = _secrets.token_urlsafe(48)
-    print("[config] JWT_SECRET 未设置或仍为默认值，已自动替换为随机密钥（服务重启后失效，请在 .env 中设置 JWT_SECRET）")
+    # 尝试从持久化文件恢复上次自动生成的密钥，避免重启后登录态全部失效
+    _jwt_persist_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".jwt_secret")
+    try:
+        if os.path.exists(_jwt_persist_file):
+            with open(_jwt_persist_file, "r") as _f:
+                _cached = _f.read().strip()
+            if _cached:
+                _JWT_SECRET_RAW = _cached
+                print("[config] JWT_SECRET 已从本地缓存恢复")
+    except Exception:
+        pass
+    if _JWT_SECRET_RAW in _WEAK_JWT_DEFAULTS:
+        _JWT_SECRET_RAW = _secrets.token_urlsafe(48)
+        try:
+            with open(_jwt_persist_file, "w") as _f:
+                _f.write(_JWT_SECRET_RAW)
+        except Exception:
+            pass
+        print("[config] JWT_SECRET 未设置或仍为默认值，已自动替换为随机密钥（已持久化到 .jwt_secret，重启不会失效）")
 JWT_SECRET = _JWT_SECRET_RAW
 JWT_EXPIRE_DAYS = int(os.environ.get("JWT_EXPIRE_DAYS", "30").strip() or "30")
 

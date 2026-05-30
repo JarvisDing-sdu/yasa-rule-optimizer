@@ -102,3 +102,5 @@ export const deleteReport = (reportPath: string) =>
 
 export const getChatStreamUrl = (reportPath: string) =>
   `${API_BASE}/api/reports/${encodeURIComponent(reportPath)}/chat/stream`
+export const chatStream = (reportPath: string, messages: string) =>
+  client.post(`/api/reports/${encodeURIComponent(reportPath)}/chat/stream`, { messages })

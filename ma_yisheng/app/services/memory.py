@@ -58,25 +58,33 @@ def add_message(conv_id: int, user_id: int, role: str, content: str) -> Optional
     try:
         # BEGIN IMMEDIATE 获取写锁，防止并发读写造成消息丢失
         db.execute(text("BEGIN IMMEDIATE"))
-        conv = db.query(Conversation).filter_by(id=conv_id, user_id=user_id).first()
-        if not conv:
+        try:
+            conv = db.query(Conversation).filter_by(id=conv_id, user_id=user_id).first()
+            if not conv:
+                db.rollback()
+                return None
+            messages = json.loads(conv.messages or "[]")
+            # 防止 SSE 重连导致重复保存：最后一条消息相同则跳过
+            if messages and messages[-1].get("role") == role and messages[-1].get("content") == content:
+                db.rollback()
+                return _conv_to_dict(conv)
+            messages.append({
+                "role": role,
+                "content": content,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            if len(messages) > MAX_MESSAGES:
+                messages = messages[-MAX_MESSAGES:]
+            conv.messages = json.dumps(messages, ensure_ascii=False)
+            conv.updated_at = datetime.now(timezone.utc)
+            # Auto-title from first user message
+            if conv.title == "新对话" and role == "user" and len(messages) <= 2:
+                conv.title = content[:50] + ("..." if len(content) > 50 else "")
+            db.commit()
+            return _conv_to_dict(conv)
+        except Exception:
             db.rollback()
-            return None
-        messages = json.loads(conv.messages or "[]")
-        messages.append({
-            "role": role,
-            "content": content,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-        if len(messages) > MAX_MESSAGES:
-            messages = messages[-MAX_MESSAGES:]
-        conv.messages = json.dumps(messages, ensure_ascii=False)
-        conv.updated_at = datetime.now(timezone.utc)
-        # Auto-title from first user message
-        if conv.title == "新对话" and role == "user" and len(messages) <= 2:
-            conv.title = content[:50] + ("..." if len(content) > 50 else "")
-        db.commit()
-        return _conv_to_dict(conv)
+            raise
     finally:
         db.close()
 

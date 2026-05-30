@@ -30,21 +30,29 @@ def _ensure_no_proxy():
         pass
 
 
+_client = None
+
+
 def _get_client():
-    """获取 OpenAI 兼容的客户端"""
+    """获取 OpenAI 兼容的客户端（单例复用，避免连接池泄漏）"""
+    global _client
+    if _client is not None:
+        return _client
     _ensure_no_proxy()
     try:
         from openai import OpenAI
         import httpx
-        return OpenAI(
+        _client = OpenAI(
             api_key=LLM_API_KEY,
             base_url=LLM_BASE_URL,
             http_client=httpx.Client(proxy=None),
         )
+        return _client
     except (ImportError, TypeError):
         try:
             from openai import OpenAI
-            return OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
+            _client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
+            return _client
         except ImportError:
             return None
 

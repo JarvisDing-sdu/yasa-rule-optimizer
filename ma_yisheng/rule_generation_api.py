@@ -204,7 +204,7 @@ def validate_rule_endpoint(req: RuleValidationRequest) -> Dict[str, Any]:
 def generate_rule_from_case_endpoint(req: RuleGenerationRequest, request: Request) -> Dict[str, Any]:
     # Rate limit: max 10/min per IP, using shared limiter from api.py
     client_ip = request.client.host if request.client else "unknown"
-    from api import _check_rate_limit as _api_rate_limit
+    from chat import _check_rate_limit as _api_rate_limit
     if not _api_rate_limit(f"rule-gen:{client_ip}", max_req=10, window=60):
         raise HTTPException(status_code=429, detail="请求过于频繁，请稍后重试")
     vuln = req.vulnCase

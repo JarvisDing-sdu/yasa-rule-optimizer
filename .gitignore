@@ -9,3 +9,4 @@ yasa-reports/
 .DS_Store
 frontend_dist/
 logs/
+.claude/settings.local.json

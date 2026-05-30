@@ -11,6 +11,9 @@ from report import save_report, mark_as_favorite, is_favorite, list_reports, get
 # 最近一次扫描结果，供 get_scan_report 使用
 _last_scan_result: Optional[dict] = None
 
+# 最近生成的规则，供 optimize_rule 复用
+_last_generated_rules: dict = {}
+
 
 def _set_last_scan(ok: bool, out: str, err: str, report_dir: str, scan_path: str, lang: str):
     global _last_scan_result
@@ -424,7 +427,7 @@ def tool_build_rule_from_cve(
         return f"错误：无效的 CVE 编号格式「{cve_id}」，应为 CVE-YYYY-NNNNN。"
     if language not in ("python", "java", "go", "js", "php", "c"):
         return f"错误：不支持的语言 {language}"
-    user_id = _current_user_id
+    user_id = _current_user_id_ctx.get()
     if not user_id:
         return "错误：未登录，无法创建规则集。请先登录。"
 
@@ -586,7 +589,7 @@ def tool_build_rules_from_cves(
     if language not in ("python", "java", "go", "js", "php", "c"):
         return f"错误：不支持的语言 {language}"
 
-    user_id = _current_user_id
+    user_id = _current_user_id_ctx.get()
     if not user_id:
         return "错误：未登录，无法创建规则集。请先登录。"
 
@@ -629,14 +632,14 @@ def tool_build_rules_from_cves(
 
 
 
-# 当前 Agent 调用的用户上下文
-_current_user_id: int = 0
+# 当前 Agent 调用的用户上下文（contextvars 保证并发安全）
+import contextvars
+_current_user_id_ctx: contextvars.ContextVar[int] = contextvars.ContextVar("current_user_id", default=0)
 
 
 def set_agent_user_context(user_id: int):
     """设置当前 Agent 调用的用户上下文（API 层在调用 Agent 前设置）"""
-    global _current_user_id
-    _current_user_id = user_id
+    _current_user_id_ctx.set(user_id)
 
 
 from cve_intel import tool_enrich_cve, tool_search_nvd_cve, tool_check_kev, tool_query_osv, tool_cve_prioritize

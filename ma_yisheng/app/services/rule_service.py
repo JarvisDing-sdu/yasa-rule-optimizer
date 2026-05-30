@@ -389,9 +389,10 @@ def merge_rules_for_scan(user_id: int, lang: str,
 
 # ── CVE search ──────────────────────────────────────────────────────────────
 
-# 缓存 GitHub Advisory 搜索结果（5分钟过期，避免重复请求）
+# 缓存 GitHub Advisory 搜索结果（5分钟过期，最多 50 条防内存泄漏）
 _advisory_cache: Dict[str, tuple] = {}  # key -> (timestamp, results)
 _CACHE_TTL = 300  # 5 分钟
+_MAX_CACHE_SIZE = 50
 
 def search_github_advisories_sync(language: str, vuln_type: str = "",
                                    count: int = 10, keyword: str = "",
@@ -414,6 +415,12 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
             all_advisories = cached
         else:
             del _advisory_cache[cache_key]
+
+    # 缓存条数超限时淘汰最旧条目
+    if len(_advisory_cache) >= _MAX_CACHE_SIZE:
+        oldest_key = min(_advisory_cache, key=lambda k: _advisory_cache[k][0], default=None)
+        if oldest_key:
+            del _advisory_cache[oldest_key]
 
     ecosystem_map = {"python": "pip", "java": "maven", "javascript": "npm", "js": "npm", "go": "go", "php": "composer"}
     ecosystem = ecosystem_map.get(language.lower(), "")

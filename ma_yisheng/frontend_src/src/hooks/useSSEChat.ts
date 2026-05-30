@@ -33,14 +33,17 @@ export function useSSEChat(reportPath: string) {
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
     const allMessages = [...prevMessages, userMsg]
-    const messagesParam = encodeURIComponent(JSON.stringify(allMessages))
 
-    const url = `${API_BASE}/api/reports/${encodeURIComponent(reportPath)}/chat/stream?messages=${messagesParam}`
+    const url = `${API_BASE}/api/reports/${encodeURIComponent(reportPath)}/chat/stream`
 
     try {
       const res = await fetch(url, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ messages: JSON.stringify(allMessages) }),
         signal: abortRef.current.signal,
       })
 

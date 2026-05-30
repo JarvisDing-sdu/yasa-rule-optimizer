@@ -16,38 +16,45 @@ def _db():
 def _set_task(task_id: str, **kwargs) -> None:
     import time as _time
     conn = _db()
-    row = conn.execute("SELECT task_id FROM scan_tasks WHERE task_id=?", (task_id,)).fetchone()
-    if not row:
-        conn.execute(
-            "INSERT INTO scan_tasks (task_id, user_id, status, scan_path, lang, progress, result, created_at) VALUES (?,?,?,?,?,?,?,?)",
-            (
-                task_id,
-                kwargs.get("user_id", 0),
-                kwargs.get("status", "pending"),
-                kwargs.get("scan_path"),
-                kwargs.get("lang"),
-                kwargs.get("progress"),
-                _json_mod.dumps(kwargs.get("result"), ensure_ascii=False) if kwargs.get("result") is not None else None,
-                kwargs.get("created_at"),
+    # BEGIN IMMEDIATE 串行化写入，消除 SELECT-then-INSERT/UPDATE 竞态
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        row = conn.execute("SELECT task_id FROM scan_tasks WHERE task_id=?", (task_id,)).fetchone()
+        if not row:
+            conn.execute(
+                "INSERT INTO scan_tasks (task_id, user_id, status, scan_path, lang, progress, result, created_at) VALUES (?,?,?,?,?,?,?,?)",
+                (
+                    task_id,
+                    kwargs.get("user_id", 0),
+                    kwargs.get("status", "pending"),
+                    kwargs.get("scan_path"),
+                    kwargs.get("lang"),
+                    kwargs.get("progress"),
+                    _json_mod.dumps(kwargs.get("result"), ensure_ascii=False) if kwargs.get("result") is not None else None,
+                    kwargs.get("created_at"),
+                )
             )
-        )
-    else:
-        sets, vals = [], []
-        for col in ("status", "scan_path", "lang", "progress", "user_id", "created_at"):
-            if col in kwargs:
-                sets.append(f"{col}=?")
-                vals.append(kwargs[col])
-        if "result" in kwargs:
-            sets.append("result=?")
-            vals.append(_json_mod.dumps(kwargs["result"], ensure_ascii=False) if kwargs["result"] is not None else None)
-        if kwargs.get("status") in ("completed", "failed", "cancelled", "done"):
-            sets.append("finished_at=?")
-            vals.append(_time.time())
-        if sets:
-            vals.append(task_id)
-            conn.execute(f"UPDATE scan_tasks SET {', '.join(sets)} WHERE task_id=?", vals)
-    conn.commit()
-    conn.close()
+        else:
+            sets, vals = [], []
+            for col in ("status", "scan_path", "lang", "progress", "user_id", "created_at"):
+                if col in kwargs:
+                    sets.append(f"{col}=?")
+                    vals.append(kwargs[col])
+            if "result" in kwargs:
+                sets.append("result=?")
+                vals.append(_json_mod.dumps(kwargs["result"], ensure_ascii=False) if kwargs["result"] is not None else None)
+            if kwargs.get("status") in ("completed", "failed", "cancelled", "done"):
+                sets.append("finished_at=?")
+                vals.append(_time.time())
+            if sets:
+                vals.append(task_id)
+                conn.execute(f"UPDATE scan_tasks SET {', '.join(sets)} WHERE task_id=?", vals)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def _get_task(task_id: str) -> Optional[Dict[str, Any]]:

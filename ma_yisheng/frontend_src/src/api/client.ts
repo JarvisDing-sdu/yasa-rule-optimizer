@@ -21,9 +21,9 @@ client.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('email')
-      // 不 reject，避免调用方显示错误（本拦截器已处理跳转）
+      // 跳转登录页，同时 reject 让调用方知道自己被中断了
       setTimeout(() => { window.location.href = '/login' }, 0)
-      return Promise.resolve({ data: null } as any)
+      return Promise.reject(new Error('AUTH_REQUIRED'))
     }
     const detail = err.response?.data?.detail
     if (detail) {
