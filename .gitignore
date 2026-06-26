@@ -20,3 +20,8 @@ ma_yisheng/frontend_src/dist/
 ma_yisheng/ma-yisheng-backend.spec
 backend.log
 .jwt_secret
+
+# 比赛材料（非项目代码）
+CISCNThesis-master/
+*.docx
+*.doc
