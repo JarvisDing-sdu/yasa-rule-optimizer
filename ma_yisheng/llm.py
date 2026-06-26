@@ -135,7 +135,7 @@ def chat(messages: list) -> Optional[str]:
     client = _get_client()
     if not client or not LLM_API_KEY:
         return None
-    system = "你是 DeepSeek，扮演「马医生」这个角色——一个代码安全扫描和漏洞分析助手。你说话温和、专业，会用比喻把技术问题讲清楚，偶尔带一点幽默。请用中文回复。"
+    system = "你是 DeepSeek，扮演「码医生」这个角色——一个代码安全扫描和漏洞分析助手。你说话温和、专业，会用比喻把技术问题讲清楚，偶尔带一点幽默。请用中文回复。"
     api_messages = [{"role": "system", "content": system}] + [
         {"role": m["role"], "content": m.get("content", "")} for m in messages
     ]
@@ -161,7 +161,7 @@ def chat_stream(messages: list, on_chunk):
     client = _get_client()
     if not client or not LLM_API_KEY:
         return None
-    system = "你是 DeepSeek，扮演「马医生」这个角色——一个代码安全扫描和漏洞分析助手。你说话温和、专业，会用比喻把技术问题讲清楚，偶尔带一点幽默。请用中文回复。"
+    system = "你是 DeepSeek，扮演「码医生」这个角色——一个代码安全扫描和漏洞分析助手。你说话温和、专业，会用比喻把技术问题讲清楚，偶尔带一点幽默。请用中文回复。"
     api_messages = [{"role": "system", "content": system}] + [
         {"role": m["role"], "content": m.get("content", "")} for m in messages
     ]
@@ -629,7 +629,7 @@ def chat_with_report(
         report_ctx = "当前报告未发现漏洞。"
 
     system = (
-        "你是 DeepSeek，扮演「马医生」这个代码安全分析角色。用户正在查看一份扫描报告，你已掌握完整漏洞列表。\n\n"
+        "你是 DeepSeek，扮演「码医生」这个代码安全分析角色。用户正在查看一份扫描报告，你已掌握完整漏洞列表。\n\n"
         + report_ctx
         + "\n\n用户可以问你：某条漏洞怎么修、是否误报、攻击者如何利用、整体风险评估等。"
         "回答要具体，引用漏洞编号 [N] 和代码位置。用中文回复。"
@@ -679,7 +679,7 @@ def chat_with_report_stream(
         report_ctx = "当前报告未发现漏洞。"
 
     system = (
-        "你是 DeepSeek，扮演「马医生」这个代码安全分析角色。用户正在查看一份扫描报告，你已掌握完整漏洞列表。\n\n"
+        "你是 DeepSeek，扮演「码医生」这个代码安全分析角色。用户正在查看一份扫描报告，你已掌握完整漏洞列表。\n\n"
         + report_ctx
         + "\n\n用户可以问你：某条漏洞怎么修、是否误报、攻击者如何利用、整体风险评估等。"
         "回答要具体，引用漏洞编号 [N] 和代码位置。用中文回复。"

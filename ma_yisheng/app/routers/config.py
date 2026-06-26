@@ -24,7 +24,7 @@ class RuntimeConfigUpdate(BaseModel):
     SMTP_PORT: str = "587"
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    SMTP_FROM_NAME: str = "马医生"
+    SMTP_FROM_NAME: str = "码医生"
     SMTP_SECURITY: str = "auto"
 
     @field_validator("*", mode="before")

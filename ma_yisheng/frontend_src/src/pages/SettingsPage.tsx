@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: RuntimeConfig = {
   SMTP_PORT: '587',
   SMTP_USER: '',
   SMTP_PASSWORD: '',
-  SMTP_FROM_NAME: '马医生',
+  SMTP_FROM_NAME: '码医生',
   SMTP_SECURITY: 'auto',
 }
 
@@ -29,7 +29,7 @@ const FIELD_LABELS: Array<[keyof RuntimeConfig, string, string]> = [
   ['SMTP_PORT', 'SMTP 端口', '587'],
   ['SMTP_USER', '发件邮箱', 'your-email@qq.com'],
   ['SMTP_PASSWORD', '邮箱授权码', 'SMTP 授权码或密码'],
-  ['SMTP_FROM_NAME', '发件人名称', '马医生'],
+  ['SMTP_FROM_NAME', '发件人名称', '码医生'],
   ['SMTP_SECURITY', 'SMTP 加密方式', 'auto / starttls / ssl / none'],
   ['YASA_BUNDLE_PATH', 'YASA 引擎目录', '/path/to/yasa-linux-x64'],
   ['YASA_EXECUTABLE', 'YASA 可执行文件名', 'yasa'],

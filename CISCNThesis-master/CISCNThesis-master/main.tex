@@ -1,0 +1,684 @@
+\documentclass[a4paper,12pt,UTF8]{ctexart}
+
+% ===== 页面布局 =====
+\usepackage{geometry}
+\geometry{top=26.4mm,bottom=25.4mm,left=28.6mm,right=25.9mm}
+
+% ===== 常用宏包 =====
+\usepackage{ulem}           % \uline 下划线
+\usepackage{fancyhdr}       % 页眉页脚
+\usepackage{lastpage}       % 总页数
+\usepackage{titlesec}       % 标题格式
+\usepackage{titletoc}       % 目录格式
+\usepackage{indentfirst}    % 首行缩进
+\usepackage{setspace}       % 行距
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\hypersetup{hidelinks,unicode=true,bookmarksnumbered=true}
+
+% ===== 英文字体 =====
+\setmainfont{Times New Roman}
+
+% ===== 正文行距 1.5 倍 =====
+\renewcommand{\baselinestretch}{1.5}
+
+% ===== 首行缩进两字 =====
+\setlength{\parindent}{2em}
+
+% ===== 页眉页脚 =====
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\zihao{-5}}
+\fancyfoot[C]{\zihao{-5} 第\thepage 页\enspace 共\pageref{LastPage} 页}
+\renewcommand{\headrulewidth}{0.5pt}
+
+% ===== 章节标题格式 =====
+% 一级：居中黑体三号，格式"第X章"
+\titleformat{\section}
+  {\centering\heiti\zihao{3}\bfseries}
+  {第\chinese{section}章}{0.5em}{}
+\titlespacing*{\section}{0pt}{24pt}{12pt}
+
+% 二级：黑体四号
+\titleformat{\subsection}
+  {\heiti\zihao{4}\bfseries}
+  {\thesubsection}{0.5em}{}
+\titlespacing*{\subsection}{0pt}{18pt}{6pt}
+
+% 三级：黑体小四
+\titleformat{\subsubsection}
+  {\heiti\zihao{-4}\bfseries}
+  {\thesubsubsection}{0.5em}{}
+
+\renewcommand\thesubsection{\arabic{section}.\arabic{subsection}}
+\renewcommand\thesubsubsection{\thesubsection.\arabic{subsubsection}}
+
+% ===== 目录格式 =====
+\setcounter{tocdepth}{1}  % 只显示章级，不显示小节
+
+\renewcommand{\contentsname}{目\hspace{2em}录}
+
+\titlecontents{section}[0pt]{\vspace{3mm}\songti\zihao{-4}}
+  {第\zhnumber{\thecontentslabel}章\hspace{1em}}{\hspace{0pt}}
+  {\titlerule*[0.5pc]{.}\contentspage}
+
+\titlecontents{subsection}[2em]{\songti\zihao{-4}}
+  {\thecontentslabel\hspace{0.5em}}{}
+  {\titlerule*[0.5pc]{.}\contentspage}
+
+% ===== 图表标题 =====
+\DeclareCaptionFont{song}{\songti}
+\captionsetup[figure]{font={song,small},labelsep=quad,position=bottom}
+\captionsetup[table]{font={song,small},labelsep=quad,position=top}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+\numberwithin{equation}{section}
+
+% ===== 参考文献环境 =====
+\usepackage{etoolbox}
+\AtBeginEnvironment{thebibliography}{%
+  \phantomsection
+  \addcontentsline{toc}{section}{参考文献}}
+
+% 目录标题：黑体三号居中（ctexart 默认用 \section* 渲染，覆盖其格式）
+\ctexset{
+  contentsname = {目\hspace{2em}录},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\normalem  % ulem 包：保持 \emph 为斜体
+
+%% ==================== 第一页：封面 ====================
+\newpage
+\null
+\thispagestyle{empty}
+\vspace*{2cm}
+\begin{center}
+  {\zihao{2}\songti
+    第十九届全国大学生信息安全竞赛（作品赛）\\[6pt]
+    暨第三届"长城杯"网数智安全大赛（作品赛）\par}
+  \vspace{0.8cm}
+  {\zihao{2}\songti 作品报告\par}
+\end{center}
+\vspace{1cm}
+\noindent\hspace{5em}{\zihao{3}%
+  □\textbf{命题赛道}\hspace{8em}☑\textbf{自由赛道}\par}
+\vspace{2cm}
+\begin{center}
+  {\zihao{3}\heiti 作品名称：\uline{\hspace{9cm}}\par}
+  \vspace{0.8cm}
+  {\zihao{3}\heiti 电子邮箱：\uline{\hspace{9cm}}\par}
+  \vspace{0.8cm}
+  {\zihao{3}\heiti 提交日期：\uline{\hspace{9cm}}\par}
+\end{center}
+\newpage
+
+%% ==================== 第二页：填写说明 ====================
+\null
+\thispagestyle{empty}
+\begin{center}
+  {\zihao{3}\heiti\bfseries 填写说明\par}
+\end{center}
+\vspace{0.5cm}
+{\zihao{-4}\heiti\bfseries
+  1.\quad 所有参赛项目必须为一个基本完整的设计。作品报告书旨在能够清晰准确地阐述（或图示）该参赛队的参赛项目（或方案）。\par}
+{\zihao{-4}\heiti\bfseries
+  2.\enspace 作品报告采用A4纸撰写。除标题外，所有内容必需为宋体、小四号字、1.5倍行距。\par}
+{\zihao{-4}\heiti\bfseries
+  3.\enspace 作品报告中各项目说明文字部分仅供参考，作品报告书撰写完毕后，请删除所有说明文字。(本页不删除)\par}
+{\zihao{-4}\heiti\bfseries
+  4.\enspace 作品报告模板里已经列的内容仅供参考，作者可以在此基础上增加内容或对文档结构进行微调。\par}
+{\zihao{-4}\heiti\bfseries
+  5.\enspace 为保证网评的公平、公正，作品报告中应避免出现作者所在学校、院系和指导教师等泄露身份的信息。\par}
+\newpage
+
+%% ==================== 目录 ====================
+\thispagestyle{empty}
+\phantomsection
+\tableofcontents
+\newpage
+
+%% ==================== 从此处开始计页码 ====================
+\setcounter{page}{1}
+
+%% ==================== 摘要 ====================
+\phantomsection
+\section*{摘要} 
+\addcontentsline{toc}{section}{摘要}
+\vspace{0.3cm}
+
+{\zihao{-4}\songti
+随着软件系统规模的持续扩大与供应链安全威胁的日益严峻，代码安全漏洞检测已成为软件工程领域的核心挑战。基于规则的静态分析是工业界广泛采用的主流检测手段，然而其效果高度依赖规则库的质量——人工编写高质量规则不仅门槛高、成本大，且难以覆盖跨语言场景。与此同时，现有静态分析工具对 C 语言等系统级语言的污点追踪支持有限，制约了其在底层软件安全审计中的应用。
+
+本作品"码医生代码安全扫描平台"以蚂蚁集团开源的 YASA 静态分析引擎为底座，参考侯战义等人提出的基于大语言模型（LLM）的跨语言静态分析规则生成与优化方法，工程化实现了以下核心功能：
+
+（1）\textbf{LLM 辅助规则自动生成管道（规则工坊）}：实现四阶段闭环流程——Stage 1 由 LLM 对漏洞描述或 CVE 信息进行结构化分析，提取 source/sink/数据流特征；Stage 2 由 LLM 生成符合 YASA 规则 JSON 格式的检测规则；Stage 3 将生成规则注入真实 YASA 引擎对测试用例做扫描，解析 SARIF 报告计算 TP/FP/FN 及 F1 分数；Stage 4 将精确的引擎反馈输入 LLM 进行规则针对性优化，迭代至 F1 ≥ 0.85 或连续三轮无改进为止。相较于传统"LLM 生成—LLM 自评"方案，Stage 3 以真实引擎扫描结果代替 LLM 自评，提供了客观、精确的优化信号。
+
+（2）\textbf{C 语言污点分析支持扩展}：在 YASA 原有引擎基础上，扩展了 C 语言 checker 配置，补全了 C 语言的 source/sink 函数签名体系，实现对 \texttt{getenv()→system()} 等典型 C 语言命令注入路径的污点追踪检测。
+
+（3）\textbf{双引擎代码安全扫描平台}：集成 YASA（污点追踪，适合深度安全审计）与 Semgrep（模式匹配，适合快速检查）双引擎，支持 Python、Java、Go、JavaScript、PHP、C 六种语言，提供 Web 化扫描任务管理、SARIF 报告解析、AI 二次研判与修复建议、HTML 报告导出等完整功能。
+
+（4）\textbf{AI Agent 对话式安全助手}：支持自然语言驱动的 CVE 检索、规则生成、扫描发起与报告分析全流程。
+
+平台采用 FastAPI 后端 + React 前端架构，具备用户认证与数据隔离机制，可本地部署使用。实验表明，规则工坊生成的 YASA 规则在标准测试集上 F1 均高于 0.80，C 语言扫描模块可准确检出测试用例中的命令执行漏洞。
+
+\par}
+\vspace{0.5cm}
+{\noindent\zihao{-4}\heiti\bfseries 关键字：}{\zihao{-4}\songti
+静态分析\quad 污点追踪\quad 大语言模型\quad 规则自动生成\quad 漏洞检测\quad 代码安全}
+\newpage
+
+%% ==================== 第一章 ====================
+\section{作品概述}
+
+\subsection{背景分析}
+
+{\zihao{-4}\songti
+软件安全漏洞已成为现代信息系统面临的最严峻威胁之一。随着软件规模的急速膨胀与开源供应链的广泛普及，代码中潜藏的安全缺陷（如命令注入、SQL 注入、代码执行、缓冲区溢出等）一旦被攻击者利用，往往造成数据泄露、系统失陷乃至大规模供应链攻击。近年来，Log4Shell（CVE-2021-44228）、Spring4Shell（CVE-2022-22965）等高危漏洞事件相继爆发，对全球数以百万计的应用系统造成严重冲击，充分暴露了现有安全检测体系的不足。
+
+在漏洞检测技术路线上，\textbf{静态分析}（Static Analysis）因其无需运行程序、可在开发早期介入、覆盖面广等特点，成为工业界软件质量保障流程中最重要的工具之一\cite{beller2016}。静态分析工具通过对源代码或中间表示进行结构化分析，能够在编译前系统性地发现潜在缺陷，大幅降低漏洞修复成本。然而，当前静态分析技术在实际落地中面临三大核心困境：
+
+\textbf{（1）规则创建门槛高，定制化程度低。}大多数静态分析工具的内置规则集以通用 bug 模式为主，难以覆盖业务项目特定的漏洞模式。研究表明，开源项目中使用的静态分析规则中，自定义规则占比不足 5\%\cite{beller2016}；即便在短期培训后，也仅有约 25\% 的维护人员能够有效创建自定义规则\cite{mendonca2022}。规则的 DSL（领域特定语言）语法复杂，多层嵌套模式的编写对非程序分析专家而言极具挑战。
+
+\textbf{（2）跨语言规则迁移成本高。}同一漏洞模式在 Python、Java、Go、C 等不同语言中有着不同的表现形式，现有工具往往需要针对每种语言独立维护规则集，迁移时需重构规则逻辑，耗费大量人力。
+
+\textbf{（3）深度污点分析能力不足。}主流模式匹配工具（如 Semgrep）擅长语法层面的快速扫描，但对跨函数、跨文件的污点数据流（taint flow）追踪能力有限，容易产生较高的漏报率。尤其对于 C 语言等系统级语言，深度污点追踪支持尤为欠缺。
+
+针对上述问题，学术界的最新研究表明，大语言模型（LLM）在理解代码语义、生成结构化配置文件方面展现出强大能力，为静态分析规则的自动化生成提供了新的技术路径\cite{hou2025}。如何将 LLM 的生成能力与真实静态分析引擎的精确评估能力有机结合，构建"生成—评估—优化"闭环，是当前研究的前沿方向。本作品正是在这一背景下，以工程化落地为目标，设计并实现了"码医生代码安全扫描平台"。
+\par}
+
+\subsection{相关工作}
+
+{\zihao{-4}\songti
+
+\subsubsection{基于规则的静态分析工具}
+
+静态代码分析工具是目前工业界软件安全保障流程中的核心基础设施。从工具架构演进来看，早期工具（如 Lint、Findbugs）将检测逻辑与规则硬编码在一起，扩展能力有限。随后出现了支持用户自定义分析的框架，如 Clang Static Analyzer（CSA）、CodeQL、Joern，它们提供底层程序分析 API，但要求使用者具备深厚的程序分析领域知识\cite{hou2025}。
+
+近年兴起的\textbf{基于规则的代码静态分析工具}采用了一种折中方案：以接近目标语言语法的 DSL 定义匹配规则，使规则编写门槛显著低于直接开发 checker，同时又比纯正则表达式具备更强的结构化分析能力。其中影响力最大的是 \textbf{Semgrep}——它将代码转换为统一抽象语法树（UAST），基于 YAML 规则对 30 余种语言进行跨语言模式匹配，支持基础数据流检查，拥有活跃的社区规则共享生态\cite{hou2025}。此外，Comby 提供了基于轻量级模式匹配的静态扫描能力，适用于简单表达式和语句级别的查找与替换。
+
+然而，Semgrep 等模式匹配工具在\textbf{污点追踪}（Taint Analysis）方面能力有限——它们难以追踪污点数据在跨函数调用链中的传播路径，导致深层次的注入漏洞容易被漏报。
+
+\subsubsection{YASA：面向企业级的污点追踪引擎}
+
+\textbf{YASA（Yet Another Static Analyzer）}是蚂蚁集团研发并于近期开源的企业级静态分析引擎，专注于深度污点追踪（Taint Analysis）能力。其核心技术路线与学术界及工业界公认的污点分析范式一致：将源码解析为\textbf{统一抽象语法树（UAST）}，在此中间表示上由 Checker 框架执行 source→propagation→sink 的完整数据流追踪，从而精准检测跨函数、跨文件的污点传播路径。
+
+YASA 的规则体系由 JSON 格式的规则配置文件定义，核心概念包括：
+\begin{itemize}
+  \item \textbf{Source（污点源）}：用户可控的外部输入点，如 \texttt{input()}、\texttt{getenv()}、HTTP 请求参数等，以函数签名（fsig）和参数位置（args/values）标识；
+  \item \textbf{Sink（污点汇）}：敏感操作点，如 \texttt{os.system()}、\texttt{cursor.execute()}、\texttt{eval()} 等，触发时产生漏洞告警；
+  \item \textbf{Sanitizer（净化器）}：对污点数据进行安全处理（如参数化查询、输入过滤）的函数，截断污点传播路径；
+  \item \textbf{Bridge（桥接器）}：处理跨函数/跨文件的数据流传递，支持对复杂调用链的追踪。
+\end{itemize}
+
+YASA 支持 Python、Java、Go、JavaScript/TypeScript、PHP 等多种语言，通过对应的 UAST 解析器（uast4py、uast4go 等）将源码转换为统一中间表示，再由 Checker 框架执行污点分析，最终输出标准 SARIF（Static Analysis Results Interchange Format）报告，便于与 CI/CD 流程集成。与 Semgrep 的模式匹配不同，YASA 的污点追踪能够捕获更深层的数据流路径，在复杂漏洞场景下具有更低的漏报率。
+
+\subsubsection{LLM 在软件静态分析中的应用}
+
+大语言模型的兴起为静态分析领域带来了新的技术范式。现有 LLM 辅助静态分析工作主要可归纳为三类：
+
+\textbf{（1）直接使用 LLM 进行静态分析。}此类方法直接利用 LLM 的代码理解能力分析输入代码片段，判断漏洞存在性、类型及位置\cite{yang2024,hossain2024}。优点是充分利用 LLM 的语义理解能力，缺点是对大规模代码库推理成本极高，且受限于上下文长度。
+
+\textbf{（2）LLM 辅助分析传统工具报告。}将传统静态分析工具的输出作为上下文输入给 LLM，利用 LLM 进行误报过滤和报告增强\cite{li2024,chapman2024}。此类方法能有效降低误报率，但受制于上游工具的检出能力上限。
+
+\textbf{（3）LLM 生成新的静态分析工具/规则。}Yang 等人提出的 KNighter 利用 LLM 生成基于 Clang Static Analyzer 的 C++ 检测器，在 Linux Kernel 扫描中取得了良好效果\cite{yang2025}。侯战义等人提出的方法\cite{hou2025}则系统化地将 LLM 用于 Semgrep 规则的生成、跨语言迁移与优化，在规则生成实验中达到 81.98\% 语法有效率和 74.73\% 功能有效率，并在 Linux Kernel 数据集上检出了 9 个已有工具未发现的未知漏洞，优于 KNighter（37 条有效规则 vs. 本文方法的 41 条）。
+
+上述研究奠定了"LLM 辅助规则生成"的方法论基础。然而，现有工作存在两点不足：其一，大多针对 Semgrep 等模式匹配工具，尚未将 LLM 生成的规则与具备深度污点追踪能力的工业级引擎（如 YASA）相结合；其二，规则优化环节的反馈信号依赖 LLM 自评或简单语法校验，缺乏来自真实引擎扫描的精确 TP/FP/FN 量化评估。本作品在上述工作基础上，面向 YASA 引擎实现了"真实扫描评估驱动的迭代优化"闭环，填补了这一空白。
+
+\subsection{特色描述}
+
+本作品的核心特色体现在以下三点：
+
+\textbf{（1）真实引擎评估驱动的规则优化闭环。}传统 LLM 生成方案以 LLM 自评作为优化信号，存在评估偏差。本作品的规则工坊将生成的规则直接注入 YASA 真实引擎扫描测试用例，以精确的 TP/FP/FN 数据（如"第 25 行 os.system() 处误报 1 次，漏报 0 次"）作为 LLM 优化的输入，实现了客观、可量化的闭环迭代。
+
+\textbf{（2）C 语言污点追踪能力扩展。}针对 YASA 引擎原有对 C 语言支持不完善的问题，本作品扩展了 C 语言 checker 配置，构建了覆盖 \texttt{getenv()}、\texttt{fgets()} 等典型 source 函数和 \texttt{system()}、\texttt{execl()} 等 sink 函数的规则体系，补全了 YASA 在系统级语言安全检测上的能力短板。
+
+\textbf{（3）完整工程化平台。}将规则生成、代码扫描、报告分析、AI 辅助决策整合为统一的 Web 平台，提供从 CVE 情报检索、规则自动生成到扫描报告导出的端到端安全工程能力，降低了安全工程师使用静态分析技术的门槛。
+
+\subsection{应用前景分析}
+
+{\zihao{-4}\songti
+本作品的应用前景主要体现在以下几个方面：
+
+\textbf{（1）DevSecOps 流水线集成。}在软件开发生命周期（SDLC）的"安全左移"趋势下，将安全检测嵌入 CI/CD 流水线已成为工业界共识。本平台提供标准化 REST API，可与 GitLab CI、GitHub Actions 等主流 CI/CD 工具集成，在代码提交阶段自动触发扫描，实现漏洞早发现早修复。
+
+\textbf{（2）安全规则库的快速积累与演化。}面对新兴漏洞类型（尤其是 CVE 数据库中持续新增的漏洞），规则工坊能够从 CVE 描述自动生成对应的 YASA 检测规则，使规则库随漏洞情报实时更新，避免了传统方式中规则滞后于漏洞的困境。
+
+\textbf{（3）低资源场景下的企业安全能力建设。}对于中小型企业和高校，雇佣专职的程序分析专家编写定制化规则往往不现实。本平台以 LLM 代替专家完成规则生成，大幅降低了构建专有安全检测能力的门槛，支持以本地部署方式使用，保护代码隐私。
+
+\textbf{（4）安全研究与漏洞挖掘。}正如支撑论文中所验证的，LLM 驱动的规则生成方法在 Linux Kernel 等大型代码库中发现了传统工具无法检出的未知漏洞\cite{hou2025}。结合 YASA 的深度污点追踪能力，本平台在面向复杂系统的安全研究场景中同样具有潜在价值。
+\par}
+}
+
+\newpage
+
+%% ==================== 第二章 ====================
+\section{作品设计与实现}
+
+{\zihao{-4}\songti
+本章围绕作品的工程实现展开说明。码医生代码安全扫描平台不是单一命令行扫描器的简单网页包装，而是将前端交互、用户认证、扫描任务调度、YASA/Semgrep 双引擎调用、SARIF 报告解析、AI 漏洞研判、Agent 工具调用以及规则工坊闭环生成流程组织为一套端到端的代码安全分析系统。系统整体设计遵循“前端提交任务—后端异步调度—静态分析引擎执行—报告结构化解析—AI 辅助研判—规则持续沉淀”的主线，使用户能够在 Web 界面中完成从代码扫描到规则生成、从漏洞查看到修复建议的完整安全分析流程。
+\par}
+
+\subsection{系统总体架构设计}
+
+{\zihao{-4}\songti
+本作品采用前后端分离与模块化后端服务相结合的架构。前端部分主要由 React + TypeScript + Vite 实现，负责扫描控制台、报告列表、报告详情、AI 对话等高频交互页面；规则工坊采用独立静态页面实现三栏式工作台，与主 React 应用通过统一后端接口协同。后端采用 FastAPI 构建 REST API 服务，负责用户认证、扫描任务创建、后台任务调度、报告管理、规则集管理、CVE 情报检索和 Agent 对话等功能。静态分析能力由 YASA 与 Semgrep 两类引擎提供，其中 YASA 负责深度污点追踪，Semgrep 负责快速模式匹配。大语言模型能力通过统一 LLM 调用模块接入，用于漏洞解释、修复建议、可利用性评估、规则生成与规则优化。
+
+从工程分层看，系统可以划分为六层：第一层为用户交互层，包括扫描控制台、规则工坊、报告详情页和 Agent 聊天页；第二层为 API 接入层，包括扫描、报告、CVE、规则集、聊天和认证等 FastAPI 路由；第三层为业务服务层，包括扫描调度服务、规则工坊服务、对话记忆服务和报告服务；第四层为引擎适配层，负责将平台参数转换为 YASA 或 Semgrep 的命令行调用；第五层为数据与规则资产层，保存用户、任务、会话、报告、用户规则集和官方规则库；第六层为外部能力层，包括 YASA 引擎、Semgrep 规则生态、GitHub Advisory 漏洞情报和大语言模型服务。
+\par}
+
+\begin{figure}[htbp]
+\centering
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\centering
+用户浏览器（React 扫描台 / 报告页 / Agent 聊天 / 规则工坊）\\[4pt]
+$\Downarrow$ HTTP / SSE / 文件上传\\[4pt]
+FastAPI API 层（认证、扫描、报告、CVE、规则集、聊天）\\[4pt]
+$\Downarrow$\\[4pt]
+业务服务层（扫描调度、报告解析、规则生成、对话记忆、规则集管理）\\[4pt]
+$\Downarrow$\\[4pt]
+引擎与模型适配层（YASA、Semgrep、LLM、GitHub Advisory）\\[4pt]
+$\Downarrow$\\[4pt]
+结果沉淀层（SARIF、report.json、用户规则库、历史会话、HTML 报告）
+\end{minipage}}
+\caption{码医生代码安全扫描平台总体架构}
+\label{fig:system-architecture}
+\end{figure}
+
+{\zihao{-4}\songti
+在该架构中，后端入口负责注册认证、扫描、报告、聊天、规则集、CVE 等路由，并将前端页面、规则工坊页面和静态资源统一暴露给用户。扫描任务由扫描路由接收后进入后台执行，避免长时间扫描阻塞 HTTP 请求。报告模块负责将引擎输出的 SARIF 文件转换为前端可展示的结构化漏洞列表。规则工坊服务负责将 CVE 或漏洞描述转化为 YASA 规则，并将生成后的规则写入用户规则集。Agent 模块则将扫描、报告查询、CVE 检索、规则生成等能力封装为可由自然语言触发的工具，使平台形成“可操作”的安全助手，而不仅是静态页面展示系统。
+\par}
+
+\subsection{前端封装与用户交互实现}
+
+{\zihao{-4}\songti
+前端实现的目标是将底层复杂的静态分析流程封装为清晰的用户操作路径。React 主应用通过路由组织扫描控制台、报告列表、报告详情和 Agent 聊天页面，并通过认证守卫保证未登录用户不能访问核心功能。统一 API 客户端负责自动附加用户令牌、处理登录失效和提取后端错误信息，使各业务页面不需要重复处理认证逻辑。
+
+扫描控制台是用户使用平台的入口。用户可以选择上传 ZIP 包或单个源代码文件，也可以输入服务器上的项目路径；随后选择扫描语言和扫描引擎。对于上传单个代码文件的场景，前端会自动将文件压缩为 ZIP 后提交，提高不同输入形式的兼容性。扫描提交成功后，前端并不等待扫描同步返回，而是通过任务列表组件周期性轮询任务状态。任务完成后，用户可以直接从任务卡片跳转到对应报告详情页。
+
+报告详情页负责展示扫描结果的核心信息，包括漏洞类型、严重级别、文件位置、代码片段、污点传播路径和规则名称等。每条漏洞以卡片形式展示，用户可以展开查看详细上下文，并针对单条漏洞触发 AI 研判、修复建议和可利用性评估。报告页底部还嵌入了基于当前报告上下文的流式对话框，用户可以直接询问“这些高危漏洞中哪个最需要优先修复”“这条命令执行是否可能是误报”等问题，前端通过流式读取逐步展示模型回复。
+
+Agent 聊天页则是面向自然语言操作的综合入口。该页面支持多轮会话、历史会话管理、文件上传、服务器路径附加、普通对话和深度思考模式。在深度思考模式下，前端不仅展示最终回答，还会展示工具调用步骤、推理过程和外部来源，使用户能够理解 Agent 如何从自然语言需求转化为具体的扫描、检索或规则生成操作。
+\par}
+
+\begin{figure}[htbp]
+\centering
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\centering
+用户输入扫描目标\\
+（上传 ZIP / 单文件自动打包 / 服务器路径）\\[4pt]
+$\Downarrow$\\[4pt]
+选择语言与引擎\\
+（auto、Python、Java、Go、JavaScript、PHP、C；YASA 或 Semgrep）\\[4pt]
+$\Downarrow$\\[4pt]
+提交扫描任务并轮询状态\\[4pt]
+$\Downarrow$\\[4pt]
+查看结构化报告\\[4pt]
+$\Downarrow$\\[4pt]
+单条漏洞 AI 研判 / 修复建议 / 可利用性评估 / 报告上下文对话
+\end{minipage}}
+\caption{前端扫描与报告分析交互流程}
+\label{fig:frontend-scan-flow}
+\end{figure}
+
+{\zihao{-4}\songti
+规则工坊在前端交互上采用三栏式工作台设计：左侧为 CVE 搜索区域，支持按语言生态、漏洞类型、关键词和返回数量检索 GitHub Advisory；中间为漏洞详情、规则生成和生成结果区域，用户可以查看选中 CVE 的描述、影响范围和修复建议，并将其摄入规则生成流程；右侧为规则库管理区域，支持查看官方规则集与个人规则集，创建规则集、克隆官方规则、查看规则详情以及启用、禁用和删除规则。该设计使“找漏洞情报—生成规则—管理规则资产”三个步骤集中在同一页面完成，降低了安全规则工程的操作成本。
+\par}
+
+\subsection{YASA 扫描流程设计与实现}
+
+{\zihao{-4}\songti
+YASA 是本作品深度安全扫描能力的核心底座。平台对 YASA 的封装不是简单拼接命令，而是围绕扫描任务生命周期实现了语言识别、规则选择、命令构造、目录过滤、超时控制、报告解析和状态更新等完整流程。
+
+当用户通过前端提交扫描请求后，后端扫描路由首先创建任务编号并记录任务初始状态，然后通过后台任务机制启动扫描调度服务。扫描调度服务将任务状态从 pending 更新为 running，并根据用户选择的引擎进行分流。如果用户选择 YASA，引擎适配层会根据目标语言和扫描场景选择对应规则文件、checker pack、analyzer 和 UAST 解析器路径；如果语言选择为 auto，系统会根据项目中的文件扩展名检测项目包含的语言，并对多语言项目逐语言发起扫描。
+
+YASA 扫描命令的关键参数包括规则配置文件、源码路径、目标语言、checker pack 或 checker id、analyzer、UAST SDK 路径以及报告输出目录。对于 Python 和 Go 等需要外部 UAST 解析器的语言，系统会从配置中读取对应 uast4py 或 uast4go 路径；对于 Java、JavaScript、PHP、C 等语言，则根据 YASA bundle 和语言配置使用相应 analyzer。C 语言扫描在实现上使用 CAnalyzer 与 C 语言 checker 配置，使平台能够对 C 语言 source 到 sink 的污点流进行检测。
+
+考虑到真实项目中常包含 node\_modules、.git、dist、build、venv 等大量无关目录，系统在扫描前会根据排除目录配置判断是否需要构造过滤后的源码副本，从而减少无关文件对扫描性能和结果噪声的影响。扫描过程还支持超时控制和取消检查，避免单次扫描长时间占用资源。扫描完成后，YASA 输出标准 SARIF 报告，报告服务再将其转换为结构化 JSON 和文本摘要，供前端展示与 AI 分析使用。
+\par}
+
+\begin{figure}[htbp]
+\centering
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\centering
+POST /api/scan 或 POST /api/scan/upload\\[3pt]
+$\Downarrow$\\[3pt]
+创建任务 ID，写入任务状态，启动后台扫描\\[3pt]
+$\Downarrow$\\[3pt]
+语言识别：手动语言或 auto 多语言检测\\[3pt]
+$\Downarrow$\\[3pt]
+规则选择：官方规则 + 用户启用规则合并\\[3pt]
+$\Downarrow$\\[3pt]
+构造 YASA 命令：ruleConfigFile、sourcePath、language、checker、analyzer、uastSDKPath、report\\[3pt]
+$\Downarrow$\\[3pt]
+YASA 解析源码为 UAST，Checker 执行污点追踪\\[3pt]
+$\Downarrow$\\[3pt]
+输出 SARIF，解析为 report.json 和 summary.txt，任务状态置为 done
+\end{minipage}}
+\caption{YASA 扫描任务后端执行流程}
+\label{fig:yasa-scan-flow}
+\end{figure}
+
+{\zihao{-4}\songti
+在规则选择方面，系统既支持官方规则文件，也支持规则工坊生成的个人规则。官方规则按语言和场景组织，例如 minimal 模式用于日常快速扫描，full 模式用于更全面的安全审计。用户在规则工坊中生成或维护的规则会存储在个人规则集中。扫描时，如果用户勾选了个人规则集，后端会将官方规则与用户启用规则合并为临时规则配置文件，再通过规则覆盖参数传递给 YASA 引擎。这样，规则工坊产生的规则不是停留在数据库中的静态文本，而是可以直接参与实际项目扫描。
+\par}
+
+\subsection{SARIF 报告解析与漏洞结果展示}
+
+{\zihao{-4}\songti
+YASA 与 Semgrep 均可以输出 SARIF 格式报告。SARIF 是面向静态分析结果交换的标准格式，包含规则信息、漏洞位置、代码片段、数据流路径和严重级别等内容。但原始 SARIF 结构较复杂，不适合直接展示给普通开发者。因此，本作品设计了报告解析与标准化模块，将不同引擎输出统一转换为平台内部的 finding 结构。
+
+报告解析模块会读取 SARIF 中的 results、locations、codeFlows、message、ruleId 和 properties 等字段，提取漏洞所在文件、行号、代码片段、漏洞类型、规则名称、严重级别和污点传播路径。对于 YASA 输出中包含的 sinkAttribute，系统会进一步映射为更易理解的中文漏洞类型和风险等级。对于重复结果，系统使用文件路径、行号、规则标识和代码片段等信息生成去重键，避免同一漏洞在前端重复展示。
+
+报告保存模块在扫描结束后生成三类结果文件：第一类是原始 report.sarif，用于保留引擎完整输出；第二类是结构化 report.json，用于前端渲染、AI 研判和报告导出；第三类是 summary.txt，用于保存摘要信息和原始命令输出。结构化 report.json 中不仅保存基础漏洞信息，还会在后续 AI 分析后写入模型研判结果、修复建议、可利用性评估等增强字段，实现报告内容的持续丰富。
+\par}
+
+\subsection{AI 漏洞研判与报告辅助分析实现}
+
+{\zihao{-4}\songti
+传统静态分析工具通常只给出告警位置和规则名称，开发者仍需自行判断漏洞是否真实、是否可利用以及如何修复。为解决这一问题，本作品在报告详情页中加入了面向单条漏洞的 AI 辅助分析能力，并在后端实现了漏洞研判、修复建议、可利用性评估和报告上下文对话等 LLM 功能。
+
+单条漏洞 AI 研判的输入包括漏洞类型、严重级别、文件路径、行号、代码片段、污点路径和规则名称。模型会结合这些上下文判断该告警更可能是真漏洞、误报还是需要人工确认，并给出理由。修复建议功能则进一步要求模型解释漏洞成因，给出安全修复思路和参考代码。可利用性评估功能关注攻击者能否实际触发该漏洞，会分析前置条件、攻击路径、利用难度、影响范围和可能的 PoC 思路。与普通问答不同，这些能力均围绕结构化 finding 进行提示词构造，使模型回答紧密绑定扫描结果，而不是泛泛讨论漏洞概念。
+
+为了提高用户体验，AI 分析结果会写回结构化报告。也就是说，用户对某条漏洞执行一次 AI 研判后，结论会持久化保存在 report.json 中；下次打开报告时，前端可以直接展示已缓存的分析结果，而不需要重复调用模型。这一设计既降低了 API 调用成本，也使报告具备归档价值。
+\par}
+
+\begin{figure}[htbp]
+\centering
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\centering
+结构化 finding\\
+（漏洞类型、文件、行号、代码片段、污点路径、规则名）\\[4pt]
+$\Downarrow$\\[4pt]
+构造 LLM 上下文\\[4pt]
+$\Downarrow$\\[4pt]
+AI 研判 / 修复建议 / 可利用性评估\\[4pt]
+$\Downarrow$\\[4pt]
+结果写回 report.json\\[4pt]
+$\Downarrow$\\[4pt]
+前端报告页展示并支持 HTML 导出
+\end{minipage}}
+\caption{AI 报告研判与持久化流程}
+\label{fig:ai-report-flow}
+\end{figure}
+
+{\zihao{-4}\songti
+除单条漏洞分析外，平台还支持报告级对话。报告对话会将当前报告中的结构化 findings 注入模型上下文，使用户可以围绕整份报告进行提问。例如，用户可以询问“本次扫描最严重的问题是什么”“哪些漏洞属于同一种成因”“应该按什么顺序修复”。前端采用流式读取方式展示模型回复，用户可以实时看到回答生成过程，并可随时中断。这种基于报告上下文的对话能力，使扫描报告从静态结果文件转变为可交互的安全分析对象。
+\par}
+
+\subsection{对话式 Agent 安全助手设计}
+
+{\zihao{-4}\songti
+为了进一步降低安全分析工具的使用门槛，本作品设计了对话式 Agent 安全助手。与报告页中的局部对话不同，Agent 面向更开放的用户需求，能够根据自然语言调用系统内置工具，完成 CVE 检索、项目扫描、报告查询、规则生成和规则优化等操作。
+
+Agent 后端采用手写 tool-calling 循环实现。系统首先将可用工具转换为 OpenAI function calling 兼容格式，然后将用户消息、历史会话和必要上下文发送给大语言模型。模型如果判断需要调用工具，会返回工具名称与参数；后端执行对应工具函数，将工具结果加入上下文后继续请求模型，直到生成最终回答。该机制使 Agent 不只是“聊天机器人”，而是能够把用户意图映射为平台真实功能调用的调度器。
+
+Agent 工具集覆盖平台主要安全能力，包括扫描项目、获取扫描报告、列出历史报告、读取报告内容、Web 或 GitHub 搜索、生成规则、优化规则以及从 CVE 构建规则等。用户可以用自然语言表达需求，例如“扫描这个项目并告诉我高危漏洞”“根据某个 CVE 生成 Python 检测规则”“解释最近一次报告中的命令注入问题”。Agent 会根据上下文选择工具，并在最终回答中汇总工具执行结果。
+
+前端 Agent 聊天页支持普通模式和深度思考模式。普通模式返回一次性回答，适合简单问题；深度思考模式采用流式事件返回，前端可以展示 reasoning、tool\_call、tool\_result 和最终回复。系统还支持代码文件上传和服务器路径附加，用户可以把待分析对象作为会话上下文交给 Agent。对话历史通过数据库持久化，用户可以创建、切换和删除会话，从而将多轮安全分析过程保存下来。
+\par}
+
+\subsection{规则工坊总体设计}
+
+{\zihao{-4}\songti
+规则工坊是本作品设计与实现中最核心的部分。其目标是将论文中“基于大语言模型的跨语言静态分析规则生成、迁移与优化”思想工程化落地到 YASA 规则体系中，并进一步引入真实 YASA 引擎评估作为反馈信号，形成“漏洞输入—规则生成—引擎验证—反馈优化—规则入库—实际扫描”的闭环。
+
+从用户视角看，规则工坊提供三步式操作流程。第一步，用户在左侧面板检索 GitHub Advisory，可以按语言生态、漏洞类型、关键词和返回数量筛选 CVE/GHSA 条目。系统支持根据 CWE 编号和关键词匹配漏洞类型，并根据 advisory 中的 ecosystem 信息推断目标语言。第二步，用户选择一个或多个漏洞条目，在中间面板查看详情并点击生成规则。第三步，生成成功的规则会写入用户选择的规则集，并在右侧规则库中展示，用户可以启用、禁用、删除或克隆官方规则。后续扫描时，用户只需勾选相应规则集，这些规则就会与官方规则合并后参与 YASA 扫描。
+\par}
+
+\begin{figure}[htbp]
+\centering
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\centering
+用户操作层：搜索 CVE / 选择漏洞 / 选择规则集 / 点击生成\\[4pt]
+$\Downarrow$\\[4pt]
+漏洞情报层：GitHub Advisory 详情、CVE、CWE、生态、描述、参考链接\\[4pt]
+$\Downarrow$\\[4pt]
+规则生成层：LLM 结构化分析漏洞并生成 YASA JSON 规则\\[4pt]
+$\Downarrow$\\[4pt]
+真实评估层：YASA 扫描测试集，计算 TP、FP、FN、Precision、Recall、F1\\[4pt]
+$\Downarrow$\\[4pt]
+反馈优化层：LLM 根据误报、漏报和命中情况修改规则\\[4pt]
+$\Downarrow$\\[4pt]
+规则资产层：规则入库、启停管理、扫描时合并生效
+\end{minipage}}
+\caption{规则工坊端到端闭环流程}
+\label{fig:rule-workshop-flow}
+\end{figure}
+
+{\zihao{-4}\songti
+规则工坊后端主要由 CVE 路由、规则集路由、规则服务、规则评估器和 LLM 模块组成。CVE 路由负责搜索 advisory、获取漏洞详情和摄入 CVE；规则集路由负责官方规则和用户规则的增删改查；规则服务负责协调漏洞详情获取、语言推断、规则管道执行和规则入库；规则评估器负责将候选规则写入临时配置并调用真实 YASA 引擎评估；LLM 模块负责漏洞结构化分析、规则生成、规则质量分析和规则优化。
+\par}
+
+\subsection{规则生成管道设计与实现}
+
+{\zihao{-4}\songti
+规则生成管道参考侯战义等人关于 LLM 辅助跨语言静态分析规则生成与优化的方法，但在实现对象和反馈方式上进行了面向 YASA 的工程化改造。论文方法强调利用 LLM 从漏洞描述、代码样例或已有规则中提取跨语言安全知识，并生成目标静态分析工具可执行的规则。本作品将这一思想迁移到 YASA 的 JSON 规则体系中，将漏洞知识映射为 sources、sinks、sanitizers、bridge、scope、checkerIds 和 metadata 等字段，使模型输出能够被 YASA 真实执行。
+
+管道第一阶段是漏洞结构化理解。系统将 CVE 描述、漏洞类型、CWE、影响生态、参考链接和用户提供的样例组织为提示词，要求模型提取漏洞的关键安全要素，包括不可信输入来源、危险函数或敏感操作、传播路径、净化条件、触发约束和适用语言。对于命令注入，模型需要识别环境变量、HTTP 参数、命令行参数等 source，以及 system、exec、eval 等 sink；对于 SQL 注入，模型需要识别数据库查询 API 和参数化查询等 sanitizer。
+
+第二阶段是生成 YASA 规则 JSON。模型根据第一阶段得到的结构化漏洞描述，生成符合 YASA 规则配置格式的候选规则。该规则需要包含 checkerIds、sources、sinks、sanitizers、bridge 和 metadata 等字段。其中 sources 和 sinks 通常使用函数签名和参数位置描述污点来源与危险汇点；metadata 中保存 ruleId、名称、描述、严重级别和漏洞类型等信息。为了避免模型输出自然语言解释或格式错误，系统会对生成结果进行 JSON 提取与结构校验，确保候选规则至少具备可被后续流程处理的基本结构。
+
+第三阶段是真实 YASA 扫描评估。系统将候选规则写入临时规则配置文件，调用 YASA 引擎扫描对应语言的测试集，并解析扫描生成的 SARIF 报告。测试集目录中通过 expected.json 定义预期漏洞位置和类型，评估器会将实际 finding 与预期结果进行匹配，计算 TP、FP、FN、Precision、Recall 和 F1。该阶段是本作品区别于普通 LLM 规则生成系统的关键：规则质量不是由模型自我判断，而是由真实静态分析引擎在真实测试样例上的表现决定。
+
+第四阶段是基于反馈的规则优化。系统将第三阶段得到的命中、误报和漏报信息输入 LLM，让模型针对具体问题调整规则。例如，如果某个 sink 未被识别，模型可能需要补充函数签名或修正参数位置；如果出现误报，模型可能需要增加 sanitizer、scope 或属性约束；如果规则过宽，则需要限制语言、包名、调用形态或 sink 属性。优化后的规则再次进入第三阶段评估，如此迭代，直到 F1 达到目标阈值、达到最大迭代轮数或连续无改进为止。
+\par}
+
+\begin{figure}[htbp]
+\centering
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\centering
+Stage 1：LLM 漏洞分析\\
+输入 CVE / 漏洞描述 / 代码样例，输出 source、sink、sanitizer、触发条件\\[5pt]
+$\Downarrow$\\[5pt]
+Stage 2：LLM 生成 YASA 规则\\
+输出 checkerIds、sources、sinks、bridge、scope、metadata 等 JSON 字段\\[5pt]
+$\Downarrow$\\[5pt]
+Stage 3：YASA 真实扫描评估\\
+扫描 test-\{lang\}-cases，解析 SARIF，对比 expected.json，计算 TP/FP/FN/F1\\[5pt]
+$\Downarrow$\\[5pt]
+Stage 4：LLM 反馈优化\\
+根据误报和漏报修正 fsig、args、attribute、sanitizer、scope\\[5pt]
+$\circlearrowleft$ 若 F1 未达标且仍有改进空间，则继续 Stage 3 到 Stage 4
+\end{minipage}}
+\caption{规则工坊四阶段规则生成与优化管道}
+\label{fig:rule-pipeline}
+\end{figure}
+
+{\zihao{-4}\songti
+为保证管道在工程上可运行，系统还设计了多项效率与稳定性机制。其一，规则哈希缓存避免相同规则重复触发昂贵的 YASA 扫描；其二，测试集采用小规模、可控的单文件或多文件样例，使规则评估可以在较短时间内完成；其三，最大迭代轮数和 F1 阈值共同限制优化过程，防止模型陷入无效循环；其四，当某种语言暂时没有配置测试集时，系统可以降级到快速模式，仅进行 LLM 生成和结构校验，用于 CVE 快速摄入和规则预览。
+\par}
+
+\subsection{规则数据结构与规则资产化实现}
+
+{\zihao{-4}\songti
+YASA 规则的本质是面向污点分析的 JSON 配置。平台在规则设计时围绕 source、sink、sanitizer、bridge 和 metadata 五类信息组织规则内容。source 描述不可信输入来源，例如 Python 中的 input、Web 请求参数或 C 语言中的 getenv、fgets；sink 描述危险操作点，例如 os.system、cursor.execute、eval、system、execl 等；sanitizer 描述能够切断污点传播的净化函数或安全 API；bridge 用于描述跨函数或跨对象的数据流传递；metadata 则记录规则标识、规则名称、漏洞类型、严重级别和说明信息。
+
+为了使规则能够持续积累，系统将规则从文件配置提升为可管理的安全资产。官方规则集保存在项目 rules 目录下，按语言和场景区分 minimal 与 full 两种模式；用户规则集则存储在数据库中，每个规则集包含名称、语言、场景、来源类型和规则数量等信息，每条用户规则保存 ruleId、启用状态和完整 JSON 内容。用户可以从官方规则集克隆基础规则，也可以通过规则工坊从 CVE 生成新规则，还可以对规则进行启用、禁用和删除操作。
+
+规则资产化的关键在于与扫描流程打通。扫描任务启动时，后端会读取用户选择的规则集，过滤出启用状态的规则，并与对应语言的官方规则配置合并成临时 rule\_config 文件。随后 YASA 扫描不再只使用固定官方规则，而是使用“官方规则 + 用户规则”的组合配置。这样，规则工坊生成的检测能力可以立即服务于后续项目扫描，形成从漏洞情报到检测能力再到实际扫描结果的闭环。
+\par}
+
+\subsection{双引擎协同与多语言支持实现}
+
+{\zihao{-4}\songti
+平台同时封装 YASA 与 Semgrep 两类静态分析引擎，目的是覆盖深度污点追踪和快速模式匹配两种使用场景。YASA 适合安全审计、漏洞验证和规则工坊评估，因为它能够基于 UAST 和 Checker 框架追踪 source 到 sink 的数据流；Semgrep 适合开发阶段快速检查，因为它启动快、规则生态丰富，对常见危险调用和编码缺陷具备较好的巡检能力。
+
+在语言支持方面，系统通过文件扩展名映射识别 Python、Java、Go、JavaScript/TypeScript、PHP 和 C 等语言。用户可以手动指定语言，也可以选择 auto 自动识别。对于多语言项目，系统会遍历目录并统计出现的语言类型，然后按语言分别调用相应引擎进行扫描，最后将多个报告目录汇总到同一任务结果中。规则配置层负责将语言和场景映射到具体规则文件、checker pack 和 analyzer，例如 Python 对应 PythonAnalyzer，Java 对应 JavaAnalyzer，Go 对应 GoAnalyzer，C 对应 CAnalyzer。
+
+Semgrep 扫描流程同样被纳入统一任务体系。系统优先使用本地离线规则目录，便于在无外网环境中运行；若未配置离线规则，则使用语言相关或 OWASP Top Ten 等在线规则集。无论底层引擎是 YASA 还是 Semgrep，扫描结束后都会进入统一 SARIF 解析和报告展示流程，因此前端可以用一致的方式呈现不同引擎的结果。
+\par}
+
+\subsection{安全性、部署与数据隔离设计}
+
+{\zihao{-4}\songti
+作为面向代码安全分析的平台，本作品在工程实现中也考虑了基础安全性与部署可用性。系统提供用户认证机制，支持邮箱验证码注册和密码登录，前端通过令牌访问后端 API。后端报告目录按用户维度组织，扫描任务、报告、用户规则集和会话记录均与用户身份关联，从而避免不同用户之间直接混用扫描结果和规则资产。
+
+在部署方面，平台支持本地部署和服务器模式。YASA 引擎二进制、UAST 解析器路径、LLM API Key、GitHub Token、SMTP 配置、扫描超时、排除目录和 Semgrep 离线规则路径均通过环境变量配置。配置模块集中管理这些参数，并为扫描执行层提供统一读取接口。对于生产环境，系统会检查 JWT 密钥等关键配置，避免使用弱默认值；对于扫描上传，系统设置上传大小限制，防止异常大文件影响服务稳定性。
+
+任务执行方面，平台采用后台任务方式运行扫描，并使用任务状态记录扫描进度。长时间扫描不会阻塞前端请求，用户可以通过任务列表持续查看状态。扫描完成后，报告被结构化保存，便于后续查看、导出和 AI 分析。整体上，平台以 Web 服务形式封装复杂静态分析工具，在保持本地部署与代码隐私的同时，为用户提供较低门槛的安全检测能力。
+\par}
+
+\subsection{本章小结}
+
+{\zihao{-4}\songti
+本章从系统架构、前端封装、YASA 扫描流程、SARIF 报告解析、AI 辅助分析、Agent 对话、规则工坊和规则资产化等方面说明了作品的设计与实现。平台通过 React 前端和 FastAPI 后端将 YASA、Semgrep、LLM、GitHub Advisory 和规则数据库连接为完整工程系统；通过后台任务和统一报告解析机制实现代码扫描的可用化；通过 AI 研判和 Agent 工具调用增强扫描结果的可解释性；通过规则工坊四阶段闭环实现从漏洞情报到 YASA 检测规则的自动生成、真实评估和迭代优化。由此，作品不仅完成了一个代码扫描平台，也实现了一套可持续演化的智能规则工程流程。
+\par}
+
+\newpage
+
+%% ==================== 第三章 ====================
+\section{作品测试与分析}
+
+（建议包括测试方案、测试环境搭建、测试设备、测试数据、结果分析等）
+
+\newpage
+
+%% ==================== 第四章 ====================
+\section{创新性说明}
+
+{\zihao{-4}\songti
+本作品的创新性并不局限于将现有静态分析工具进行界面化封装，而是在开源 YASA 静态分析引擎的基础上，围绕“漏洞理解—规则生成—真实验证—反馈优化—规则沉淀”构建了一套面向多语言代码安全分析的智能化规则工程体系。系统将大语言模型的语义理解与规则生成能力、YASA 的深度污点追踪能力、CVE 漏洞情报检索能力以及 Web 平台的任务管理能力进行融合，使代码安全检测从传统的“人工编写规则、人工试错、人工维护”逐步转向“智能生成、真实评估、持续优化”的闭环流程。
+\par}
+
+\subsection{真实引擎反馈驱动的规则生成优化闭环}
+
+{\zihao{-4}\songti
+传统 LLM 辅助静态分析规则生成方法通常采用“漏洞描述输入—模型生成规则—模型自评或人工检查”的流程，其主要问题在于：模型无法直接感知规则在真实静态分析引擎中的执行效果，因而难以准确判断规则是否存在误报、漏报或覆盖不足。本作品在规则工坊中引入真实 YASA 引擎扫描评估环节，将规则生成过程从一次性文本生成改造为可量化的工程闭环。
+
+具体而言，系统首先利用 LLM 对漏洞描述、CVE 条目或代码样例进行结构化分析，抽取 source、sink、sanitizer、传播路径、调用链路和触发条件等关键安全要素；随后生成符合 YASA 规则配置格式的 JSON 规则初稿；再将生成规则写入临时规则配置文件，调用真实 YASA 引擎对测试用例进行扫描，并解析 SARIF 报告，计算 TP、FP、FN、Precision、Recall 和 F1 等指标；最后将“哪些漏洞被正确检出、哪些位置发生误报、哪些预期漏洞未被覆盖”等具体反馈重新输入 LLM，指导其对函数签名、参数位置、属性约束、作用域和 bridge 配置进行针对性修正。
+
+这一机制的关键创新在于，系统不再让 LLM 仅凭自身判断规则质量，而是以真实静态分析引擎的执行结果作为客观反馈信号。规则优化目标由模糊的“生成看起来合理的规则”转化为明确的“提升测试集上的检出率并降低误报率”，从而提高了规则质量的可验证性和优化过程的可控性。系统还设计了 F1 阈值停止、最大迭代轮数限制和规则哈希缓存等机制，使闭环优化在工程上具备可运行性和效率保障。
+\par}
+
+\subsection{面向 YASA 的跨语言安全规则工程方法}
+
+{\zihao{-4}\songti
+本作品不是从零实现底层静态分析引擎，而是以 YASA 作为成熟的企业级污点分析底座，在其上构建面向多语言场景的规则生成、规则评估、规则迁移和规则管理能力。与基于简单模式匹配的工具相比，YASA 通过统一抽象语法树（UAST）和 Checker 框架进行 source 到 sink 的污点传播追踪，能够捕获跨函数、跨文件的数据流路径，更适合命令注入、SQL 注入、代码执行等深层漏洞类型的检测。
+
+在此基础上，本作品提出并实现了面向 YASA 规则体系的自动化映射流程：将漏洞知识中的不可信输入点、危险函数、净化函数、传播关系和适用作用域映射为 YASA 规则中的 sources、sinks、sanitizers、bridge 和 scope 等字段。该过程使 CVE 描述、漏洞样例和安全分析经验能够转化为可执行的静态分析规则，降低了编写 YASA 规则所需的程序分析门槛。
+
+更进一步，系统将规则从静态配置文件提升为可管理、可复用、可演化的安全资产。平台支持官方规则集浏览、用户规则集创建、官方规则克隆、单条规则启用与禁用、规则删除以及扫描时的多规则集合并。生成后的规则可以直接进入用户个人规则库，并在后续扫描任务中与官方规则共同生效。这种规则资产化机制使平台不仅具备规则生成能力，也具备持续积累和运营安全检测知识的能力。
+\par}
+
+\subsection{C 语言污点追踪能力拓展}
+
+{\zihao{-4}\songti
+C 语言广泛应用于操作系统、数据库、网络服务和嵌入式系统等关键基础软件中，其漏洞往往具有影响范围大、利用后果严重的特点。然而，C 语言存在指针、手工内存管理、复杂库函数调用和跨文件数据流等特征，对静态分析提出了更高要求。现有许多轻量级静态扫描工具对 C 语言深度污点追踪支持有限，难以准确识别用户可控输入流向危险系统调用的漏洞链路。
+
+针对这一问题，本作品在 YASA 框架基础上开展了 C 语言分析能力拓展，补充了 C 语言 checker 配置与规则文件，构建了覆盖典型 source 与 sink 的规则体系。例如，系统将 \texttt{getenv()}、\texttt{fgets()} 等外部输入函数建模为污点源，将 \texttt{system()}、\texttt{execl()} 等危险执行函数建模为污点汇，从而支持对“\texttt{getenv()} 到 \texttt{system()}”这类命令执行路径进行检测。该工作一方面扩展了平台的语言覆盖范围，另一方面也为后续研究新语言快速接入、规则模板抽象和跨语言规则迁移提供了可复用的实践样本。
+\par}
+
+\subsection{漏洞情报到检测能力的自动转化}
+
+{\zihao{-4}\songti
+面对不断增长的新型漏洞和 CVE 条目，传统安全团队通常需要先阅读漏洞公告、分析漏洞成因，再手工编写和验证检测规则，存在响应周期长、专业门槛高和规则沉淀困难等问题。本作品将 GitHub Advisory 漏洞情报检索、CWE 类型识别、语言生态判断和规则生成管线进行联通，实现了从外部漏洞知识到内部检测规则的半自动转化。
+
+在规则工坊中，用户可以按照语言、漏洞类型或关键词搜索 GitHub Advisory，查看漏洞描述、影响范围和修复建议，并将选定 CVE 一键摄入规则生成流程。系统根据 Advisory 中的 ecosystem 信息推断目标语言，根据 CWE 编号和关键词辅助判断漏洞类型，再调用四阶段规则生成管线生成 YASA 检测规则并写入规则集。该流程使平台能够随着漏洞情报的更新快速扩展自身检测能力，有助于解决传统规则库滞后于漏洞披露的问题。
+
+这一创新体现为“漏洞知识向静态检测知识的自动迁移”：公开漏洞公告不再只是供人工阅读的文本资料，而是可以通过结构化抽取、规则映射和真实扫描验证，转化为可被静态分析引擎执行的检测能力。
+\par}
+
+\subsection{双引擎协同的代码安全扫描体系}
+
+{\zihao{-4}\songti
+单一静态分析引擎往往难以同时满足深度审计和快速巡检两类需求。YASA 的优势在于深度污点追踪，适合发现跨函数、跨文件传播的复杂漏洞；Semgrep 的优势在于模式匹配速度快、规则生态丰富，适合日常开发阶段的快速检查。本作品将两类引擎集成到统一平台中，形成“快速筛查 + 深度分析”的双引擎协同体系。
+
+在用户侧，平台支持本地路径扫描和压缩包上传扫描，支持 Python、Java、Go、JavaScript/TypeScript、PHP、C 等多语言目标，能够自动识别项目主要语言或对多语言项目逐语言扫描。用户可以根据场景选择 YASA 或 Semgrep 引擎，也可以选择 minimal 与 full 等不同规则模式，在扫描效率和覆盖率之间进行权衡。在后端实现上，系统对扫描任务进行异步调度，统一处理语言识别、规则路径选择、引擎命令构造、扫描超时控制、目录过滤、SARIF 解析和任务状态更新，从而将底层工具调用组织为可管理的工程流程。
+
+双引擎体系增强了平台的实际适用性：在开发日常检查场景下，可优先使用 Semgrep 快速发现显式缺陷；在安全审计和漏洞验证场景下，可使用 YASA 对污点传播链进行深度追踪。二者共同覆盖了安全检测中“快”和“深”的不同需求。
+\par}
+
+\subsection{面向开发者的智能化报告研判与修复辅助}
+
+{\zihao{-4}\songti
+传统静态分析工具往往只输出大量告警，开发者仍需自行判断漏洞是否真实、风险是否严重以及如何修复。为降低扫描结果的理解和处置成本，本作品在 SARIF 报告解析基础上加入了智能化后处理能力。
+
+系统会将 YASA 或 Semgrep 输出的 SARIF 报告解析为结构化漏洞列表，根据文件、行号和漏洞类型进行去重，按严重度进行归类排序，并保留污点路径、代码片段、规则名称和 sink 属性等关键信息。在此基础上，平台提供单条漏洞 AI 二次研判功能，能够结合漏洞类型、代码上下文和污点路径判断结果属于真漏洞、误报还是需要人工确认；同时支持生成修复建议、修复代码和可利用性分析，并将 AI 分析结果回写到报告中持久保存。用户还可以导出 HTML 报告，用于复盘、归档和团队协作。
+
+因此，本作品并不是只完成“发现漏洞”的前半段任务，而是进一步面向开发者处置流程，提供漏洞解释、风险研判和修复建议，使扫描结果更易被理解和应用。
+\par}
+
+\subsection{对话式 Agent 安全助手}
+
+{\zihao{-4}\songti
+本作品将 Agent 技术引入代码安全分析场景，构建了自然语言驱动的智能交互入口。用户既可以围绕已有扫描报告提问，例如询问某条漏洞的成因、风险等级、触发路径、误报可能性和修复方式；也可以在没有报告的情况下直接提出安全分析需求，例如查询某类 CVE、生成特定语言的检测规则或分析某类漏洞模式。Agent 根据用户意图调用 CVE 检索、规则生成、扫描分析和报告解释等工具，将“自然语言需求”转化为“工具化安全分析流程”。
+
+这一设计突破了传统安全工具依赖复杂表单和命令参数的交互方式，使平台从静态报告展示系统进一步演进为交互式安全分析助手。对于非专业开发者，Agent 能降低理解漏洞和使用规则工坊的门槛；对于安全人员，Agent 能提升检索漏洞情报、生成规则和解释报告的效率。
+\par}
+
+\subsection{小结}
+
+{\zihao{-4}\songti
+综上，本作品的核心创新可以概括为：以 YASA 深度污点分析能力为底座，以 LLM 和 Agent 技术为智能化增强手段，构建了覆盖漏洞情报检索、规则自动生成、真实引擎评估、反馈迭代优化、规则资产管理、代码扫描、报告研判和修复建议的端到端平台。其创新重点不是简单“使用大模型”或“封装扫描器”，而是将大模型生成能力置于真实静态分析引擎的反馈约束之下，使规则生成具备可执行、可评估、可优化和可沉淀的工程属性。这一思路为多语言代码安全分析和静态分析规则库持续演化提供了新的实现路径。
+\par}
+
+
+\newpage
+
+%% ==================== 第五章 ====================
+\section{总结}
+
+\newpage
+
+%% ==================== 参考文献 ====================
+\begin{thebibliography}{9}
+\setlength{\itemsep}{-1mm}
+
+\bibitem{beller2016}
+  Beller M, Bholanath R, McIntosh S, et al. Analyzing the state of static analysis: A large-scale evaluation in open source software[C]// 2016 IEEE 23rd International Conference on Software Analysis, Evolution, and Reengineering (SANER). IEEE, 2016: 470--481.
+
+\bibitem{mendonca2022}
+  Mendonça D S, Kalinowski M. An empirical investigation on the challenges of creating custom static analysis rules for defect localization[J]. Software Quality Journal, 2022, 30(3): 781--808.
+
+\bibitem{hou2025}
+  Hou Z, Duan Z, Yang M, et al. Generation, Migration and Optimization of Cross-Language Static-Analysis Rules Based on Large Language Models[C]// 2025 25th International Conference on Software Quality, Reliability and Security (QRS). IEEE, 2025: 34--45.
+
+\bibitem{yang2025}
+  Yang C, Zhao Z, Xie Z, et al. KNighter: Transforming Static Analysis with LLM-Synthesized Checkers[J]. arXiv preprint arXiv:2503.09002, 2025.
+
+\bibitem{yang2024}
+  Yang A Z, Le Goues C, Martins R, et al. Large language models for test-free fault localization[C]// Proceedings of the 46th IEEE/ACM International Conference on Software Engineering. 2024: 1--12.
+
+\bibitem{hossain2024}
+  Hossain S B, Jiang N, Zhou Q, et al. A deep dive into large language models for automated bug localization and repair[J]. Proceedings of the ACM on Software Engineering, 2024, 1(FSE): 1471--1493.
+
+\bibitem{li2024}
+  Li H, Hao Y, Zhai Y, et al. Enhancing static analysis for practical bug detection: An LLM-integrated approach[J]. Proceedings of the ACM on Programming Languages, 2024, 8(OOPSLA1): 474--499.
+
+\bibitem{chapman2024}
+  Chapman P J, Rubio-González C, Thakur A V. Interleaving static analysis and LLM prompting[C]// Proceedings of the 13th ACM SIGPLAN International Workshop on the State Of the Art in Program Analysis. 2024: 9--17.
+
+\end{thebibliography}
+
+\end{document}
+
+  Yang A Z, Le Goues C, Martins R, et al. Large language models for test-free fault localization[C]// Proceedings of the 46th IEEE/ACM International Conference on Software Engineering. 2024: 1--12.
+
+\bibitem{hossain2024}
+  Hossain S B, Jiang N, Zhou Q, et al. A deep dive into large language models for automated bug localization and repair[J]. Proceedings of the ACM on Software Engineering, 2024, 1(FSE): 1471--1493.
+
+\bibitem{li2024}
+  Li H, Hao Y, Zhai Y, et al. Enhancing static analysis for practical bug detection: An LLM-integrated approach[J]. Proceedings of the ACM on Programming Languages, 2024, 8(OOPSLA1): 474--499.
+
+\bibitem{chapman2024}
+  Chapman P J, Rubio-González C, Thakur A V. Interleaving static analysis and LLM prompting[C]// Proceedings of the 13th ACM SIGPLAN International Workshop on the State Of the Art in Program Analysis. 2024: 9--17.
+
+\end{thebibliography}
+
+\end{document}

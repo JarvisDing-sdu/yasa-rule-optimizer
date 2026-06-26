@@ -1,4 +1,4 @@
-# 马医生 Code Security Scanner
+# 码医生 Code Security Scanner
 
 [语言：**中文** | [English](README.en.md)]
 

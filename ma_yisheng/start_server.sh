@@ -1,5 +1,5 @@
 #!/bin/bash
-# 马医生 YASA 扫描后端 - 启动脚本
+# 码医生 YASA 扫描后端 - 启动脚本
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,7 +22,7 @@ fi
 HOST=${API_HOST:-0.0.0.0}
 PORT=${API_PORT:-8000}
 
-echo "启动马医生后端：http://$HOST:$PORT"
+echo "启动码医生后端：http://$HOST:$PORT"
 echo "API 文档：http://$HOST:$PORT/docs"
 echo "按 Ctrl+C 停止"
 echo ""

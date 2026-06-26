@@ -12,7 +12,7 @@ def health_check() -> Dict[str, Any]:
     from config import LLM_API_KEY, YASA_BUNDLE_PATH
     return {
         "status": "ok",
-        "service": "马医生后端",
+        "service": "码医生后端",
         "yasa_configured": bool(YASA_BUNDLE_PATH),
         "llm_configured": bool(LLM_API_KEY),
         "timestamp": datetime.now().isoformat(),

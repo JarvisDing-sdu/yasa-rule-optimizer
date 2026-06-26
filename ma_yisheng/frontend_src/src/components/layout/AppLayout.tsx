@@ -31,7 +31,7 @@ export function AppLayout() {
       <aside className="w-72 shrink-0 border-r-3 border-black flex flex-col bg-white">
         {/* 品牌 */}
         <div className="border-b-3 border-black px-5 py-4 bg-black">
-          <h1 className="text-brutal-yellow text-xl font-black uppercase tracking-tight">马医生</h1>
+          <h1 className="text-brutal-yellow text-xl font-black uppercase tracking-tight">码医生</h1>
           <p className="text-brutal-gray text-xs uppercase tracking-widest mt-0.5">Security Scanner</p>
         </div>
 

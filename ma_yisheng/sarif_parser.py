@@ -400,7 +400,7 @@ def format_findings_text(findings: List[Dict], scan_path: str = "") -> str:
             verdict_str = f" {VERDICT_MAP.get(verdict, '')}" if verdict else ""
             lines.append(f"\n{i}. 【{f.get('vuln_name', '未知')}】{verdict_str} {f.get('file', '')}:{f.get('line', 0)}")
             if f.get("llm_reason"):
-                lines.append(f"   马医生: {f['llm_reason']}")
+                lines.append(f"   码医生: {f['llm_reason']}")
             if f.get("snippet"):
                 lines.append(f"   代码: {f['snippet'][:60].strip()}...")
             if f.get("code_flow"):

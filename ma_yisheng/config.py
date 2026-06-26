@@ -169,7 +169,7 @@ SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587").strip() or "587")
 SMTP_USER = os.environ.get("SMTP_USER", "").strip()
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
-SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "马医生").strip()
+SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "码医生").strip()
 SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "auto").strip().lower()
 
 
@@ -365,7 +365,7 @@ def reload_config() -> None:
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587").strip() or "587")
     SMTP_USER = os.environ.get("SMTP_USER", "").strip()
     SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
-    SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "马医生").strip()
+    SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "码医生").strip()
     SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "auto").strip().lower()
     SEMGREP_RULES_PATH = os.environ.get("SEMGREP_RULES_PATH", "").strip()
     _origins_raw = os.environ.get("ALLOWED_ORIGINS", "").strip()

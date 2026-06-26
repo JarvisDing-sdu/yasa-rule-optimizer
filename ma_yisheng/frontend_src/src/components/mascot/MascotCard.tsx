@@ -162,7 +162,7 @@ export function MascotCard() {
     <div
       className="flex flex-col items-center gap-3 select-none cursor-pointer hover:opacity-80 transition-opacity"
       onClick={() => nav('/chat')}
-      title="点击和马医生对话"
+      title="点击和码医生对话"
     >
       <p className="text-xs font-black uppercase tracking-[0.3em] text-black">马 医 生</p>
 

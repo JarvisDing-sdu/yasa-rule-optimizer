@@ -91,7 +91,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* 标题 */}
         <div className="mb-8 text-center">
-          <h1 className="text-5xl font-black uppercase tracking-tight">马医生</h1>
+          <h1 className="text-5xl font-black uppercase tracking-tight">码医生</h1>
           <p className="text-sm font-bold uppercase tracking-widest text-gray-500 mt-1">
             Code Security Scanner
           </p>

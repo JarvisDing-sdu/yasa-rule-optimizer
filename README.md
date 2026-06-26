@@ -1,4 +1,4 @@
-# 马医生 · Code Security Scanner
+# 码医生 · Code Security Scanner
 
 <p>
   <a href="http://47.94.95.178">网页版</a> ·

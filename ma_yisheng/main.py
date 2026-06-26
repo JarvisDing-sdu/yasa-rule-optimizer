@@ -1,4 +1,4 @@
-"""马医生 YASA 扫描器 - FastAPI 应用入口（重构版）"""
+"""码医生 YASA 扫描器 - FastAPI 应用入口（重构版）"""
 import os
 import time
 import threading
@@ -51,7 +51,7 @@ async def lifespan(app_instance):
     yield
 
 app = FastAPI(
-    title="马医生 YASA 扫描后端",
+    title="码医生 YASA 扫描后端",
     version="2.1.0",
     description="代码漏洞扫描 REST API",
     lifespan=lifespan,
@@ -179,12 +179,12 @@ if os.path.isdir(FRONTEND_DIR):
 if __name__ == "__main__":
     import argparse
     import uvicorn
-    parser = argparse.ArgumentParser(description="马医生 YASA 扫描后端")
+    parser = argparse.ArgumentParser(description="码医生 YASA 扫描后端")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
-    print(f"启动马医生后端 v2.1：http://{args.host}:{args.port}")
+    print(f"启动码医生后端 v2.1：http://{args.host}:{args.port}")
     if args.reload:
         uvicorn.run("main:app", host=args.host, port=args.port, reload=True)
     else:

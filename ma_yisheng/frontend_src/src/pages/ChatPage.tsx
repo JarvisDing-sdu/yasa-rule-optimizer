@@ -326,7 +326,7 @@ export default function ChatPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center gap-4 mb-4">
           <Button variant="yellow" size="sm" onClick={() => nav('/')}>← 返回</Button>
-          <h1 className="text-xl font-black uppercase">马医生 AI 对话</h1>
+          <h1 className="text-xl font-black uppercase">码医生 AI 对话</h1>
         </header>
 
         <Card className="flex-1 flex flex-col mb-4 overflow-hidden">
@@ -334,7 +334,7 @@ export default function ChatPage() {
             {messages.length === 0 && (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-sm text-gray-500 text-center max-w-lg leading-relaxed px-4">
-                  <p className="text-base font-black mb-3">🐴 我是<strong>马医生</strong>，你的代码安全分析助手</p>
+                  <p className="text-base font-black mb-3">🐴 我是<strong>码医生</strong>，你的代码安全分析助手</p>
                   <div className="text-left space-y-1.5">
                     <p>🔍 <strong>代码扫描</strong> — 上传代码文件或指定路径，自动检测漏洞</p>
                     <p>🌐 <strong>联网搜索</strong> — 搜索最新漏洞情报、技术文档、CVE 详情</p>
@@ -453,7 +453,7 @@ export default function ChatPage() {
                   showPathInput ? 'bg-brutal-purple text-white' : 'bg-white hover:bg-brutal-gray'
                 }`} title="指定本地文件路径"
               >📂</button>
-              <input type="text" placeholder={attachedFile ? '输入问题（可选）...' : '问马医生，或上传代码文件...'}
+              <input type="text" placeholder={attachedFile ? '输入问题（可选）...' : '问码医生，或上传代码文件...'}
                 value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') send() }} disabled={loading}
                 className="flex-1 px-4 py-3 text-sm font-medium outline-none bg-white"
