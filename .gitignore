@@ -10,3 +10,13 @@ yasa-reports/
 frontend_dist/
 logs/
 .claude/settings.local.json
+
+# Local runtime data and packaged app artifacts
+ma_yisheng/.pyinstaller-cache/
+ma_yisheng/build/
+ma_yisheng/dist/
+ma_yisheng/frontend_src/release/
+ma_yisheng/frontend_src/dist/
+ma_yisheng/ma-yisheng-backend.spec
+backend.log
+.jwt_secret

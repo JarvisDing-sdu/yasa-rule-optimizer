@@ -116,6 +116,23 @@ def _cleanup_filtered_source(temp_dir: str):
         pass
 
 
+def _build_child_env() -> dict:
+    """Return a clean environment for external scanner binaries."""
+    env = os.environ.copy()
+    for key in (
+        "ELECTRON_RUN_AS_NODE",
+        "ELECTRON_NO_ATTACH_CONSOLE",
+        "ELECTRON_ENABLE_LOGGING",
+        "NODE_OPTIONS",
+        "NODE_PATH",
+        "npm_config_prefix",
+        "npm_lifecycle_event",
+        "npm_lifecycle_script",
+    ):
+        env.pop(key, None)
+    return env
+
+
 def _has_excludable_dirs(scan_path: str, exclude_dirs: list) -> bool:
     """检查项目中是否存在需要排除的目录"""
     p = Path(scan_path)
@@ -209,7 +226,14 @@ def run_yasa_scan(
     if uast_path:
         cmd.extend(["--uastSDKPath", uast_path])
 
-    popen_kw = dict(stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+    popen_kw = dict(
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=_build_child_env(),
+    )
 
     try:
         proc = subprocess.Popen(cmd, **popen_kw)
@@ -265,7 +289,8 @@ def run_yasa_scan(
         out = "".join(stdout_lines)
         if use_filtered:
             _cleanup_filtered_source(filtered_dir)
-        return proc.returncode == 0, out, "", str(report_dir)
+        err = "" if proc.returncode == 0 else f"YASA 退出码 {proc.returncode}"
+        return proc.returncode == 0, out, err, str(report_dir)
     except subprocess.TimeoutExpired:
         proc.kill()
         if use_filtered:
@@ -429,6 +454,7 @@ def run_semgrep_scan(
             text=True,
             encoding="utf-8",
             errors="replace",
+            env=_build_child_env(),
         )
         stdout_lines = []
 

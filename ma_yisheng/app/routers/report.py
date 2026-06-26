@@ -52,7 +52,7 @@ def get_report_findings_endpoint(report_path: str, user: Dict = Depends(get_curr
     rd = Path(report_path)
     if not rd.is_dir():
         raise HTTPException(status_code=404, detail="报告目录不存在")
-    if not (rd / "report.json").exists() and not (rd / "report.sarif").exists():
+    if not (rd / "report.json").exists() and not (rd / "report.sarif").exists() and not (rd / "summary.txt").exists():
         raise HTTPException(status_code=404, detail="报告不存在")
     findings = get_structured_findings(report_path)
     return {"findings": findings, "count": len(findings)}

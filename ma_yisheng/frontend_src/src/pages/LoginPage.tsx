@@ -160,8 +160,13 @@ export default function LoginPage() {
             )}
 
             {error && (
-              <div className="border-3 border-brutal-red bg-white px-3 py-2">
+              <div className="border-3 border-brutal-red bg-white px-3 py-2 flex flex-col gap-2">
                 <p className="text-brutal-red text-xs font-black">{error}</p>
+                {(error.includes('邮件') || error.includes('SMTP') || error.includes('Connection')) && (
+                  <Button variant="white" size="sm" onClick={() => nav('/setup')} className="w-fit">
+                    返回环境配置
+                  </Button>
+                )}
               </div>
             )}
             {success && (

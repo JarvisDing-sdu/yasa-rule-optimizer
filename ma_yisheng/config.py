@@ -2,13 +2,36 @@
 """配置加载模块"""
 
 import os
+import sys
 from pathlib import Path
+
+
+def get_runtime_dir() -> Path:
+    """Writable runtime data directory."""
+    override = os.environ.get("MA_YISHENG_DATA_DIR", "").strip()
+    if override:
+        p = Path(override).expanduser()
+    elif sys.platform == "darwin":
+        p = Path.home() / "Library" / "Application Support" / "MaYisheng"
+    elif os.name == "nt":
+        p = Path(os.environ.get("APPDATA", str(Path.home()))) / "MaYisheng"
+    else:
+        p = Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share"))) / "ma-yisheng"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def get_env_path() -> Path:
+    """Writable .env path."""
+    return get_runtime_dir() / ".env"
+
 
 # 尝试加载 .env
 try:
     from dotenv import load_dotenv
     # 优先从系统安全目录加载密钥，再加载项目 .env（用于本地开发覆盖）
     load_dotenv("/etc/ma_yisheng/env")
+    load_dotenv(get_env_path())
     load_dotenv()
 except ImportError:
     pass
@@ -16,12 +39,19 @@ except ImportError:
 
 def get_project_root() -> Path:
     """获取项目根目录（脚本所在目录）"""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent
+
+
+def get_data_path(name: str) -> Path:
+    """Return writable runtime file path."""
+    return get_runtime_dir() / name
 
 
 def get_reports_dir() -> Path:
     """获取报告保存目录"""
-    return get_project_root() / "yasa-reports"
+    return get_data_path("yasa-reports")
 
 
 RECENT_PATHS_FILE = "recent_paths.json"
@@ -30,7 +60,7 @@ RECENT_PATHS_MAX = 10
 
 def get_recent_paths() -> list:
     """获取最近扫描路径列表，最多 RECENT_PATHS_MAX 条"""
-    p = get_project_root() / RECENT_PATHS_FILE
+    p = get_data_path(RECENT_PATHS_FILE)
     if not p.exists():
         return []
     try:
@@ -55,7 +85,7 @@ def add_recent_path(path: str) -> None:
     paths = paths[:RECENT_PATHS_MAX]
     try:
         import json
-        p = get_project_root() / RECENT_PATHS_FILE
+        p = get_data_path(RECENT_PATHS_FILE)
         with open(p, "w", encoding="utf-8") as f:
             json.dump({"paths": paths}, f, ensure_ascii=False, indent=2)
     except Exception:
@@ -107,7 +137,7 @@ _WEAK_JWT_DEFAULTS = {
 if _JWT_SECRET_RAW in _WEAK_JWT_DEFAULTS:
     import secrets as _secrets
     # 尝试从持久化文件恢复上次自动生成的密钥，避免重启后登录态全部失效
-    _jwt_persist_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".jwt_secret")
+    _jwt_persist_file = str(get_data_path(".jwt_secret"))
     try:
         if os.path.exists(_jwt_persist_file):
             with open(_jwt_persist_file, "r") as _f:
@@ -134,6 +164,7 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587").strip() or "587")
 SMTP_USER = os.environ.get("SMTP_USER", "").strip()
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
 SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "马医生").strip()
+SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "auto").strip().lower()
 
 
 
@@ -221,7 +252,7 @@ def save_env_config(updates: dict) -> bool:
     将配置项保存到 .env 文件。updates 格式: {"YASA_BUNDLE_PATH": "/home/xx/yasa", ...}
     保留 .env 中其他未修改的项。
     """
-    env_path = get_project_root() / ".env"
+    env_path = get_env_path()
     output = []
     written_keys = set()
     if env_path.exists():
@@ -255,7 +286,7 @@ def save_env_config(updates: dict) -> bool:
 def save_scan_timeout(seconds: int) -> bool:
     """将 SCAN_TIMEOUT 保存到 .env，用于对话/Agent 的默认扫描超时"""
     global SCAN_TIMEOUT
-    env_path = get_project_root() / ".env"
+    env_path = get_env_path()
     lines = []
     found = False
     if env_path.exists():
@@ -286,14 +317,21 @@ def get_missing_config() -> list:
         missing.append("YASA_BUNDLE_PATH（YASA 安装目录的 WSL 路径，如 /home/csj/yasa-linux-x64）")
     if not LLM_API_KEY:
         missing.append("LLM_API_KEY（DeepSeek 或 OpenAI 的 API Key）")
+    if not SMTP_HOST:
+        missing.append("SMTP_HOST（邮件服务器地址，如 smtp.qq.com / smtp.gmail.com）")
+    if not SMTP_USER:
+        missing.append("SMTP_USER（发件邮箱账号）")
+    if not SMTP_PASSWORD:
+        missing.append("SMTP_PASSWORD（邮箱授权码或 SMTP 密码）")
     return missing
 
 
 def reload_config() -> None:
     """重新加载 .env 并更新配置（配置向导保存后调用）"""
-    global YASA_BUNDLE_PATH, YASA_EXECUTABLE, UAST_PYTHON_EXE, UAST_GO_EXE, LLM_PROVIDER, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, SCAN_TIMEOUT, SCAN_EXCLUDE_DIRS, SERVER_URL, SERVER_MODE, JWT_SECRET, JWT_EXPIRE_DAYS, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME, SEMGREP_RULES_PATH, ALLOWED_ORIGINS
+    global YASA_BUNDLE_PATH, YASA_EXECUTABLE, UAST_PYTHON_EXE, UAST_GO_EXE, LLM_PROVIDER, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, SCAN_TIMEOUT, SCAN_EXCLUDE_DIRS, SERVER_URL, SERVER_MODE, JWT_SECRET, JWT_EXPIRE_DAYS, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME, SMTP_SECURITY, SEMGREP_RULES_PATH, ALLOWED_ORIGINS
     try:
         from dotenv import load_dotenv
+        load_dotenv(get_env_path(), override=True)
         load_dotenv(override=True)
     except ImportError:
         pass
@@ -321,6 +359,7 @@ def reload_config() -> None:
     SMTP_USER = os.environ.get("SMTP_USER", "").strip()
     SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
     SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "马医生").strip()
+    SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "auto").strip().lower()
     SEMGREP_RULES_PATH = os.environ.get("SEMGREP_RULES_PATH", "").strip()
     _origins_raw = os.environ.get("ALLOWED_ORIGINS", "").strip()
     ALLOWED_ORIGINS = [o.strip() for o in _origins_raw.split(",") if o.strip()]

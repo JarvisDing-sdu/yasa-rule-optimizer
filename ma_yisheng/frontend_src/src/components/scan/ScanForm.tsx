@@ -22,7 +22,7 @@ const languageOptions = [
 ]
 
 export function ScanForm({ onSubmitted }: Props) {
-  const [tab, setTab] = useState<Tab>('upload')
+  const [tab, setTab] = useState<Tab>('path')
   const [path, setPath] = useState('')
   const [engine, setEngine] = useState('semgrep')
   const [lang, setLang] = useState('auto')
@@ -73,20 +73,33 @@ export function ScanForm({ onSubmitted }: Props) {
     }
   }
 
+  const selectDirectory = async () => {
+    if (!window.maYisheng?.selectDirectory) {
+      setError('当前环境不支持目录选择，请手动填写本地路径')
+      return
+    }
+    setError('')
+    const res = await window.maYisheng.selectDirectory()
+    if (res.ok && res.path) {
+      setTab('path')
+      setPath(res.path)
+    }
+  }
+
   return (
     <Card className="p-5">
       <h2 className="text-lg font-black uppercase mb-4">提交扫描</h2>
 
       {/* Tab 切换 */}
       <div className="flex mb-4 border-3 border-black w-fit">
-        {(['upload', 'path'] as Tab[]).map((t) => (
+        {(['path', 'upload'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-1.5 text-xs font-black uppercase tracking-wider transition-colors
               ${tab === t ? 'bg-black text-brutal-yellow' : 'bg-white text-black hover:bg-brutal-gray'}`}
           >
-            {t === 'upload' ? '上传 ZIP' : '服务器路径'}
+            {t === 'upload' ? '上传 ZIP' : '本地路径'}
           </button>
         ))}
       </div>
@@ -105,12 +118,17 @@ export function ScanForm({ onSubmitted }: Props) {
             />
           </div>
         ) : (
-          <Input
-            label="服务器路径"
-            placeholder="/home/user/project"
-            value={path}
-            onChange={(e) => setPath(e.target.value)}
-          />
+          <div className="flex flex-col gap-2">
+            <Input
+              label="本地项目路径"
+              placeholder="/Users/infinite/Downloads/project"
+              value={path}
+              onChange={(e) => setPath(e.target.value)}
+            />
+            <Button variant="white" size="sm" onClick={selectDirectory} type="button">
+              选择文件夹
+            </Button>
+          </div>
         )}
 
         {/* 语言选择 */}

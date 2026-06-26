@@ -11,6 +11,15 @@ def send_verification_email(to_email, code, smtp_config):
         user = smtp_config.get("user")
         password = smtp_config.get("password")
         from_name = smtp_config.get("from_name", "马医生")
+        try:
+            port = int(port)
+        except (TypeError, ValueError):
+            port = 587
+        security = (smtp_config.get("security") or "").lower()
+        if not security or security == "auto":
+            security = "ssl" if port == 465 else "starttls"
+        if port == 465 and security == "starttls":
+            security = "ssl"
 
         if not all([host, user, password]):
             return False, "SMTP 配置不完整（host/user/password 缺失）"
@@ -36,8 +45,14 @@ def send_verification_email(to_email, code, smtp_config):
 </html>"""
 
         msg.attach(MIMEText(html_body, "html", "utf-8"))
-        with smtplib.SMTP(host, port) as server:
-            server.starttls()
+        if security == "ssl":
+            server_ctx = smtplib.SMTP_SSL(host, port, timeout=20)
+        else:
+            server_ctx = smtplib.SMTP(host, port, timeout=20)
+
+        with server_ctx as server:
+            if security == "starttls":
+                server.starttls()
             server.login(user, password)
             server.sendmail(user, to_email, msg.as_string())
         return True, ""

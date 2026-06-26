@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 @router.post("/send-code", summary="发送邮箱验证码")
 @limiter.limit(AUTH_LIMITS["send_code"])
 def send_verification_code(request: Request, req: SendCodeRequest):
-    from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME
+    from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME, SMTP_SECURITY
     from auth import generate_verification_code, save_verification_code, try_acquire_send_slot
     from email_service import send_verification_email
 
@@ -23,6 +23,7 @@ def send_verification_code(request: Request, req: SendCodeRequest):
         "host": SMTP_HOST, "port": SMTP_PORT,
         "user": SMTP_USER, "password": SMTP_PASSWORD,
         "from_name": SMTP_FROM_NAME,
+        "security": SMTP_SECURITY,
     }
     ok, err_msg = send_verification_email(req.email, code, smtp_config)
     if not ok:

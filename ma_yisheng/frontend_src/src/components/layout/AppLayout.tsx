@@ -6,6 +6,8 @@ import { Button } from '../ui/Button'
 const NAV_ITEMS = [
   { to: '/',        label: '仪表盘',   icon: '◆' },
   { to: '/reports', label: '报告列表', icon: '◇' },
+  { to: '/rule-workshop', label: '规则工坊', icon: '◆' },
+  { to: '/settings', label: '环境配置', icon: '◇' },
 ]
 
 export function AppLayout() {
@@ -45,17 +47,6 @@ export function AppLayout() {
               {label}
             </NavLink>
           ))}
-          <a
-            href="/rule-workshop"
-            onClick={(event) => {
-              event.preventDefault()
-              window.location.assign('/rule-workshop')
-            }}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm font-black uppercase tracking-wider transition-colors border-3 bg-white text-black border-transparent hover:bg-brutal-gray hover:border-black"
-          >
-            <span className="text-lg">◆</span>
-            规则工坊
-          </a>
         </nav>
 
         {/* 用户信息 */}
@@ -74,7 +65,7 @@ export function AppLayout() {
 
       {/* ── 主区域 ── */}
       <main className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Outlet />
         </div>
       </main>

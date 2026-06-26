@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-export const API_BASE = window.location.origin
+const envApiBase = import.meta.env.VITE_API_BASE_URL?.trim()
+const desktopApiBase = window.maYisheng?.apiBase?.trim()
+const fallbackApiBase = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : window.location.origin
+
+export const API_BASE = desktopApiBase || envApiBase || fallbackApiBase
 
 const client = axios.create({
   baseURL: API_BASE,
@@ -22,7 +26,7 @@ client.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('email')
       // 跳转登录页，同时 reject 让调用方知道自己被中断了
-      setTimeout(() => { window.location.href = '/login' }, 0)
+      setTimeout(() => { window.location.hash = '#/login' }, 0)
       return Promise.reject(new Error('AUTH_REQUIRED'))
     }
     const detail = err.response?.data?.detail

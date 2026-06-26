@@ -1,9 +1,9 @@
 """SQLAlchemy database setup."""
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
-from config import get_project_root
+from config import get_data_path
 
-DB_PATH = str(get_project_root() / "users.db")
+DB_PATH = str(get_data_path("users.db"))
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(

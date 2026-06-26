@@ -107,6 +107,7 @@ from app.routers.health import router as health_router
 from app.routers.conversation import router as conversation_router
 from app.routers.rule_sets import router as rule_sets_router
 from app.routers.cve import router as cve_router
+from app.routers.config import router as config_router
 
 app.include_router(auth_router)
 app.include_router(scan_router)
@@ -116,6 +117,7 @@ app.include_router(health_router)
 app.include_router(conversation_router)
 app.include_router(rule_sets_router)
 app.include_router(cve_router)
+app.include_router(config_router)
 
 try:
     from rule_generation_api import router as rule_gen_router
@@ -183,4 +185,7 @@ if __name__ == "__main__":
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
     print(f"启动马医生后端 v2.1：http://{args.host}:{args.port}")
-    uvicorn.run("main:app", host=args.host, port=args.port, reload=args.reload)
+    if args.reload:
+        uvicorn.run("main:app", host=args.host, port=args.port, reload=True)
+    else:
+        uvicorn.run(app, host=args.host, port=args.port)

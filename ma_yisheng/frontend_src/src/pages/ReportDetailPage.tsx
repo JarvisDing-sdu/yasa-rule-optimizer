@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { getFindings } from '../api/reports'
+import { getFindings, getReportContent } from '../api/reports'
 import { chainAnalysis } from '../api/scan'
 import type { Finding } from '../api/reports'
 import { FindingItem } from '../components/report/FindingItem'
@@ -18,6 +18,7 @@ export default function ReportDetailPage() {
   const [findings, setFindings] = useState<Finding[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [rawContent, setRawContent] = useState('')
 
   // Chain analysis state
   const [chainLoading, setChainLoading] = useState(false)
@@ -29,9 +30,20 @@ export default function ReportDetailPage() {
   useEffect(() => {
     if (!reportPath) return
     setLoading(true)
+    setError('')
+    setRawContent('')
     getFindings(reportPath)
       .then((res) => setFindings(res.data.findings ?? []))
-      .catch(() => setError('加载报告失败'))
+      .catch(async () => {
+        try {
+          const res = await getReportContent(reportPath)
+          setFindings([])
+          setRawContent(res.data.content || '')
+          setError('')
+        } catch {
+          setError('加载报告失败')
+        }
+      })
       .finally(() => setLoading(false))
   }, [reportPath])
 
@@ -63,6 +75,16 @@ export default function ReportDetailPage() {
     }
   }
 
+  const handleShowReportDir = async () => {
+    if (!reportPath) return
+    if (!window.maYisheng?.showPath) {
+      alert(reportPath)
+      return
+    }
+    const res = await window.maYisheng.showPath(reportPath)
+    if (!res.ok) alert(res.error || '打开报告目录失败')
+  }
+
   const sorted = [...findings].sort((a, b) => {
     const order: Record<string, number> = { '高危': 0, '中危': 1, '低危': 2 }
     return (order[a.severity] ?? 3) - (order[b.severity] ?? 3)
@@ -73,6 +95,9 @@ export default function ReportDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <Button variant="white" size="sm" onClick={() => nav('/reports')}>← 返回</Button>
         <h2 className="text-3xl font-black uppercase">报告详情</h2>
+        {reportPath && (
+          <Button variant="white" size="sm" onClick={handleShowReportDir}>打开目录</Button>
+        )}
       </div>
 
       {loading && (
@@ -89,6 +114,11 @@ export default function ReportDetailPage() {
 
       {!loading && !error && (
         <div className="flex flex-col gap-6">
+          <Card className="p-3">
+            <p className="text-xs font-black uppercase text-gray-500">报告目录</p>
+            <p className="text-xs font-mono break-all mt-1">{reportPath}</p>
+          </Card>
+
           {/* 摘要 */}
           <div className="grid grid-cols-3 gap-3">
             <Card className="p-4 bg-brutal-red text-white flex flex-col items-center">
@@ -138,8 +168,15 @@ export default function ReportDetailPage() {
           {/* 空结果 */}
           {findings.length === 0 && (
             <Card className="p-8 text-center border-3 border-dashed border-black">
-              <p className="font-black uppercase text-lg">未发现漏洞</p>
-              <p className="text-sm font-medium mt-1">代码看起来很干净</p>
+              <p className="font-black uppercase text-lg">{rawContent ? '无结构化漏洞' : '未发现漏洞'}</p>
+              <p className="text-sm font-medium mt-1">{rawContent ? '下方显示原始扫描输出' : '代码看起来很干净'}</p>
+            </Card>
+          )}
+
+          {rawContent && (
+            <Card className="p-4">
+              <p className="text-xs font-black uppercase text-gray-500 mb-2">原始输出</p>
+              <pre className="text-xs whitespace-pre-wrap break-words max-h-[520px] overflow-auto">{rawContent}</pre>
             </Card>
           )}
 

@@ -64,6 +64,15 @@ export default function ReportsPage() {
     window.open(getExportUrl(path), '_blank')
   }
 
+  const handleShowPath = async (path: string) => {
+    if (!window.maYisheng?.showPath) {
+      alert(path)
+      return
+    }
+    const res = await window.maYisheng.showPath(path)
+    if (!res.ok) alert(res.error || '打开报告目录失败')
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -132,6 +141,9 @@ export default function ReportsPage() {
                   <span>·</span>
                   <span>{new Date(r.mtime * 1000).toLocaleString('zh-CN')}</span>
                 </div>
+                <div className="mt-1 text-xs text-gray-500 truncate" title={r.path}>
+                  {r.path}
+                </div>
                 {r.vuln_types.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                     {r.vuln_types.slice(0, 5).map((v, i) => (
@@ -168,6 +180,14 @@ export default function ReportsPage() {
                     title="导出 HTML"
                   >
                     ⬇
+                  </Button>
+                  <Button
+                    variant="white"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); handleShowPath(r.path) }}
+                    title="在 Finder 中打开报告目录"
+                  >
+                    目录
                   </Button>
                   <Button
                     variant="red"

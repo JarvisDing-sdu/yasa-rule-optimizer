@@ -26,8 +26,8 @@ except ImportError:
 
 def get_db_path() -> Path:
     """获取数据库路径"""
-    from config import get_project_root
-    return get_project_root() / "users.db"
+    from config import get_data_path
+    return get_data_path("users.db")
 
 
 def _connect():

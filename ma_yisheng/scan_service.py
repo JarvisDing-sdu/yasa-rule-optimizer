@@ -61,11 +61,12 @@ def run_scan_background(
                         on_output=on_output, user_id=user_id,
                         rule_config_override=merged_path,
                     )
+                error_text = err or ("" if ok else "扫描进程异常退出，请打开报告查看原始输出")
                 r: Dict[str, Any] = {
                     "lang": detected_lang, "ok": ok, "report_dir": report_dir,
-                    "error": err, "engine": engine,
+                    "error": error_text, "engine": engine,
                 }
-                if ok and report_dir:
+                if report_dir:
                     json_path, txt_path = save_report(report_dir, scan_path, detected_lang, out)
                     if favorite:
                         mark_as_favorite(report_dir)
@@ -93,8 +94,9 @@ def run_scan_background(
                     on_output=on_output, user_id=user_id,
                     rule_config_override=merged_rule_path,
                 )
-            r = {"lang": lang, "ok": ok, "report_dir": report_dir, "error": err, "engine": engine}
-            if ok and report_dir:
+            error_text = err or ("" if ok else "扫描进程异常退出，请打开报告查看原始输出")
+            r = {"lang": lang, "ok": ok, "report_dir": report_dir, "error": error_text, "engine": engine}
+            if report_dir:
                 json_path, txt_path = save_report(report_dir, scan_path, lang, out)
                 if favorite:
                     mark_as_favorite(report_dir)
