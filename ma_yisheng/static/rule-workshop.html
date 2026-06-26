@@ -253,7 +253,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
       <option value="30">30</option>
     </select>
   </div>
-  <button id="searchBtn" class="btn-yellow" style="width:100%;">搜索 GitHub Advisory</button>
+  <button id="searchBtn" class="btn-yellow" style="width:100%;">搜索 GitHub 漏洞公告</button>
   <div id="cveStatus"></div>
   <div class="list" id="cveResults" style="margin-top:8px;">
     <div style="color:#888;font-size:12px;">输入条件后点击搜索</div>
@@ -477,7 +477,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     if (state.cveResults.length === 0) {
       document.getElementById('cveResults').innerHTML =
         '<div style="color:#888;font-size:12px;">无结果，尝试更换关键词或语言</div>';
-      showStatus(status, 'info', '未找到结果');
+      showStatus(status, 'info', '未找到漏洞公告；这不是仓库搜索，可尝试更换语言、漏洞类型或关键词');
     } else {
       showStatus(status, 'ok', '找到 ' + state.cveResults.length + ' 条结果');
       renderCveList();

@@ -22,10 +22,13 @@ async def search_cve(
     keyword: str = Query(""),
     user: t.Dict = Depends(get_current_user),
 ):
-    results = await search_github_advisories(
-        language=language, vuln_type=vuln_type,
-        count=count, keyword=keyword,
-    )
+    try:
+        results = await search_github_advisories(
+            language=language, vuln_type=vuln_type,
+            count=count, keyword=keyword,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {"results": results, "count": len(results)}
 
 

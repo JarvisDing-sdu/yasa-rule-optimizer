@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+import urllib.error
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 import logging
@@ -433,7 +434,11 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
     if github_token:
         headers["Authorization"] = f"Bearer {github_token}"
     else:
-        token = os.environ.get("GITHUB_TOKEN", "")
+        try:
+            import config
+            token = getattr(config, "GITHUB_TOKEN", "")
+        except Exception:
+            token = os.environ.get("GITHUB_TOKEN", "")
         if token:
             headers["Authorization"] = f"Bearer {token}"
 
@@ -633,8 +638,15 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
                 data = json.loads(resp.read().decode("utf-8", errors="replace"))
-        except Exception:
-            break
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode("utf-8", errors="replace")[:300]
+            if e.code == 403:
+                raise RuntimeError("GitHub API 访问受限或已触发限流，请在服务器 .env 配置 GITHUB_TOKEN 后重启服务")
+            if e.code == 401:
+                raise RuntimeError("GitHub Token 无效，请检查服务器 .env 中的 GITHUB_TOKEN")
+            raise RuntimeError(f"GitHub API 请求失败：HTTP {e.code} {detail}")
+        except Exception as e:
+            raise RuntimeError(f"GitHub API 请求失败：{e}")
 
         if not isinstance(data, list) or not data:
             break
@@ -739,7 +751,11 @@ def fetch_cve_detail_sync(ghsa_id: str, github_token: str = "") -> Optional[Dict
     if github_token:
         headers["Authorization"] = f"Bearer {github_token}"
     else:
-        token = os.environ.get("GITHUB_TOKEN", "")
+        try:
+            import config
+            token = getattr(config, "GITHUB_TOKEN", "")
+        except Exception:
+            token = os.environ.get("GITHUB_TOKEN", "")
         if token:
             headers["Authorization"] = f"Bearer {token}"
 

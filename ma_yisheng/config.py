@@ -101,6 +101,7 @@ LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "deepseek").strip()
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com").strip()
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "").strip()
 LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-v4-pro").strip()
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()
 # 服务器模式：设置 SERVER_URL 后客户端将所有扫描、LLM 请求全部转发到远程 API
 SERVER_URL = os.environ.get("SERVER_URL", "http://47.94.95.178:8000").strip().rstrip("/")
 SERVER_MODE = bool(SERVER_URL)
@@ -333,7 +334,7 @@ def get_missing_config() -> list:
 
 def reload_config() -> None:
     """重新加载 .env 并更新配置（配置向导保存后调用）"""
-    global YASA_BUNDLE_PATH, YASA_EXECUTABLE, UAST_PYTHON_EXE, UAST_GO_EXE, LLM_PROVIDER, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, SCAN_TIMEOUT, SCAN_EXCLUDE_DIRS, SERVER_URL, SERVER_MODE, JWT_SECRET, JWT_EXPIRE_DAYS, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME, SMTP_SECURITY, SEMGREP_RULES_PATH, ALLOWED_ORIGINS
+    global YASA_BUNDLE_PATH, YASA_EXECUTABLE, UAST_PYTHON_EXE, UAST_GO_EXE, LLM_PROVIDER, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, GITHUB_TOKEN, SCAN_TIMEOUT, SCAN_EXCLUDE_DIRS, SERVER_URL, SERVER_MODE, JWT_SECRET, JWT_EXPIRE_DAYS, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_NAME, SMTP_SECURITY, SEMGREP_RULES_PATH, ALLOWED_ORIGINS
     try:
         from dotenv import load_dotenv
         load_dotenv(get_env_path(), override=True)
@@ -348,6 +349,7 @@ def reload_config() -> None:
     LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com").strip()
     LLM_API_KEY = os.environ.get("LLM_API_KEY", "").strip()
     LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-v4-pro").strip()
+    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()
     try:
         _st = os.environ.get("SCAN_TIMEOUT", "300").strip()
         SCAN_TIMEOUT = int(_st) if _st else 300
