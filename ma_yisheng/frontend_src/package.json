@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "electron": "npm run build && electron .",
     "dist": "npm run build && electron-builder --mac --dir",
-    "dist:dmg": "npm run build && electron-builder --mac dmg"
+    "dist:dmg": "npm run build && electron-builder --mac dmg",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
   },
   "build": {
     "appId": "com.mayisheng.scanner",
@@ -86,6 +88,17 @@
         "dir",
         "dmg"
       ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
     }
   },
   "dependencies": {
