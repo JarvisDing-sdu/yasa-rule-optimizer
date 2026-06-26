@@ -23,9 +23,10 @@ export type RuntimeConfig = {
 
 export async function getRuntimeConfig() {
   return client.get<{
-    values: RuntimeConfig
+    values: Partial<RuntimeConfig>
     configured: { yasa: boolean; llm: boolean }
     missing: string[]
+    editable?: boolean
   }>('/api/config')
 }
 

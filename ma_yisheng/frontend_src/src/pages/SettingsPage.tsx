@@ -59,6 +59,7 @@ export default function SettingsPage({ setupMode = false }: Props) {
   const [testEmail, setTestEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [editable, setEditable] = useState(true)
 
   useEffect(() => {
     getRuntimeConfig()
@@ -69,6 +70,7 @@ export default function SettingsPage({ setupMode = false }: Props) {
         ) as RuntimeConfig
         setValues(normalized)
         setMissing(res.data.missing || [])
+        setEditable(res.data.editable !== false)
       })
       .catch((err) => setError(err instanceof Error ? err.message : '读取配置失败'))
       .finally(() => setLoading(false))
@@ -131,6 +133,17 @@ export default function SettingsPage({ setupMode = false }: Props) {
 
   if (loading) {
     return <div className="font-black">加载中...</div>
+  }
+
+  if (!editable) {
+    return (
+      <div className="border-3 border-black bg-white p-5">
+        <h2 className="text-2xl font-black uppercase">环境配置不可用</h2>
+        <p className="mt-2 text-sm font-bold text-gray-600">
+          当前是服务器部署模式，环境变量由服务端管理员维护。
+        </p>
+      </div>
+    )
   }
 
   return (

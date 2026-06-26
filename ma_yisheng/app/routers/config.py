@@ -42,6 +42,18 @@ CONFIG_KEYS = tuple(RuntimeConfigUpdate.model_fields.keys())
 def get_runtime_config():
     import config
 
+    if not config.CONFIG_UI_ENABLED:
+        return {
+            "values": {},
+            "configured": {
+                "yasa": bool(config.YASA_BUNDLE_PATH),
+                "llm": bool(config.LLM_API_KEY),
+            },
+            "missing": [],
+            "env_path": "",
+            "editable": False,
+        }
+
     values = {key: getattr(config, key, "") for key in CONFIG_KEYS}
     return {
         "values": values,
@@ -51,12 +63,16 @@ def get_runtime_config():
         },
         "missing": config.get_missing_config(),
         "env_path": str(config.get_env_path()),
+        "editable": True,
     }
 
 
 @router.post("")
 def update_runtime_config(payload: RuntimeConfigUpdate):
     import config
+
+    if not config.CONFIG_UI_ENABLED:
+        raise HTTPException(status_code=403, detail="服务器部署已关闭在线环境配置")
 
     updates = {key: str(getattr(payload, key, "") or "").strip() for key in CONFIG_KEYS}
     if not config.save_env_config(updates):
@@ -80,6 +96,9 @@ class MailTestRequest(BaseModel):
 def test_mail(payload: MailTestRequest):
     import config
     from email_service import send_verification_email
+
+    if not config.CONFIG_UI_ENABLED:
+        raise HTTPException(status_code=403, detail="服务器部署已关闭在线环境配置")
 
     if not payload.to_email.strip():
         raise HTTPException(status_code=400, detail="请填写测试收件邮箱")

@@ -11,7 +11,7 @@ export function ConfigGate() {
   useEffect(() => {
     getRuntimeConfig()
       .then((res) => {
-        setReady((res.data.missing || []).length === 0)
+        setReady(res.data.editable === false || (res.data.missing || []).length === 0)
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : '无法读取环境配置')

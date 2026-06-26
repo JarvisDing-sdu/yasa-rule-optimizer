@@ -104,6 +104,11 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-v4-pro").strip()
 # 服务器模式：设置 SERVER_URL 后客户端将所有扫描、LLM 请求全部转发到远程 API
 SERVER_URL = os.environ.get("SERVER_URL", "http://47.94.95.178:8000").strip().rstrip("/")
 SERVER_MODE = bool(SERVER_URL)
+APP_MODE = os.environ.get("APP_MODE", "server").strip().lower()
+CONFIG_UI_ENABLED = os.environ.get(
+    "CONFIG_UI_ENABLED",
+    "1" if APP_MODE in {"desktop", "local", "dev"} else "0",
+).strip().lower() in {"1", "true", "yes", "on"}
 # SCAN_TIMEOUT: 秒数，默认 300（5分钟），0 表示无限制
 try:
     _st = os.environ.get("SCAN_TIMEOUT", "300").strip()

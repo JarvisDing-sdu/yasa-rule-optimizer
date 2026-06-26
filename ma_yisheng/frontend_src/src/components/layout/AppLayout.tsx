@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { getRuntimeConfig } from '../../api/config'
 import { useAuthStore } from '../../store/authStore'
 import { MascotCard } from '../mascot/MascotCard'
 import { Button } from '../ui/Button'
@@ -7,11 +9,21 @@ const NAV_ITEMS = [
   { to: '/',        label: '仪表盘',   icon: '◆' },
   { to: '/reports', label: '报告列表', icon: '◇' },
   { to: '/rule-workshop', label: '规则工坊', icon: '◆' },
-  { to: '/settings', label: '环境配置', icon: '◇' },
 ]
 
 export function AppLayout() {
   const { email, logout } = useAuthStore()
+  const [configEditable, setConfigEditable] = useState(false)
+
+  useEffect(() => {
+    getRuntimeConfig()
+      .then((res) => setConfigEditable(res.data.editable !== false))
+      .catch(() => setConfigEditable(false))
+  }, [])
+
+  const navItems = configEditable
+    ? [...NAV_ITEMS, { to: '/settings', label: '环境配置', icon: '◇' }]
+    : NAV_ITEMS
 
   return (
     <div className="min-h-screen bg-brutal-cream flex">
@@ -30,7 +42,7 @@ export function AppLayout() {
 
         {/* 导航 */}
         <nav className="border-b-3 border-black py-3 px-3 flex flex-col gap-1">
-          {NAV_ITEMS.map(({ to, label, icon }) => (
+          {navItems.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}
