@@ -27,6 +27,7 @@ export interface ScanParams {
   timeout?: number
   favorite?: boolean
   engine?: string
+  rule_set_ids?: number[]
 }
 
 export const scanPath = (params: ScanParams) =>
@@ -35,6 +36,8 @@ export const scanPath = (params: ScanParams) =>
     lang: params.lang,
     scene: params.scene,
     engine: params.engine,
+    timeout: params.timeout,
+    rule_set_ids: params.rule_set_ids ?? [],
   })
 
 export const scanUpload = (file: File, params: Omit<ScanParams, 'scan_path'>) => {
@@ -45,6 +48,7 @@ export const scanUpload = (file: File, params: Omit<ScanParams, 'scan_path'>) =>
   form.append('timeout', String(params.timeout ?? 300))
   form.append('favorite', String(params.favorite ?? false))
   if (params.engine) form.append('engine', params.engine)
+  if (params.rule_set_ids?.length) form.append('rule_set_ids', params.rule_set_ids.join(','))
   return client.post<{ task_id: string }>('/api/scan/upload', form)
 }
 

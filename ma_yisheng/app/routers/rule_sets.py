@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 
 from app.schemas.rule_set import RuleSetCreate, RuleSetCloneOfficial, RuleToggle
-from app.deps import get_current_user
+from app.deps import get_current_user_or_local_desktop
 from app.services.rule_service import (
     get_official_rule_set_detail,
     get_official_rule_sets,
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/rule-sets", tags=["rule-sets"])
 
 @router.get("", summary="列出所有可用规则集")
 def list_rule_sets(
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
     include_official: bool = Query(True),
 ) -> Dict[str, Any]:
     result = []
@@ -34,7 +34,7 @@ def list_rule_sets(
 @router.post("", summary="创建新规则集")
 def create_new_rule_set(
     req: RuleSetCreate,
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ) -> Dict[str, Any]:
     rs = create_rule_set(
         user_id=user["user_id"],
@@ -49,7 +49,7 @@ def create_new_rule_set(
 @router.get("/{rule_set_id}", summary="获取规则集详情")
 def get_rule_set(
     rule_set_id: str,
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ) -> Dict[str, Any]:
     if rule_set_id.startswith("official_"):
         detail = get_official_rule_set_detail(rule_set_id)
@@ -67,7 +67,7 @@ def get_rule_set(
 @router.delete("/{rule_set_id}", summary="删除规则集")
 def remove_rule_set(
     rule_set_id: int,
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ) -> Dict[str, Any]:
     ok = delete_rule_set(user["user_id"], rule_set_id)
     if not ok:
@@ -79,7 +79,7 @@ def remove_rule_set(
 def clone_official(
     rule_set_id: int = 0,
     req: RuleSetCloneOfficial = RuleSetCloneOfficial(),
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ) -> Dict[str, Any]:
     if rule_set_id > 0:
         detail = get_rule_set_detail(user["user_id"], rule_set_id)
@@ -112,7 +112,7 @@ def toggle_rule(
     rule_set_id: int,
     rule_db_id: int,
     req: RuleToggle,
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ) -> Dict[str, Any]:
     ok = toggle_rule_in_set(user["user_id"], rule_set_id, rule_db_id, req.is_enabled)
     if not ok:
@@ -124,7 +124,7 @@ def toggle_rule(
 def remove_rule_from_set(
     rule_set_id: int,
     rule_db_id: int,
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ) -> Dict[str, Any]:
     from app.services.rule_service import remove_rule_from_set as _remove
     ok = _remove(user["user_id"], rule_set_id, rule_db_id)

@@ -7,11 +7,11 @@ import zipfile
 from datetime import datetime
 from typing import Dict, Any
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, File, Form, UploadFile, Header
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, File, Form, UploadFile, Header, Request
 from typing import Optional
 
 from app.schemas.scan import ScanPathRequest
-from app.deps import get_current_user
+from app.deps import get_current_user_or_local_desktop, is_local_desktop_request
 
 router = APIRouter(prefix="/api", tags=["scan"])
 
@@ -33,7 +33,7 @@ def _get_task(task_id: str):
 def scan_server_path(
     req: ScanPathRequest,
     background_tasks: BackgroundTasks,
-    user: Dict = Depends(get_current_user),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ):
     if not os.path.exists(req.path):
         raise HTTPException(status_code=400, detail=f"路径不存在：{req.path}")
@@ -48,7 +48,7 @@ def scan_server_path(
     from app.services.scan_service import run_scan_background
     background_tasks.add_task(
         run_scan_background,
-        task_id, req.path, req.lang, req.scene, 300, False, "", user["user_id"], req.engine,
+        task_id, req.path, req.lang, req.scene, req.timeout, False, "", user["user_id"], req.engine, req.rule_set_ids,
     )
     return {"task_id": task_id}
 
@@ -58,11 +58,12 @@ async def scan_upload(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     lang: str = Form("auto"),
-    scene: str = Form("minimal"),
-    timeout: int = Form(300),
+    scene: str = Form("full"),
+    timeout: int = Form(1800),
     favorite: bool = Form(False),
     engine: str = Form("yasa"),
-    user: Dict = Depends(get_current_user),
+    rule_set_ids: str = Form(""),
+    user: Dict = Depends(get_current_user_or_local_desktop),
 ):
     if not (file.filename or "").lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="请上传 .zip 压缩包")
@@ -103,19 +104,28 @@ async def scan_upload(
     )
 
     from app.services.scan_service import run_scan_background
+    selected_rule_set_ids = []
+    for part in (rule_set_ids or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            selected_rule_set_ids.append(int(part))
+        except ValueError:
+            pass
     background_tasks.add_task(
         run_scan_background,
-        task_id, extract_dir, lang, scene, timeout, favorite, temp_dir, user["user_id"], engine,
+        task_id, extract_dir, lang, scene, timeout, favorite, temp_dir, user["user_id"], engine, selected_rule_set_ids,
     )
     return {"task_id": task_id}
 
 
 @router.get("/scan/{task_id}", summary="查询扫描任务状态")
-def get_task(task_id: str, user: Dict = Depends(get_current_user)):
+def get_task(task_id: str, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
     task = _get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
-    if task.get("user_id") != user["user_id"]:
+    if task.get("user_id") != user["user_id"] and not is_local_desktop_request(request):
         raise HTTPException(status_code=403, detail="无权访问此任务")
     return {
         "task_id": task_id,
@@ -129,14 +139,19 @@ def get_task(task_id: str, user: Dict = Depends(get_current_user)):
 
 
 @router.get("/tasks", summary="列出当前用户的所有任务")
-def list_tasks(user: Dict = Depends(get_current_user)):
+def list_tasks(request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
     from app.deps import _db
     import json as _json
     conn = _db()
-    rows = conn.execute(
-        "SELECT task_id, status, scan_path, lang, created_at, progress, result FROM scan_tasks WHERE user_id=? ORDER BY created_at DESC LIMIT 100",
-        (user["user_id"],)
-    ).fetchall()
+    if is_local_desktop_request(request):
+        rows = conn.execute(
+            "SELECT task_id, status, scan_path, lang, created_at, progress, result FROM scan_tasks ORDER BY created_at DESC LIMIT 100"
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT task_id, status, scan_path, lang, created_at, progress, result FROM scan_tasks WHERE user_id=? ORDER BY created_at DESC LIMIT 100",
+            (user["user_id"],)
+        ).fetchall()
     conn.close()
     tasks = []
     for row in rows:

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { listTasks } from '../api/scan'
-import type { Task } from '../api/scan'
 import { useMascotStore } from '../store/mascotStore'
+import { usePageStateStore } from '../store/pageStateStore'
 
 const POLL_INTERVAL = 3000
 
 export function useTaskPoller(enabled = true) {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(false)
+  const tasks = usePageStateStore((s) => s.tasks)
+  const tasksLoaded = usePageStateStore((s) => s.tasksLoaded)
+  const setTasksState = usePageStateStore((s) => s.setTasksState)
+  const [loading, setLoading] = useState(!tasksLoaded)
   const setMascot = useMascotStore((s) => s.setStatus)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const runningIds = useRef<Set<string>>(new Set())
@@ -16,7 +18,7 @@ export function useTaskPoller(enabled = true) {
     try {
       const res = await listTasks()
       const data = res.data.tasks ?? []
-      setTasks(data)
+      setTasksState({ tasks: data, tasksLoaded: true })
 
       const nowRunning = new Set(
         data.filter((t) => t.status === 'running' || t.status === 'pending').map((t) => t.task_id)

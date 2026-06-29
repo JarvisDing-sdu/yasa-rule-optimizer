@@ -5,17 +5,20 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import FileResponse
-from app.deps import get_current_user
+from app.deps import get_current_user_or_local_desktop, is_local_desktop_request
 from app.schemas.scan import FindingReviewBody
 
 router = APIRouter(prefix="/api", tags=["reports"])
-def _assert_report_owner(report_path: str, user_id: int) -> None:
+def _assert_report_owner(report_path: str, user_id: int, request: Request = None) -> None:
     from config import get_reports_dir
     try:
         reports_dir = get_reports_dir().resolve()
         rp = Path(report_path).resolve()
+        if request is not None and is_local_desktop_request(request):
+            rp.relative_to(reports_dir)
+            return
         user_prefix = reports_dir / str(user_id)
         rp.relative_to(user_prefix)
     except ValueError:
@@ -34,20 +37,21 @@ def _resolve_finding_index(findings: list, body: FindingReviewBody) -> int:
         raise HTTPException(status_code=404, detail="找不到对应的漏洞条目")
     return idx
 @router.get("/reports", summary="列出历史报告")
-def get_reports(limit: int = 20, project: str = "", user: Dict = Depends(get_current_user)):
+def get_reports(request: Request, limit: int = 20, project: str = "", user: Dict = Depends(get_current_user_or_local_desktop)):
     from report import list_reports
-    return {"reports": list_reports(limit=limit, project_filter=project, user_id=user["user_id"])}
+    user_id = None if is_local_desktop_request(request) else user["user_id"]
+    return {"reports": list_reports(limit=limit, project_filter=project, user_id=user_id)}
 @router.get("/reports/{report_path:path}/content", summary="获取报告内容")
-def get_report_content_endpoint(report_path: str, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def get_report_content_endpoint(report_path: str, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from report import get_report_content
     content = get_report_content(report_path)
     if content is None:
         raise HTTPException(status_code=404, detail="报告不存在或内容为空")
     return {"content": content}
 @router.get("/reports/{report_path:path}/findings", summary="获取结构化漏洞列表")
-def get_report_findings_endpoint(report_path: str, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def get_report_findings_endpoint(report_path: str, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from report import get_structured_findings
     rd = Path(report_path)
     if not rd.is_dir():
@@ -57,8 +61,8 @@ def get_report_findings_endpoint(report_path: str, user: Dict = Depends(get_curr
     findings = get_structured_findings(report_path)
     return {"findings": findings, "count": len(findings)}
 @router.post("/reports/{report_path:path}/findings/review", summary="AI 二次研判")
-def review_single_finding_endpoint(report_path: str, body: FindingReviewBody, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def review_single_finding_endpoint(report_path: str, body: FindingReviewBody, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from llm import review_single_finding
     from report import get_structured_findings, update_report_findings
     rd = Path(report_path)
@@ -77,8 +81,8 @@ def review_single_finding_endpoint(report_path: str, body: FindingReviewBody, us
     update_report_findings(report_path, findings)
     return {"ok": True, "index": idx, "fingerprint": findings[idx].get("fingerprint"), **reviewed}
 @router.post("/reports/{report_path:path}/findings/fix", summary="生成修复建议")
-def fix_single_finding_endpoint(report_path: str, body: FindingReviewBody, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def fix_single_finding_endpoint(report_path: str, body: FindingReviewBody, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from llm import fix_finding
     from report import get_structured_findings, update_report_findings
     rd = Path(report_path)
@@ -98,8 +102,8 @@ def fix_single_finding_endpoint(report_path: str, body: FindingReviewBody, user:
     update_report_findings(report_path, findings)
     return {"ok": True, "index": idx, **result}
 @router.post("/reports/{report_path:path}/findings/exploit", summary="可利用性评估")
-def exploit_assessment_endpoint(report_path: str, body: FindingReviewBody, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def exploit_assessment_endpoint(report_path: str, body: FindingReviewBody, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from llm import assess_exploitability
     from report import get_structured_findings, update_report_findings
     rd = Path(report_path)
@@ -118,8 +122,8 @@ def exploit_assessment_endpoint(report_path: str, body: FindingReviewBody, user:
     update_report_findings(report_path, findings)
     return {"ok": True, "index": idx, **result}
 @router.get("/reports/{report_path:path}/export", summary="导出报告为 HTML")
-def export_report_endpoint(report_path: str, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def export_report_endpoint(report_path: str, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from report import export_report_html
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".html")
     try:
@@ -128,8 +132,8 @@ def export_report_endpoint(report_path: str, user: Dict = Depends(get_current_us
     except Exception:
         raise HTTPException(status_code=500, detail="导出失败")
 @router.post("/reports/{report_path:path}/favorite", summary="切换收藏状态")
-def toggle_favorite_endpoint(report_path: str, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def toggle_favorite_endpoint(report_path: str, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from report import is_favorite, mark_as_favorite, unmark_favorite
     if is_favorite(report_path):
         unmark_favorite(report_path)
@@ -139,8 +143,8 @@ def toggle_favorite_endpoint(report_path: str, user: Dict = Depends(get_current_
         return {"ok": True, "favorite": True}
 
 @router.delete("/reports/{report_path:path}", summary="删除报告")
-def delete_report_endpoint(report_path: str, user: Dict = Depends(get_current_user)):
-    _assert_report_owner(report_path, user["user_id"])
+def delete_report_endpoint(report_path: str, request: Request, user: Dict = Depends(get_current_user_or_local_desktop)):
+    _assert_report_owner(report_path, user["user_id"], request)
     from report import delete_report
     ok = delete_report(report_path)
     if not ok:

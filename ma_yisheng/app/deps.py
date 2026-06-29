@@ -1,7 +1,7 @@
 """Shared dependencies: DB access, auth, task storage."""
 import json as _json_mod
 from typing import Any, Dict, Optional
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 
 
 def _db():
@@ -85,3 +85,41 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, A
     if not user:
         raise HTTPException(status_code=401, detail="认证失败或已过期")
     return user
+
+
+def is_local_desktop_request(request: Request) -> bool:
+    server_host = request.url.hostname or ""
+    if server_host not in {"127.0.0.1", "::1", "localhost"}:
+        return False
+    try:
+        import config
+        return config.APP_MODE in {"desktop", "local", "dev"} or config.CONFIG_UI_ENABLED
+    except Exception:
+        return False
+
+
+def _first_local_user() -> Optional[Dict[str, Any]]:
+    """Return the first desktop user for localhost-only legacy pages."""
+    conn = _db()
+    try:
+        row = conn.execute("SELECT id, email FROM users ORDER BY id LIMIT 1").fetchone()
+    finally:
+        conn.close()
+    if not row:
+        return None
+    return {"user_id": row["id"], "email": row["email"]}
+
+
+def get_current_user_or_local_desktop(
+    request: Request,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
+    if authorization:
+        return get_current_user(authorization)
+
+    if is_local_desktop_request(request):
+        user = _first_local_user()
+        if user:
+            return user
+
+    raise HTTPException(status_code=401, detail="未提供认证信息")

@@ -351,7 +351,8 @@ def merge_rules_for_scan(user_id: int, lang: str,
                 except (ValueError, TypeError):
                     continue
                 rs = db.query(UserRuleSet).filter(
-                    UserRuleSet.id == rsid_int
+                    UserRuleSet.id == rsid_int,
+                    UserRuleSet.user_id == user_id,
                 ).first()
                 if not rs:
                     continue
@@ -394,6 +395,167 @@ def merge_rules_for_scan(user_id: int, lang: str,
 _advisory_cache: Dict[str, tuple] = {}  # key -> (timestamp, results)
 _CACHE_TTL = 300  # 5 分钟
 _MAX_CACHE_SIZE = 50
+
+
+def _codeql_root() -> Path:
+    raw = os.environ.get("CODEQL_ROOT", "").strip()
+    if raw:
+        return Path(raw).expanduser()
+    return Path.home() / "Downloads" / "codeql"
+
+
+def _codeql_security_roots(language: str) -> List[Path]:
+    lang = (language or "python").lower()
+    lang_dir = {
+        "js": "javascript",
+        "javascript": "javascript",
+        "python": "python",
+        "go": "go",
+        "java": "java",
+        "c": "cpp",
+        "cpp": "cpp",
+    }.get(lang, lang)
+    base = _codeql_root() / lang_dir / "ql"
+    return [
+        base / "test" / "query-tests" / "Security",
+        base / "src" / "Security",
+        base / "src" / "experimental",
+    ]
+
+
+def _codeql_item_id(path: Path) -> str:
+    import hashlib
+    return "CODEQL-" + hashlib.sha1(str(path).encode("utf-8")).hexdigest()[:12].upper()
+
+
+def _codeql_vuln_type(name: str) -> str:
+    text = name.lower()
+    cwe_map = {
+        "cwe-089": "SQL Injection",
+        "cwe-078": "Command Injection",
+        "cwe-077": "Command Injection",
+        "cwe-094": "Code Injection",
+        "cwe-918": "SSRF",
+        "cwe-022": "Path Traversal",
+        "cwe-079": "XSS",
+        "cwe-502": "Deserialization",
+        "cwe-611": "XXE",
+        "cwe-776": "XXE",
+        "cwe-601": "Open Redirect",
+        "cwe-643": "XPath Injection",
+        "cwe-943": "NoSQL Injection",
+        "cwe-117": "Log Injection",
+    }
+    for cwe, label in cwe_map.items():
+        if cwe in text:
+            return label
+    keyword_map = {
+        "sql": "SQL Injection",
+        "command": "Command Injection",
+        "shell": "Command Injection",
+        "codeinjection": "Code Injection",
+        "ssrf": "SSRF",
+        "path": "Path Traversal",
+        "xss": "XSS",
+        "deserial": "Deserialization",
+        "xxe": "XXE",
+        "redirect": "Open Redirect",
+        "cookie": "Cookie Injection",
+        "template": "Template Injection",
+    }
+    for kw, label in keyword_map.items():
+        if kw in text:
+            return label
+    return "Security Test"
+
+
+def _codeql_alert_count(path: Path) -> int:
+    count = 0
+    suffixes = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".java", ".c", ".cc", ".cpp", ".h", ".hpp"}
+    files = [path] if path.is_file() else path.rglob("*")
+    for fp in files:
+        if not fp.is_file() or fp.suffix.lower() not in suffixes:
+            continue
+        try:
+            count += fp.read_text(encoding="utf-8", errors="replace").count("$ Alert")
+        except Exception:
+            pass
+    return count
+
+
+def _codeql_sample_files(path: Path, limit: int = 5) -> List[str]:
+    suffixes = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".java", ".c", ".cc", ".cpp", ".h", ".hpp"}
+    result = []
+    files = [path] if path.is_file() else path.rglob("*")
+    for fp in files:
+        if fp.is_file() and fp.suffix.lower() in suffixes:
+            try:
+                result.append(str(fp.relative_to(path)))
+            except Exception:
+                result.append(fp.name)
+            if len(result) >= limit:
+                break
+    return result
+
+
+def search_codeql_tests(language: str = "python", vuln_type: str = "",
+                        count: int = 20, keyword: str = "") -> List[Dict[str, Any]]:
+    roots = [p for p in _codeql_security_roots(language) if p.exists()]
+    if not roots:
+        return []
+
+    kw = (keyword or "").lower().strip()
+    vt = (vuln_type or "").lower().replace("-", " ").strip()
+    results: List[Dict[str, Any]] = []
+    seen = set()
+    limit = int(count or 0)
+    for root in roots:
+        for path in [p for p in root.iterdir() if p.is_dir()]:
+            name = path.name
+            cwe_ids = sorted(set(re.findall(r"CWE-?\d+", name.upper().replace("_", "-"))))
+            cve_ids = sorted(set(re.findall(r"CVE-\d{4}-\d+", name.upper())))
+            vuln_label = _codeql_vuln_type(name)
+            haystack = " ".join([name, vuln_label, str(path), " ".join(cwe_ids), " ".join(cve_ids)]).lower()
+            if kw and kw not in haystack:
+                continue
+            if vt and vt not in vuln_label.lower() and vt not in haystack.replace("-", " "):
+                continue
+            item_id = _codeql_item_id(path)
+            if item_id in seen:
+                continue
+            seen.add(item_id)
+            alert_count = _codeql_alert_count(path)
+            results.append({
+                "ghsa_id": item_id,
+                "source": "codeql",
+                "cve_id": ", ".join(cve_ids),
+                "summary": name,
+                "description": f"CodeQL {language} security test: {name}",
+                "severity": "HIGH" if alert_count else "MODERATE",
+                "published_at": "",
+                "html_url": "https://github.com/github/codeql",
+                "ecosystem": language,
+                "cwe_ids": cwe_ids,
+                "vuln_type": vuln_label,
+                "package_name": "CodeQL tests",
+                "test_dir": str(path),
+                "alert_count": alert_count,
+                "sample_files": _codeql_sample_files(path),
+            })
+            if limit > 0 and len(results) >= limit:
+                return results
+    return results if limit <= 0 else results[:limit]
+
+
+def fetch_codeql_test_detail(item_id: str) -> Optional[Dict[str, Any]]:
+    for lang in ("python", "js", "go", "java", "c"):
+        for item in search_codeql_tests(lang, count=500):
+            if item.get("ghsa_id") == item_id:
+                detail = dict(item)
+                detail["references"] = f"{item.get('test_dir', '')}\nhttps://github.com/github/codeql"
+                detail["vulnerabilities"] = [{"package": {"ecosystem": item.get("ecosystem", lang)}}]
+                return detail
+    return None
 
 def search_github_advisories_sync(language: str, vuln_type: str = "",
                                    count: int = 10, keyword: str = "",
@@ -740,6 +902,9 @@ def search_github_advisories_sync(language: str, vuln_type: str = "",
 
 def fetch_cve_detail_sync(ghsa_id: str, github_token: str = "") -> Optional[Dict]:
     """Get full advisory detail including patch references (sync)."""
+    if (ghsa_id or "").startswith("CODEQL-"):
+        return fetch_codeql_test_detail(ghsa_id)
+
     import urllib.request
     import ssl
 
@@ -1000,10 +1165,11 @@ def ingest_cves_to_rules(user_id: int, rule_set_id: int, ghsa_ids: List[str],
         lang = eco_lang_map.get(package_ecosystem, "python")
 
         # Build vuln case
+        is_codeql_case = (ghsa_id or "").startswith("CODEQL-")
         vuln_case = {
             "case_id": ghsa_id,
             "language": lang,
-            "vulnerability_type": _guess_vuln_type(detail),
+            "vulnerability_type": detail.get("vuln_type") or _guess_vuln_type(detail),
             "source_code_before": "",
             "source_code_after": "",
             "source_function_hints": [],
@@ -1012,14 +1178,22 @@ def ingest_cves_to_rules(user_id: int, rule_set_id: int, ghsa_ids: List[str],
             "summary": detail.get("description", ""),
             "cve_id": detail.get("cve_id", ""),
         }
+        if is_codeql_case:
+            vuln_case["notes"] = (
+                f"{detail.get('summary', '')}\n"
+                f"CodeQL test directory: {detail.get('test_dir', '')}\n"
+                f"Expected alert count: {detail.get('alert_count', 0)}\n"
+                f"Sample files: {', '.join(detail.get('sample_files') or [])}"
+            )
 
         if on_progress:
             on_progress("generate", f"为 {ghsa_id} 生成规则...")
 
         # Run pipeline (快速模式，无测试集评估)
         try:
+            test_dirs = [detail["test_dir"]] if is_codeql_case and detail.get("test_dir") else None
             result = build_rule_pipeline(vuln_case, provider, model, api_key,
-                                         test_dirs=None, max_iterations=1)
+                                         test_dirs=test_dirs, max_iterations=1)
             rules = result["rules"] if result else None
         except Exception as e:
             results["details"].append({

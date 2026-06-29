@@ -95,8 +95,10 @@ def add_recent_path(path: str) -> None:
 # 配置项
 YASA_BUNDLE_PATH = os.environ.get("YASA_BUNDLE_PATH", "").strip()
 YASA_EXECUTABLE = os.environ.get("YASA_EXECUTABLE", "yasa").strip()
-UAST_PYTHON_EXE = os.environ.get("UAST_PYTHON_EXE", "uast4py-linux-amd64").strip()
-UAST_GO_EXE = os.environ.get("UAST_GO_EXE", "uast4go-linux-amd64").strip()
+_default_uast_python = "uast4py-mac-arm64" if sys.platform == "darwin" else "uast4py-linux-amd64"
+_default_uast_go = "uast4go-mac-arm64" if sys.platform == "darwin" else "uast4go-linux-amd64"
+UAST_PYTHON_EXE = os.environ.get("UAST_PYTHON_EXE", _default_uast_python).strip()
+UAST_GO_EXE = os.environ.get("UAST_GO_EXE", _default_uast_go).strip()
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "deepseek").strip()
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com").strip()
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "").strip()
@@ -343,8 +345,8 @@ def reload_config() -> None:
         pass
     YASA_BUNDLE_PATH = os.environ.get("YASA_BUNDLE_PATH", "").strip()
     YASA_EXECUTABLE = os.environ.get("YASA_EXECUTABLE", "yasa").strip()
-    UAST_PYTHON_EXE = os.environ.get("UAST_PYTHON_EXE", "uast4py-linux-amd64").strip()
-    UAST_GO_EXE = os.environ.get("UAST_GO_EXE", "uast4go-linux-amd64").strip()
+    UAST_PYTHON_EXE = os.environ.get("UAST_PYTHON_EXE", _default_uast_python).strip()
+    UAST_GO_EXE = os.environ.get("UAST_GO_EXE", _default_uast_go).strip()
     LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "deepseek").strip()
     LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com").strip()
     LLM_API_KEY = os.environ.get("LLM_API_KEY", "").strip()

@@ -1,35 +1,44 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listReports, deleteReport, toggleFavorite, getExportUrl } from '../api/reports'
-import type { Report } from '../api/reports'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { usePageStateStore } from '../store/pageStateStore'
 
 export default function ReportsPage() {
   const nav = useNavigate()
-  const [reports, setReports] = useState<Report[]>([])
-  const [loading, setLoading] = useState(true)
+  const reports = usePageStateStore((s) => s.reports)
+  const reportsLoaded = usePageStateStore((s) => s.reportsLoaded)
+  const search = usePageStateStore((s) => s.reportsSearch)
+  const setReportsState = usePageStateStore((s) => s.setReportsState)
+  const [loading, setLoading] = useState(!reportsLoaded)
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [faving, setFaving] = useState<string | null>(null)
 
   const fetch = useCallback(async (project = '') => {
-    setLoading(true)
+    if (!reportsLoaded) setLoading(true)
     try {
       const res = await listReports(50, project)
-      setReports(res.data.reports ?? [])
+      setReportsState({ reports: res.data.reports ?? [], reportsLoaded: true })
       setError('')
-    } catch {
-      setError('加载报告列表失败')
+    } catch (err) {
+      if (!reportsLoaded) {
+        setError('加载报告列表失败')
+      } else {
+        setError('')
+        console.warn('刷新报告列表失败，保留本地缓存', err)
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [reportsLoaded, setReportsState])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => {
+    fetch(search.trim())
+  }, [fetch])
 
   const handleSearch = () => {
     fetch(search.trim())
@@ -40,7 +49,7 @@ export default function ReportsPage() {
     setDeleting(path)
     try {
       await deleteReport(path)
-      setReports(prev => prev.filter(r => r.path !== path))
+      setReportsState({ reports: reports.filter(r => r.path !== path) })
     } catch {
       alert('删除失败，可能该报告已收藏')
     } finally {
@@ -52,7 +61,7 @@ export default function ReportsPage() {
     setFaving(path)
     try {
       const res = await toggleFavorite(path)
-      setReports(prev => prev.map(r => r.path === path ? { ...r, favorite: res.data.favorite } : r))
+      setReportsState({ reports: reports.map(r => r.path === path ? { ...r, favorite: res.data.favorite } : r) })
     } catch {
       alert('操作失败')
     } finally {
@@ -85,7 +94,7 @@ export default function ReportsPage() {
         <Input
           placeholder="按项目名搜索..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setReportsState({ reportsSearch: e.target.value })}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="flex-1"
         />
@@ -93,7 +102,7 @@ export default function ReportsPage() {
           搜索
         </Button>
         {search && (
-          <Button variant="white" size="md" onClick={() => { setSearch(''); fetch() }}>
+          <Button variant="white" size="md" onClick={() => { setReportsState({ reportsSearch: '' }); fetch() }}>
             清除
           </Button>
         )}

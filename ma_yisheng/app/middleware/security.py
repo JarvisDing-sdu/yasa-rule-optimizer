@@ -13,6 +13,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self'; connect-src 'self'"
         if is_rule_workshop:
             csp += "; frame-ancestors 'self' file:"
+            response.headers["Cache-Control"] = "no-store, max-age=0"
+            response.headers["Pragma"] = "no-cache"
         response.headers["Content-Security-Policy"] = csp
         response.headers["X-Content-Type-Options"] = "nosniff"
         if not is_rule_workshop:

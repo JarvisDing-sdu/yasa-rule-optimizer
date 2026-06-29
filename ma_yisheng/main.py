@@ -137,10 +137,9 @@ STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 def _frontend_file_response(name: str, media_type: str = "text/html") -> FileResponse:
     """Serve a built frontend file, falling back to legacy static pages."""
-    candidates = [
-        os.path.join(FRONTEND_DIR, name),
-        os.path.join(STATIC_DIR, name),
-    ]
+    candidates = [os.path.join(FRONTEND_DIR, name), os.path.join(STATIC_DIR, name)]
+    if name in {"rule-workshop.html", "rule-generation.html"}:
+        candidates = [os.path.join(STATIC_DIR, name), os.path.join(FRONTEND_DIR, name)]
     for file_path in candidates:
         if os.path.isfile(file_path):
             return FileResponse(file_path, media_type=media_type)

@@ -150,6 +150,28 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .status-ok { background: #d1fae5; border: 2px solid #15803d; }
 .status-err { background: #fee2e2; border: 2px solid #991b1b; color: #991b1b; }
 
+/* ── Progress ── */
+.progress-wrap {
+  display: none; margin-top: 12px; border: 2px solid var(--black);
+  background: #fff; padding: 8px;
+}
+.progress-head {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: 11px; font-weight: 800; margin-bottom: 6px;
+}
+.progress-bar {
+  height: 18px; border: 2px solid var(--black); background: var(--gray);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%; width: 0%; background: var(--green);
+  transition: width 0.2s ease;
+}
+.progress-log {
+  margin-top: 8px; max-height: 160px; overflow-y: auto;
+  font-size: 11px; line-height: 1.5;
+}
+
 /* ── Badge ── */
 .badge {
   display: inline-block; padding: 2px 8px; font-size: 10px; font-weight: 800;
@@ -217,6 +239,13 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 <div class="card" style="box-shadow: var(--sh) var(--sh) 0 var(--yellow);">
   <h2>CVE 漏洞搜索</h2>
   <div class="section">
+    <label>搜索来源</label>
+    <select id="cveSource">
+      <option value="github">GitHub Advisory</option>
+      <option value="codeql">本地 CodeQL 测试集</option>
+    </select>
+  </div>
+  <div class="section">
     <label>语言 / 生态</label>
     <select id="cveLanguage">
       <option value="python">Python (pip)</option>
@@ -246,12 +275,18 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
   </div>
   <div class="section">
     <label>数量</label>
-    <select id="cveCount">
-      <option value="5">5</option>
+    <div style="display:grid;grid-template-columns:1fr 96px;gap:8px;">
+    <select id="cveCountPreset">
       <option value="10" selected>10</option>
       <option value="20">20</option>
       <option value="30">30</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="all">全部 CodeQL</option>
+      <option value="custom">自定义</option>
     </select>
+    <input id="cveCountCustom" type="number" min="1" max="5000" value="100" disabled>
+    </div>
   </div>
   <button id="searchBtn" class="btn-yellow" style="width:100%;">搜索 GitHub 漏洞公告</button>
   <div id="cveStatus"></div>
@@ -260,8 +295,10 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
   </div>
   <div style="margin-top:8px;display:flex;gap:6px;">
     <button id="selectAllBtn" class="btn-sm" disabled>全选</button>
+    <button id="selectCodeqlAllBtn" class="btn-sm btn-yellow" disabled>全选 CodeQL</button>
     <button id="deselectAllBtn" class="btn-sm" disabled>取消</button>
   </div>
+  <div id="selectionInfo" style="font-size:11px;color:#666;margin-top:6px;">已选 0 条</div>
 </div>
 
 <!-- ── CENTER: Detail + Generation + Results ── -->
@@ -308,6 +345,14 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
       <button id="ingestBtn" class="btn-cyan">从选中 CVE 生成规则</button>
     </div>
     <div id="ingestStatus"></div>
+    <div id="ingestProgress" class="progress-wrap">
+      <div class="progress-head">
+        <span id="progressLabel">准备生成</span>
+        <span id="progressNumbers">0 / 0</span>
+      </div>
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <div id="progressLog" class="progress-log"></div>
+    </div>
   </div>
 
   <!-- Tab: Results -->
@@ -368,11 +413,45 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 // ═══════════════════════════════════════════════════════════
 
 function getToken() {
-  const t = localStorage.getItem('token');
+  const t = window.__MA_YISHENG_TOKEN || localStorage.getItem('token');
   if (t) return t;
   const m = document.cookie.match(/token=([^;]+)/);
   return m ? m[1] : null;
 }
+
+function setToken(token) {
+  window.__MA_YISHENG_TOKEN = token || '';
+  if (token) {
+    try { localStorage.setItem('token', token); } catch {}
+  }
+}
+
+function readTokenFromHash() {
+  try {
+    const hash = window.location.hash || '';
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const token = params.get('token');
+    if (token) {
+      setToken(token);
+      history.replaceState(null, document.title, window.location.pathname + window.location.search);
+      return token;
+    }
+  } catch {}
+  return '';
+}
+
+readTokenFromHash();
+
+window.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type !== 'MA_YISHENG_AUTH') return;
+  setToken(data.token || '');
+  checkLogin();
+});
+
+try {
+  window.parent.postMessage({ type: 'MA_YISHENG_AUTH_REQUEST' }, '*');
+} catch {}
 
 function authHeaders() {
   const token = getToken();
@@ -389,6 +468,9 @@ async function apiFetch(path, options = {}) {
   try { data = JSON.parse(text); } catch { data = text; }
   if (!res.ok) {
     const detail = (data && data.detail) ? data.detail : text;
+    if (res.status === 401) {
+      throw new Error('登录状态已失效，请返回主页重新登录后刷新规则工坊');
+    }
     throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
   }
   return data;
@@ -428,18 +510,27 @@ const state = {
 //  MODULE: Auth
 // ═══════════════════════════════════════════════════════════
 
-(async function checkLogin() {
+async function checkLogin() {
   const badge = document.getElementById('loginBadge');
   try {
     const data = await apiFetch('/api/me');
     badge.textContent = '已登录: ' + (data.username || data.email || data.user_id);
     badge.style.background = '#d1fae5';
-    loadRuleSets();
   } catch {
-    badge.textContent = '未登录 — 请先到主页登录';
-    badge.style.background = '#fee2e2';
+    badge.textContent = '本机规则工坊模式';
+    badge.style.background = '#dbeafe';
   }
-})();
+  loadRuleSets();
+}
+
+if (getToken()) {
+  checkLogin();
+} else {
+  const badge = document.getElementById('loginBadge');
+  badge.textContent = '等待主页同步登录状态...';
+  badge.style.background = '#fef3c7';
+  window.setTimeout(checkLogin, 500);
+}
 
 // ═══════════════════════════════════════════════════════════
 //  MODULE: Tabs
@@ -454,38 +545,90 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+document.getElementById('cveSource').addEventListener('change', () => {
+  const source = document.getElementById('cveSource').value;
+  document.getElementById('searchBtn').textContent = source === 'codeql'
+    ? '搜索 CodeQL 测试集'
+    : '搜索 GitHub 漏洞公告';
+  document.getElementById('cveKeyword').placeholder = source === 'codeql'
+    ? '例如：CWE-089、CVE-2018-1281、CookieInjection'
+    : '例如：urllib、requests、flask';
+  const preset = document.getElementById('cveCountPreset');
+  const allOption = preset.querySelector('option[value="all"]');
+  if (allOption) allOption.disabled = source !== 'codeql';
+  if (source !== 'codeql' && preset.value === 'all') preset.value = '100';
+  updateCountCustomState();
+});
+
+document.getElementById('cveCountPreset').addEventListener('change', updateCountCustomState);
+
+function updateCountCustomState() {
+  const preset = document.getElementById('cveCountPreset').value;
+  const custom = document.getElementById('cveCountCustom');
+  custom.disabled = preset !== 'custom';
+}
+
+function getRequestedCount() {
+  const source = document.getElementById('cveSource').value;
+  const preset = document.getElementById('cveCountPreset').value;
+  if (preset === 'all') return source === 'codeql' ? '0' : '100';
+  if (preset === 'custom') {
+    const raw = parseInt(document.getElementById('cveCountCustom').value, 10);
+    const max = source === 'codeql' ? 5000 : 100;
+    return String(Math.max(1, Math.min(max, Number.isFinite(raw) ? raw : 100)));
+  }
+  return preset;
+}
+
+function updateSelectionInfo() {
+  const info = document.getElementById('selectionInfo');
+  const total = state.cveResults.length;
+  const selected = state.selectedCves.size;
+  info.textContent = '已选 ' + selected + ' / ' + total + ' 条';
+  document.getElementById('selectAllBtn').disabled = total === 0;
+  document.getElementById('selectCodeqlAllBtn').disabled = total === 0 || document.getElementById('cveSource').value !== 'codeql';
+  document.getElementById('deselectAllBtn').disabled = selected === 0;
+}
+
+updateCountCustomState();
+
 // ═══════════════════════════════════════════════════════════
 //  MODULE: CVE Search
 // ═══════════════════════════════════════════════════════════
 
-document.getElementById('searchBtn').addEventListener('click', async () => {
+document.getElementById('searchBtn').addEventListener('click', searchCves);
+
+async function searchCves() {
+  const source = document.getElementById('cveSource').value;
   const lang = document.getElementById('cveLanguage').value;
   const vulnType = document.getElementById('cveVulnType').value;
   const keyword = document.getElementById('cveKeyword').value.trim();
-  const count = document.getElementById('cveCount').value;
+  const count = getRequestedCount();
   const status = document.getElementById('cveStatus');
 
-  setLoading(status, '搜索中...');
+  setLoading(status, count === '0' ? '正在读取全部 CodeQL 测试集...' : '搜索中...');
 
   try {
     const params = new URLSearchParams({ language: lang, count, keyword });
     if (vulnType) params.set('vuln_type', vulnType);
-    const data = await apiFetch('/api/cve/search?' + params.toString());
+    const endpoint = source === 'codeql' ? '/api/cve/codeql-search?' : '/api/cve/search?';
+    const data = await apiFetch(endpoint + params.toString());
     state.cveResults = data.results || [];
     state.selectedCves.clear();
 
     if (state.cveResults.length === 0) {
       document.getElementById('cveResults').innerHTML =
         '<div style="color:#888;font-size:12px;">无结果，尝试更换关键词或语言</div>';
-      showStatus(status, 'info', '未找到漏洞公告；这不是仓库搜索，可尝试更换语言、漏洞类型或关键词');
+      showStatus(status, 'info', source === 'codeql' ? '未找到 CodeQL 测试用例；可尝试 CWE/CVE/目录名关键词' : '未找到漏洞公告；这不是仓库搜索，可尝试更换语言、漏洞类型或关键词');
+      updateSelectionInfo();
     } else {
-      showStatus(status, 'ok', '找到 ' + state.cveResults.length + ' 条结果');
+      showStatus(status, 'ok', '找到 ' + state.cveResults.length + ' 条' + (source === 'codeql' ? ' CodeQL 测试用例' : '结果') + (count === '0' ? '（全部）' : ''));
       renderCveList();
     }
   } catch (e) {
     showStatus(status, 'err', '搜索失败: ' + escapeHtml(String(e.message || e)));
   }
-});
+}
 
 function renderCveList() {
   const div = document.getElementById('cveResults');
@@ -494,12 +637,19 @@ function renderCveList() {
     const sev = item.severity || '';
     const sevColors = { CRITICAL: '#dc2626', HIGH: '#ea580c', MODERATE: '#ca8a04' };
     const sevColor = sevColors[sev] || '#888';
+    const codeqlMeta = item.source === 'codeql'
+      ? 'CodeQL · ' + escapeHtml(item.vuln_type || '') + ' · Alert ' + (item.alert_count || 0)
+      : escapeHtml(item.package_name || '') + (item.cve_id ? ' · ' + escapeHtml(item.cve_id) : '');
+    const codeqlPath = item.source === 'codeql' && item.test_dir
+      ? '<div class="meta" title="' + escapeHtml(item.test_dir) + '">' + escapeHtml(item.test_dir) + '</div>'
+      : '';
     return `<div class="cve-item${sel}" data-ghsa="${escapeHtml(item.ghsa_id)}">
       <div class="ghsa">${escapeHtml(item.ghsa_id)}
         ${sev ? ' <span class="severity" style="border-color:' + sevColor + ';color:' + sevColor + ';">' + escapeHtml(sev) + '</span>' : ''}
       </div>
       <div class="desc">${escapeHtml((item.description || item.summary || '').substring(0, 120))}</div>
-      <div class="meta">${escapeHtml(item.package_name || '')} ${item.cve_id ? '· ' + escapeHtml(item.cve_id) : ''}</div>
+      <div class="meta">${codeqlMeta}</div>
+      ${codeqlPath}
     </div>`;
   }).join('');
 
@@ -514,14 +664,22 @@ function renderCveList() {
         el.classList.add('selected');
       }
       if (state.selectedCves.size === 1) loadCveDetail(ghsa);
+      updateSelectionInfo();
     });
   });
 
-  document.getElementById('selectAllBtn').disabled = false;
-  document.getElementById('deselectAllBtn').disabled = false;
+  updateSelectionInfo();
 }
 
 document.getElementById('selectAllBtn').addEventListener('click', () => {
+  state.cveResults.forEach(item => state.selectedCves.add(item.ghsa_id));
+  renderCveList();
+});
+document.getElementById('selectCodeqlAllBtn').addEventListener('click', async () => {
+  if (document.getElementById('cveSource').value !== 'codeql') return;
+  document.getElementById('cveCountPreset').value = 'all';
+  updateCountCustomState();
+  await searchCves();
   state.cveResults.forEach(item => state.selectedCves.add(item.ghsa_id));
   renderCveList();
 });
@@ -549,8 +707,12 @@ async function loadCveDetail(ghsaId) {
       <div style="font-size:12px;line-height:1.5;color:#555;margin-bottom:8px;">${escapeHtml(d.description || d.summary || item.description || '无描述')}</div>
       ${d.package_name ? '<div style="font-size:11px;"><strong>包:</strong> ' + escapeHtml(d.package_name) + '</div>' : ''}
       ${d.cve_id ? '<div style="font-size:11px;"><strong>CVE:</strong> ' + escapeHtml(d.cve_id) + '</div>' : ''}
+      ${d.cwe_ids && d.cwe_ids.length ? '<div style="font-size:11px;"><strong>CWE:</strong> ' + escapeHtml(d.cwe_ids.join(', ')) + '</div>' : ''}
       ${d.patched_versions ? '<div style="font-size:11px;"><strong>修复版本:</strong> ' + escapeHtml(d.patched_versions) + '</div>' : ''}
       ${d.vuln_type ? '<div style="font-size:11px;"><strong>漏洞类型:</strong> ' + escapeHtml(d.vuln_type) + '</div>' : ''}
+      ${d.test_dir ? '<div style="font-size:11px;"><strong>测试目录:</strong> ' + escapeHtml(d.test_dir) + '</div>' : ''}
+      ${d.alert_count !== undefined ? '<div style="font-size:11px;"><strong>预期 Alert:</strong> ' + escapeHtml(String(d.alert_count)) + '</div>' : ''}
+      ${d.sample_files && d.sample_files.length ? '<div style="font-size:11px;"><strong>样例文件:</strong> ' + escapeHtml(d.sample_files.join(', ')) + '</div>' : ''}
       ${d.references ? '<div style="font-size:11px;margin-top:4px;"><strong>参考:</strong><br>' + escapeHtml(String(d.references).substring(0, 500)) + '</div>' : ''}
     `;
   } catch (e) {
@@ -730,6 +892,29 @@ document.getElementById('saveNewRuleSet').addEventListener('click', async () => 
 //  MODULE: CVE Ingest → Rules
 // ═══════════════════════════════════════════════════════════
 
+function resetProgress(total) {
+  document.getElementById('ingestProgress').style.display = 'block';
+  document.getElementById('progressLabel').textContent = '准备生成';
+  document.getElementById('progressNumbers').textContent = '0 / ' + total;
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressLog').innerHTML = '';
+}
+
+function updateProgress(done, total, label, ok) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressLabel').textContent = label || '处理中';
+  document.getElementById('progressNumbers').textContent = done + ' / ' + total + ' · ' + pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressFill').style.background = ok === false ? 'var(--red)' : 'var(--green)';
+}
+
+function appendProgressLog(text, ok) {
+  const log = document.getElementById('progressLog');
+  const color = ok === false ? '#991b1b' : ok === true ? '#15803d' : '#555';
+  log.innerHTML += '<div style="color:' + color + ';">' + escapeHtml(text) + '</div>';
+  log.scrollTop = log.scrollHeight;
+}
+
 document.getElementById('ingestBtn').addEventListener('click', async () => {
   const ruleSetId = parseInt(document.getElementById('targetRuleSet').value);
   if (!ruleSetId) { alert('请先选择或创建一个目标规则集'); return; }
@@ -744,37 +929,63 @@ document.getElementById('ingestBtn').addEventListener('click', async () => {
   document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
   document.getElementById('tab-results').style.display = 'block';
 
-  setLoading(status, '正在处理 ' + ghsaIds.length + ' 个 CVE，可能需要几分钟...');
+  resetProgress(ghsaIds.length);
+  showStatus(status, 'info', '正在处理 ' + ghsaIds.length + ' 个条目，可能需要几分钟...');
 
-  try {
-    const data = await apiFetch('/api/cve/ingest', {
-      method: 'POST', body: JSON.stringify({ ghsa_ids: ghsaIds, rule_set_id: ruleSetId })
-    });
+  const allDetails = [];
+  let generated = 0;
+  let failed = 0;
+  let rulesGenerated = 0;
+  document.getElementById('ingestResults').innerHTML = '<div style="font-size:12px;color:#555;">正在生成...</div>';
 
-    showStatus(status, 'ok', '处理完成！生成 ' + (data.generated || 0) + ' 条规则，失败 ' + (data.failed || 0) + ' 条');
-
-    const results = data.details || [];
-    let html = '<div style="font-size:12px;line-height:1.8;">';
-    html += '<strong>总 CVE:</strong> ' + ghsaIds.length + '<br>';
-    html += '<strong>生成规则:</strong> ' + (data.rules_generated || 0) + '<br>';
-    html += '<strong>加入规则集:</strong> ' + (data.generated || 0) + '<br><br>';
-
-    for (const r of results) {
-      const ok = r.status !== 'fetch_failed' && r.status !== 'pipeline_failed' && r.status !== 'generation_failed';
-      const bg = ok ? '#d1fae5' : '#fee2e2';
-      const border = ok ? '#15803d' : '#991b1b';
-      html += '<div style="padding:8px;border:2px solid ' + border + ';margin-bottom:6px;background:' + bg + ';">';
-      html += '<strong>' + escapeHtml(r.ghsa_id || '?') + '</strong>: ';
-      html += ok ? '成功 (' + (r.rules_added || 0) + ' 条规则)' : '失败: ' + escapeHtml(r.error || r.status || '未知错误');
-      html += '</div>';
+  for (let i = 0; i < ghsaIds.length; i += 1) {
+    const ghsaId = ghsaIds[i];
+    updateProgress(i, ghsaIds.length, '正在生成 ' + ghsaId);
+    appendProgressLog('开始：' + ghsaId);
+    try {
+      const data = await apiFetch('/api/cve/ingest', {
+        method: 'POST', body: JSON.stringify({ ghsa_ids: [ghsaId], rule_set_id: ruleSetId })
+      });
+      const details = data.details || [{ ghsa_id: ghsaId, status: data.generated ? 'ok' : 'unknown' }];
+      allDetails.push(...details);
+      generated += data.generated || 0;
+      failed += data.failed || 0;
+      rulesGenerated += data.rules_generated || 0;
+      appendProgressLog('完成：' + ghsaId + '，加入 ' + (data.generated || 0) + ' 条', true);
+      updateProgress(i + 1, ghsaIds.length, '已完成 ' + ghsaId, true);
+    } catch (e) {
+      failed += 1;
+      allDetails.push({ ghsa_id: ghsaId, status: 'request_failed', error: String(e.message || e) });
+      appendProgressLog('失败：' + ghsaId + '，' + String(e.message || e), false);
+      updateProgress(i + 1, ghsaIds.length, '失败 ' + ghsaId, false);
     }
-    html += '</div>';
-    document.getElementById('ingestResults').innerHTML = html;
-    loadRuleSets();
-  } catch (e) {
-    showStatus(status, 'err', '处理失败: ' + escapeHtml(String(e.message || e)));
+    renderIngestResults(ghsaIds.length, rulesGenerated, generated, allDetails);
   }
+
+  const finalOk = failed === 0;
+  updateProgress(ghsaIds.length, ghsaIds.length, finalOk ? '全部完成' : '完成，有失败项', finalOk);
+  showStatus(status, finalOk ? 'ok' : 'err', '处理完成！生成 ' + generated + ' 条规则，失败 ' + failed + ' 条');
+  loadRuleSets();
 });
+
+function renderIngestResults(total, rulesGenerated, generated, results) {
+  let html = '<div style="font-size:12px;line-height:1.8;">';
+  html += '<strong>总条目:</strong> ' + total + '<br>';
+  html += '<strong>生成规则:</strong> ' + rulesGenerated + '<br>';
+  html += '<strong>加入规则集:</strong> ' + generated + '<br><br>';
+
+  for (const r of results) {
+    const ok = r.status !== 'fetch_failed' && r.status !== 'pipeline_failed' && r.status !== 'generation_failed' && r.status !== 'request_failed';
+    const bg = ok ? '#d1fae5' : '#fee2e2';
+    const border = ok ? '#15803d' : '#991b1b';
+    html += '<div style="padding:8px;border:2px solid ' + border + ';margin-bottom:6px;background:' + bg + ';">';
+    html += '<strong>' + escapeHtml(r.ghsa_id || '?') + '</strong>: ';
+    html += ok ? '成功 (' + (r.rules_added || 0) + ' 条规则)' : '失败: ' + escapeHtml(r.error || r.status || '未知错误');
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('ingestResults').innerHTML = html;
+}
 </script>
 </body>
 </html>

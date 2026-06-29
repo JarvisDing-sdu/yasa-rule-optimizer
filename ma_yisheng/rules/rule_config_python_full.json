@@ -670,6 +670,21 @@
         },
         {
           "args": ["*"],
+          "attribute": "PythonCookieInjection",
+          "fsig": "set_cookie"
+        },
+        {
+          "args": ["*"],
+          "attribute": "PythonCookieInjection",
+          "fsig": "django.http.HttpResponse.set_cookie"
+        },
+        {
+          "args": ["*"],
+          "attribute": "PythonCookieInjection",
+          "fregex": ".*\\.set_cookie\\s*\\("
+        },
+        {
+          "args": ["*"],
           "attribute": "PythonInfoLeak",
           "fsig": "traceback.print_exc"
         },
@@ -882,6 +897,16 @@
           "args": ["*"],
           "attribute": "PythonLogInjection",
           "fsig": "logging.Logger.critical"
+        }
+      ],
+      "MemberAccessTaintSink": [
+        {
+          "attribute": "PythonCookieInjection",
+          "property": "Set-Cookie"
+        },
+        {
+          "attribute": "PythonCookieInjection",
+          "fregex": ".*\\[\\s*['\\\"]Set-Cookie['\\\"]\\s*\\]"
         }
       ]
     }

@@ -2,9 +2,10 @@
 import typing as t
 from fastapi import APIRouter, HTTPException, Depends, Query
 
-from app.deps import get_current_user
+from app.deps import get_current_user_or_local_desktop
 from app.services.rule_service import (
     search_github_advisories,
+    search_codeql_tests,
     fetch_cve_detail,
     ingest_cves_to_rules,
     add_rules_to_set,
@@ -18,9 +19,9 @@ router = APIRouter(prefix="/api/cve", tags=["cve"])
 async def search_cve(
     language: str = Query("python"),
     vuln_type: str = Query(""),
-    count: int = Query(10, ge=1, le=30),
+    count: int = Query(10, ge=1, le=100),
     keyword: str = Query(""),
-    user: t.Dict = Depends(get_current_user),
+    user: t.Dict = Depends(get_current_user_or_local_desktop),
 ):
     try:
         results = await search_github_advisories(
@@ -32,10 +33,27 @@ async def search_cve(
     return {"results": results, "count": len(results)}
 
 
+@router.get("/codeql-search", summary="搜索本地 CodeQL 安全测试集")
+async def search_codeql(
+    language: str = Query("python"),
+    vuln_type: str = Query(""),
+    count: int = Query(20, ge=0, le=5000),
+    keyword: str = Query(""),
+    user: t.Dict = Depends(get_current_user_or_local_desktop),
+):
+    results = search_codeql_tests(
+        language=language,
+        vuln_type=vuln_type,
+        count=count,
+        keyword=keyword,
+    )
+    return {"results": results, "count": len(results)}
+
+
 @router.get("/detail/{ghsa_id}", summary="获取 CVE 详情")
 async def cve_detail(
     ghsa_id: str,
-    user: t.Dict = Depends(get_current_user),
+    user: t.Dict = Depends(get_current_user_or_local_desktop),
 ):
     detail = await fetch_cve_detail(ghsa_id)
     if not detail:
@@ -46,7 +64,7 @@ async def cve_detail(
 @router.post("/ingest", summary="将 CVE 转换为规则并加入规则集")
 async def ingest_cve(
     body: t.Dict,
-    user: t.Dict = Depends(get_current_user),
+    user: t.Dict = Depends(get_current_user_or_local_desktop),
 ):
     """body: { ghsa_ids: [...], rule_set_id: int, provider?: str, model?: str }"""
     ghsa_ids = body.get("ghsa_ids", [])
@@ -72,7 +90,7 @@ async def ingest_cve(
 @router.post("/generate-rules", summary="从漏洞描述直接生成规则（不走 CVE）")
 async def generate_rules_from_case(
     body: t.Dict,
-    user: t.Dict = Depends(get_current_user),
+    user: t.Dict = Depends(get_current_user_or_local_desktop),
 ):
     """
     body: {

@@ -5,8 +5,10 @@ from typing import Optional, List, Dict
 class ScanPathRequest(BaseModel):
     path: str
     lang: str = ""
-    scene: str = "minimal"
+    scene: str = "full"
     engine: str = "yasa"
+    timeout: int = 1800
+    rule_set_ids: List[int] = []
 
 
 class ChatRequest(BaseModel):

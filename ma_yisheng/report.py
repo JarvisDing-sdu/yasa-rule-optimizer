@@ -29,120 +29,6 @@ VULN_ATTR_MAP = {
     "XSS": ("XSS", "中危"),
 }
 
-PHP_SUPERGLOBALS = ("$_GET", "$_POST", "$_REQUEST", "$_COOKIE", "$_FILES", "$_SERVER")
-PHP_SINKS = {
-    "mysqli_query": ("PhpSqlInjection", "SQL 注入", "高危"),
-    "mysqli_multi_query": ("PhpSqlInjection", "SQL 注入", "高危"),
-    "mysql_query": ("PhpSqlInjection", "SQL 注入", "高危"),
-    "pg_query": ("PhpSqlInjection", "SQL 注入", "高危"),
-    "sqlite_query": ("PhpSqlInjection", "SQL 注入", "高危"),
-    "shell_exec": ("PhpCommandInjection", "命令注入", "高危"),
-    "system": ("PhpCommandInjection", "命令注入", "高危"),
-    "exec": ("PhpCommandInjection", "命令注入", "高危"),
-    "passthru": ("PhpCommandInjection", "命令注入", "高危"),
-    "popen": ("PhpCommandInjection", "命令注入", "高危"),
-    "eval": ("PhpCodeInjection", "代码注入", "高危"),
-    "assert": ("PhpCodeInjection", "代码注入", "高危"),
-    "include": ("PhpFileInclusion", "文件包含", "高危"),
-    "include_once": ("PhpFileInclusion", "文件包含", "高危"),
-    "require": ("PhpFileInclusion", "文件包含", "高危"),
-    "require_once": ("PhpFileInclusion", "文件包含", "高危"),
-    "file_get_contents": ("PhpPathTraversal", "路径遍历/SSRF", "中危"),
-    "fopen": ("PhpPathTraversal", "路径遍历", "中危"),
-    "readfile": ("PhpPathTraversal", "路径遍历", "中危"),
-    "echo": ("PhpXSS", "XSS", "中危"),
-    "print": ("PhpXSS", "XSS", "中危"),
-}
-
-
-def _php_var_names(expr: str) -> List[str]:
-    return re.findall(r"\$[A-Za-z_][A-Za-z0-9_]*", expr or "")
-
-
-def _php_expr_is_tainted(expr: str, tainted_vars: set) -> bool:
-    if any(src in expr for src in PHP_SUPERGLOBALS):
-        return True
-    return any(var in tainted_vars for var in _php_var_names(expr))
-
-
-def _php_sink_call(line: str) -> Optional[Tuple[str, str]]:
-    stripped = line.strip()
-    for sink in PHP_SINKS:
-        if sink in {"include", "include_once", "require", "require_once", "echo", "print"}:
-            m = re.match(rf"^{sink}\b\s*(?:\(?)(.*?)(?:\)?\s*;)?$", stripped)
-        else:
-            m = re.search(rf"\b{sink}\s*\((.*)\)", stripped)
-        if m:
-            return sink, m.group(1)
-    return None
-
-
-def _scan_php_fallback(scan_path: str) -> List[Dict[str, Any]]:
-    """Lightweight PHP page heuristic for projects without framework entrypoints."""
-    root = Path(scan_path)
-    if not root.exists():
-        return []
-    files = [root] if root.is_file() and root.suffix.lower() == ".php" else list(root.rglob("*.php"))
-    findings: List[Dict[str, Any]] = []
-    seen = set()
-    skip_parts = {"vendor", "node_modules", ".git"}
-
-    for file_path in files:
-        if any(part in skip_parts for part in file_path.parts):
-            continue
-        try:
-            lines = file_path.read_text(encoding="utf-8", errors="replace").splitlines()
-        except Exception:
-            continue
-
-        tainted_vars = set()
-        source_lines: Dict[str, Tuple[int, str]] = {}
-        for line_no, line in enumerate(lines, 1):
-            assign = re.search(r"(\$[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?);", line)
-            if assign:
-                var, expr = assign.group(1), assign.group(2)
-                if _php_expr_is_tainted(expr, tainted_vars):
-                    tainted_vars.add(var)
-                    source_lines.setdefault(var, (line_no, line.strip()))
-
-            sink_call = _php_sink_call(line)
-            if not sink_call:
-                continue
-            sink, arg_expr = sink_call
-            if not _php_expr_is_tainted(arg_expr, tainted_vars):
-                continue
-
-            sink_attr, vuln_name, severity = PHP_SINKS[sink]
-            rel_file = str(file_path.relative_to(root)) if root.is_dir() else file_path.name
-            key = (rel_file, line_no, sink_attr, sink)
-            if key in seen:
-                continue
-            seen.add(key)
-
-            code_flow = []
-            for var in _php_var_names(arg_expr):
-                if var in source_lines:
-                    src_line, src_snippet = source_lines[var]
-                    code_flow.append({"step": f"source {var}", "line": src_line, "snippet": src_snippet[:80]})
-                    break
-            code_flow.append({"step": f"sink {sink}", "line": line_no, "snippet": line.strip()[:80]})
-
-            findings.append({
-                "file": rel_file,
-                "line": line_no,
-                "column": max(line.find(sink), 0) + 1,
-                "sink_rule": sink,
-                "sink_attribute": sink_attr,
-                "vuln_name": vuln_name,
-                "severity": severity,
-                "message": f"PHP fallback: tainted request data reaches {sink}",
-                "snippet": line.strip(),
-                "code_flow": code_flow,
-                "engine": "php-fallback",
-            })
-
-    return normalize_findings_list(findings)
-
 
 def _parse_report_summary(raw_output: str, findings: Optional[List[Dict]] = None) -> Dict[str, Any]:
     """解析摘要：优先用 SARIF findings，否则用 raw_output"""
@@ -230,9 +116,6 @@ def save_report(
     findings = []
     if sarif_path.exists():
         findings = normalize_findings_list(parse_sarif(str(sarif_path)))
-    if lang.lower() == "php" and not findings:
-        findings = _scan_php_fallback(scan_path)
-
     # TXT: 结构化报告 + 原始 YASA 输出
     txt_parts = []
     if findings:
@@ -292,54 +175,57 @@ def list_reports(limit: int = 20, project_filter: str = "", user_id: int = None)
             return []
         scan_roots = [user_dir]
     else:
-        scan_roots = [d for d in reports_dir.iterdir() if d.is_dir()]
+        scan_roots = [reports_dir]
 
     items = []
     for root in scan_roots:
-        for project_dir in root.iterdir():
-            if not project_dir.is_dir():
+        for report_dir in root.rglob("*"):
+            if not report_dir.is_dir():
                 continue
-            proj_name = project_dir.name
+            if not (
+                (report_dir / "report.json").exists()
+                or (report_dir / "report.sarif").exists()
+                or (report_dir / "summary.txt").exists()
+            ):
+                continue
+            proj_name = report_dir.parent.name
             if project_filter and project_filter.lower() not in proj_name.lower():
                 continue
-            for report_dir in project_dir.iterdir():
-                if not report_dir.is_dir():
-                    continue
-                try:
-                    mtime = report_dir.stat().st_mtime
-                    fav = (report_dir / FAVORITE_MARKER).exists()
-                    json_path = report_dir / "report.json"
-                    scan_path = ""
-                    lang = ""
-                    raw_output = ""
-                    findings = None
-                    if json_path.exists():
-                        try:
-                            with open(json_path, "r", encoding="utf-8") as f:
-                                data = json.load(f)
-                                scan_path = data.get("scan_path", "")
-                                lang = data.get("language", "")
-                                findings = data.get("findings")
-                                if findings is None:
-                                    raw_output = data.get("raw_output", "")
-                        except Exception:
-                            pass
-                    summary = _parse_report_summary(raw_output, findings if findings is not None else None)
-                    items.append({
-                        "path": str(report_dir),
-                        "project": proj_name,
-                        "report_name": report_dir.name,
-                        "mtime": mtime,
-                        "favorite": fav,
-                        "scan_path": scan_path,
-                        "language": lang,
-                        "findings_count": summary.get("findings_count", 0),
-                        "vuln_types": summary.get("vuln_types", []),
-                        "severity": summary.get("severity", "无"),
-                        "files_analyzed": summary.get("files_analyzed", 0),
-                    })
-                except Exception:
-                    pass
+            try:
+                mtime = report_dir.stat().st_mtime
+                fav = (report_dir / FAVORITE_MARKER).exists()
+                json_path = report_dir / "report.json"
+                scan_path = ""
+                lang = ""
+                raw_output = ""
+                findings = None
+                if json_path.exists():
+                    try:
+                        with open(json_path, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            scan_path = data.get("scan_path", "")
+                            lang = data.get("language", "")
+                            findings = data.get("findings")
+                            if findings is None:
+                                raw_output = data.get("raw_output", "")
+                    except Exception:
+                        pass
+                summary = _parse_report_summary(raw_output, findings if findings is not None else None)
+                items.append({
+                    "path": str(report_dir),
+                    "project": proj_name,
+                    "report_name": report_dir.name,
+                    "mtime": mtime,
+                    "favorite": fav,
+                    "scan_path": scan_path,
+                    "language": lang,
+                    "findings_count": summary.get("findings_count", 0),
+                    "vuln_types": summary.get("vuln_types", []),
+                    "severity": summary.get("severity", "无"),
+                    "files_analyzed": summary.get("files_analyzed", 0),
+                })
+            except Exception:
+                pass
     items.sort(key=lambda x: x["mtime"], reverse=True)
     return items[:limit]
 

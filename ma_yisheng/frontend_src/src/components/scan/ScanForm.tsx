@@ -1,15 +1,15 @@
-import { useState, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import JSZip from 'jszip'
 import { scanPath, scanUpload } from '../../api/scan'
+import { listRuleSets, type RuleSetSummary } from '../../api/ruleSets'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Card } from '../ui/Card'
+import { usePageStateStore, type ScanTab } from '../../store/pageStateStore'
 
 interface Props {
   onSubmitted: () => void
 }
-
-type Tab = 'upload' | 'path'
 
 const languageOptions = [
   { value: 'auto', label: '自动识别' },
@@ -21,15 +21,48 @@ const languageOptions = [
   { value: 'c', label: 'C' },
 ]
 
+const sceneOptions = [
+  { value: 'full', label: 'Full（Web/source-sink）' },
+  { value: 'minimal', label: 'Minimal（快速）' },
+]
+
 export function ScanForm({ onSubmitted }: Props) {
-  const [tab, setTab] = useState<Tab>('path')
-  const [path, setPath] = useState('')
-  const [engine, setEngine] = useState('semgrep')
-  const [lang, setLang] = useState('auto')
+  const scanForm = usePageStateStore((s) => s.scanForm)
+  const setScanForm = usePageStateStore((s) => s.setScanForm)
+  const resetScanInput = usePageStateStore((s) => s.resetScanInput)
+  const { tab, path, engine, lang, scene, timeout, ruleSetIds } = scanForm
+  const [ruleSets, setRuleSets] = useState<RuleSetSummary[]>([])
+  const [ruleSetsError, setRuleSetsError] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    listRuleSets()
+      .then((res) => {
+        setRuleSets(res.data.rule_sets ?? [])
+        setRuleSetsError('')
+      })
+      .catch((err) => setRuleSetsError(err instanceof Error ? err.message : '规则集加载失败'))
+  }, [])
+
+  const usableRuleSets = useMemo(() => {
+    const currentLang = lang === 'auto' ? '' : lang
+    return ruleSets.filter((rs) => {
+      if (rs.is_official) return false
+      if (!currentLang) return true
+      return rs.lang === currentLang
+    })
+  }, [ruleSets, lang])
+
+  const toggleRuleSet = (id: number) => {
+    setScanForm({
+      ruleSetIds: ruleSetIds.includes(id)
+        ? ruleSetIds.filter((x) => x !== id)
+        : [...ruleSetIds, id],
+    })
+  }
 
   const submit = async () => {
     setError('')
@@ -44,13 +77,13 @@ export function ScanForm({ onSubmitted }: Props) {
           const blob = await zip.generateAsync({ type: 'blob' })
           uploadFile = new File([blob], file.name.replace(/\.[^.]+$/, '') + '.zip', { type: 'application/zip' })
         }
-        await scanUpload(uploadFile, { engine, lang })
+        await scanUpload(uploadFile, { engine, lang, scene, timeout: Number(timeout) || 1800, rule_set_ids: ruleSetIds })
       } else {
         if (!path.trim()) { setError('请填写路径'); setLoading(false); return }
-        await scanPath({ scan_path: path.trim(), engine, lang })
+        await scanPath({ scan_path: path.trim(), engine, lang, scene, timeout: Number(timeout) || 1800, rule_set_ids: ruleSetIds })
       }
       setFile(null)
-      setPath('')
+      resetScanInput()
       if (fileRef.current) fileRef.current.value = ''
       onSubmitted()
     } catch (e: unknown) {
@@ -81,8 +114,7 @@ export function ScanForm({ onSubmitted }: Props) {
     setError('')
     const res = await window.maYisheng.selectDirectory()
     if (res.ok && res.path) {
-      setTab('path')
-      setPath(res.path)
+      setScanForm({ tab: 'path', path: res.path })
     }
   }
 
@@ -92,10 +124,10 @@ export function ScanForm({ onSubmitted }: Props) {
 
       {/* Tab 切换 */}
       <div className="flex mb-4 border-3 border-black w-fit">
-        {(['path', 'upload'] as Tab[]).map((t) => (
+        {(['path', 'upload'] as ScanTab[]).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => setScanForm({ tab: t })}
             className={`px-4 py-1.5 text-xs font-black uppercase tracking-wider transition-colors
               ${tab === t ? 'bg-black text-brutal-yellow' : 'bg-white text-black hover:bg-brutal-gray'}`}
           >
@@ -123,7 +155,7 @@ export function ScanForm({ onSubmitted }: Props) {
               label="本地项目路径"
               placeholder="/Users/infinite/Downloads/project"
               value={path}
-              onChange={(e) => setPath(e.target.value)}
+              onChange={(e) => setScanForm({ path: e.target.value })}
             />
             <Button variant="white" size="sm" onClick={selectDirectory} type="button">
               选择文件夹
@@ -136,10 +168,24 @@ export function ScanForm({ onSubmitted }: Props) {
           <label className="text-xs font-bold uppercase tracking-wider block mb-1">扫描语言</label>
           <select
             value={lang}
-            onChange={(e) => setLang(e.target.value)}
+            onChange={(e) => setScanForm({ lang: e.target.value })}
             className="input-brutal text-sm"
           >
             {languageOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* 规则模式 */}
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider block mb-1">规则模式</label>
+          <select
+            value={scene}
+            onChange={(e) => setScanForm({ scene: e.target.value })}
+            className="input-brutal text-sm"
+          >
+            {sceneOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
@@ -150,12 +196,50 @@ export function ScanForm({ onSubmitted }: Props) {
           <label className="text-xs font-bold uppercase tracking-wider block mb-1">扫描引擎</label>
           <select
             value={engine}
-            onChange={(e) => setEngine(e.target.value)}
+            onChange={(e) => setScanForm({ engine: e.target.value })}
             className="input-brutal text-sm"
           >
             <option value="semgrep">Semgrep</option>
             <option value="yasa">YASA</option>
           </select>
+        </div>
+
+        <Input
+          label="扫描超时（秒）"
+          type="number"
+          min="60"
+          max="1800"
+          value={timeout}
+          onChange={(e) => setScanForm({ timeout: e.target.value })}
+        />
+
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider block mb-1">自定义规则集</label>
+          <div className="border-3 border-black bg-white max-h-36 overflow-y-auto">
+            {ruleSetsError && (
+              <div className="px-3 py-2 text-xs font-bold text-brutal-red">{ruleSetsError}</div>
+            )}
+            {!ruleSetsError && usableRuleSets.length === 0 && (
+              <div className="px-3 py-2 text-xs font-bold text-gray-500">暂无匹配当前语言的自定义规则集</div>
+            )}
+            {usableRuleSets.map((rs) => {
+              const id = Number(rs.id)
+              return (
+                <label key={String(rs.id)} className="flex items-start gap-2 px-3 py-2 border-b-2 border-dashed border-gray-200 text-xs font-bold cursor-pointer hover:bg-brutal-gray">
+                  <input
+                    type="checkbox"
+                    checked={ruleSetIds.includes(id)}
+                    onChange={() => toggleRuleSet(id)}
+                    className="mt-0.5"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate">{rs.name}</span>
+                    <span className="block text-[10px] text-gray-500">{rs.lang}/{rs.scene || 'full'} · {rs.rule_count || 0} 条</span>
+                  </span>
+                </label>
+              )
+            })}
+          </div>
         </div>
 
         {error && (

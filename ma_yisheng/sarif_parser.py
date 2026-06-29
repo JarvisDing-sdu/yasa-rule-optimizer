@@ -24,6 +24,7 @@ SINK_SEVERITY_MAP = {
     "PythonInfoLeak": ("信息泄露", "中危"),
     "PythonLdapInjection": ("LDAP 注入", "高危"),
     "PythonResponseWrite": ("响应写入", "中危"),
+    "PythonCookieInjection": ("Cookie 注入", "中危"),
     "Chromium": ("Chromium", "中危"),
     # Java
     "JavaSqlInjection": ("SQL 注入", "高危"),

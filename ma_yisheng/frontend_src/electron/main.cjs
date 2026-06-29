@@ -1,13 +1,15 @@
 const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron')
 const { spawn } = require('child_process')
 const http = require('http')
+const net = require('net')
 const path = require('path')
 const fs = require('fs')
 
-const API_PORT = process.env.MA_YISHENG_PORT || '8000'
-const API_BASE = `http://127.0.0.1:${API_PORT}`
+let API_PORT = process.env.MA_YISHENG_PORT || '8000'
+let API_BASE = `http://127.0.0.1:${API_PORT}`
 let backendProcess = null
 let logFile = null
+let backendExit = null
 
 function log(message) {
   if (!logFile) return
@@ -32,11 +34,63 @@ function resolveBackendExecutable() {
   return candidates.find((file) => file && fs.existsSync(file))
 }
 
-function waitForBackend(timeoutMs = 30000) {
+function cleanupBundledRuntimeLogs(backendBin) {
+  if (!backendBin) return
+  const bundledLogPath = path.join(path.dirname(backendBin), 'logs')
+  try {
+    if (!fs.existsSync(bundledLogPath)) return
+    const stat = fs.lstatSync(bundledLogPath)
+    if (stat.isDirectory() && !stat.isSymbolicLink()) {
+      fs.rmSync(bundledLogPath, { recursive: true, force: true })
+      log(`Removed bundled runtime logs: ${bundledLogPath}`)
+    }
+  } catch (error) {
+    log(`Failed to remove bundled runtime logs: ${error.message}`)
+  }
+}
+
+function canListen(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer()
+    server.once('error', () => resolve(false))
+    server.once('listening', () => {
+      server.close(() => resolve(true))
+    })
+    server.listen(Number(port), '127.0.0.1')
+  })
+}
+
+async function chooseApiPort() {
+  const preferred = Number(process.env.MA_YISHENG_PORT || '8000')
+  const candidates = [preferred]
+  for (let port = 8001; port <= 8099; port += 1) {
+    if (!candidates.includes(port)) {
+      candidates.push(port)
+    }
+  }
+  for (const port of candidates) {
+    if (await canListen(port)) {
+      API_PORT = String(port)
+      API_BASE = `http://127.0.0.1:${API_PORT}`
+      process.env.MA_YISHENG_PORT = API_PORT
+      return API_PORT
+    }
+  }
+  throw new Error('8000-8099 端口都被占用，无法启动本地后端')
+}
+
+function waitForBackend(timeoutMs = 90000) {
   const startedAt = Date.now()
 
   return new Promise((resolve, reject) => {
     const check = () => {
+      if (backendExit) {
+        const detail = `后端进程已退出：code=${backendExit.code ?? 'null'}, signal=${backendExit.signal ?? 'null'}`
+        const suffix = logFile ? `\n日志：${logFile}` : ''
+        reject(new Error(`${detail}${suffix}`))
+        return
+      }
+
       const req = http.get(`${API_BASE}/api/health`, (res) => {
         res.resume()
         if (res.statusCode && res.statusCode < 500) {
@@ -54,7 +108,8 @@ function waitForBackend(timeoutMs = 30000) {
 
     const retry = () => {
       if (Date.now() - startedAt > timeoutMs) {
-        reject(new Error('后端启动超时'))
+        const suffix = logFile ? `\n日志：${logFile}` : ''
+        reject(new Error(`后端启动超时${suffix}`))
         return
       }
       setTimeout(check, 500)
@@ -67,29 +122,38 @@ function waitForBackend(timeoutMs = 30000) {
 function startBackend() {
   const backendBin = resolveBackendExecutable()
   const backendDir = resolveBackendDir()
+  backendExit = null
 
   const env = {
     ...process.env,
     API_HOST: '127.0.0.1',
     API_PORT,
+    APP_MODE: 'desktop',
+    CONFIG_UI_ENABLED: '1',
     SERVER_URL: '',
     ALLOWED_ORIGINS: '',
     MA_YISHENG_DATA_DIR: path.join(app.getPath('userData'), 'runtime'),
   }
   fs.mkdirSync(env.MA_YISHENG_DATA_DIR, { recursive: true })
+  const runtimeLogDir = path.join(env.MA_YISHENG_DATA_DIR, 'logs')
+  fs.mkdirSync(runtimeLogDir, { recursive: true })
+  env.LOG_DIR = runtimeLogDir
+  env.YASA_LOG_DIR = runtimeLogDir
+  env.MA_YISHENG_LOG_DIR = runtimeLogDir
   logFile = path.join(env.MA_YISHENG_DATA_DIR, 'backend.log')
-  log(`Starting backend, bin=${backendBin || ''}, dir=${backendDir || ''}`)
+  cleanupBundledRuntimeLogs(backendBin)
+  log(`Starting backend, port=${API_PORT}, bin=${backendBin || ''}, dir=${backendDir || ''}, cwd=${env.MA_YISHENG_DATA_DIR}`)
   const out = fs.openSync(logFile, 'a')
 
   if (backendBin) {
     backendProcess = spawn(backendBin, ['--host', '127.0.0.1', '--port', API_PORT], {
-      cwd: path.dirname(backendBin),
+      cwd: env.MA_YISHENG_DATA_DIR,
       env,
       stdio: ['ignore', out, out],
     })
   } else if (backendDir) {
     backendProcess = spawn('python3', ['main.py', '--host', '127.0.0.1', '--port', API_PORT], {
-      cwd: backendDir,
+      cwd: env.MA_YISHENG_DATA_DIR,
       env,
       stdio: ['ignore', out, out],
     })
@@ -103,6 +167,7 @@ function startBackend() {
 
   backendProcess.on('exit', (code, signal) => {
     log(`Backend exited: code=${code}, signal=${signal}`)
+    backendExit = { code, signal }
     backendProcess = null
   })
 }
@@ -163,6 +228,7 @@ app.whenReady().then(async () => {
   })
 
   try {
+    await chooseApiPort()
     startBackend()
     await waitForBackend()
     createWindow()
