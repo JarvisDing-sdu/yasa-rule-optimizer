@@ -521,6 +521,9 @@ async function checkLogin() {
     badge.style.background = '#dbeafe';
   }
   loadRuleSets();
+  window.setTimeout(() => {
+    if (typeof resumeLatestIngestJob === 'function') resumeLatestIngestJob();
+  }, 300);
 }
 
 if (getToken()) {
@@ -749,7 +752,7 @@ function renderRuleSetsList() {
   }
   list.innerHTML = sets.map(s => {
     let badge;
-    if (s.is_official) badge = '<span class="badge badge-official">官方</span>';
+    if (s.is_official) badge = '<span class="badge badge-official">内置</span>';
     else if (s.source_type === 'official_clone') badge = '<span class="badge badge-clone">克隆</span>';
     else badge = '<span class="badge badge-generated">自建</span>';
 
@@ -798,9 +801,11 @@ async function loadRuleSetDetail(id) {
         catch { ruleData = {}; }
         const meta = ruleData.metadata || {};
         const disabled = r.is_enabled === 0 ? ' disabled' : '';
+        const displayName = ruleDisplayName(r, ruleData);
+        const displayDescription = ruleDisplayDescription(ruleData);
         return `<div class="rule-card${disabled}">
-          <div class="rule-id">${escapeHtml(meta.ruleId || '?')}</div>
-          <div class="rule-meta">${escapeHtml((meta.description || '').substring(0, 100))}</div>
+          <div class="rule-id">${escapeHtml(displayName)}</div>
+          <div class="rule-meta">${escapeHtml((displayDescription || '').substring(0, 140))}</div>
           <details class="rule-detail" style="margin-top:6px;font-size:11px;">
             <summary style="cursor:pointer;color:#888;font-weight:700;">查看规则定义</summary>
             <pre style="background:#f8f8f8;padding:8px;border:2px solid #ddd;overflow-x:auto;max-height:300px;font-size:10px;line-height:1.4;">${escapeHtml(JSON.stringify(ruleData, null, 2))}</pre>
@@ -915,6 +920,103 @@ function appendProgressLog(text, ok) {
   log.scrollTop = log.scrollHeight;
 }
 
+function firstSinkAttribute(ruleData) {
+  const sinks = ruleData && ruleData.sinks ? ruleData.sinks : {};
+  for (const key of Object.keys(sinks)) {
+    const entries = Array.isArray(sinks[key]) ? sinks[key] : [];
+    for (const entry of entries) {
+      if (entry && entry.attribute) return entry.attribute;
+    }
+  }
+  return '';
+}
+
+function ruleDisplayName(ruleRecord, ruleData) {
+  const meta = (ruleData && ruleData.metadata) || {};
+  return meta.name || meta.ruleId || meta.caseId || firstSinkAttribute(ruleData) || ruleRecord.rule_id || '?';
+}
+
+function ruleDisplayDescription(ruleData) {
+  const meta = (ruleData && ruleData.metadata) || {};
+  if (meta.description) return meta.description;
+  const checkerIds = Array.isArray(ruleData.checkerIds) ? ruleData.checkerIds.join(', ') : '';
+  const attribute = firstSinkAttribute(ruleData);
+  return [attribute, checkerIds].filter(Boolean).join(' · ');
+}
+
+let ingestPollTimer = null;
+let ingestJobId = localStorage.getItem('ma_yisheng_ingest_job_id') || '';
+
+function switchToResultsTab() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="results"]').classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-results').style.display = 'block';
+}
+
+function renderJobProgress(job) {
+  if (!job) return;
+  resetProgress(job.total || 0);
+  const running = job.status === 'queued' || job.status === 'running';
+  const label = running
+    ? (job.current ? '正在生成 ' + job.current : '排队中')
+    : (job.status === 'completed' ? '全部完成' : '完成，有失败项');
+  updateProgress(job.done || 0, job.total || 0, label, job.failed ? false : true);
+
+  const log = document.getElementById('progressLog');
+  log.innerHTML = '';
+  (job.logs || []).forEach(item => appendProgressLog(item.message || '', item.ok));
+  renderIngestResults(job.total || 0, job.rules_generated || 0, job.generated || 0, job.details || []);
+
+  const status = document.getElementById('ingestStatus');
+  if (running) {
+    showStatus(status, 'info', '规则生成任务正在后台运行，切换页面不会中断。');
+  } else {
+    showStatus(status, job.failed ? 'err' : 'ok', '处理完成！生成 ' + (job.generated || 0) + ' 条规则，失败 ' + (job.failed || 0) + ' 条');
+  }
+}
+
+async function pollIngestJob(jobId) {
+  if (!jobId) return;
+  try {
+    const data = await apiFetch('/api/cve/ingest-jobs/' + encodeURIComponent(jobId));
+    const job = data.job;
+    if (!job) return;
+    renderJobProgress(job);
+    const running = job.status === 'queued' || job.status === 'running';
+    if (running) {
+      ingestPollTimer = setTimeout(() => pollIngestJob(jobId), 2000);
+    } else {
+      ingestJobId = '';
+      localStorage.removeItem('ma_yisheng_ingest_job_id');
+      loadRuleSets();
+    }
+  } catch (e) {
+    showStatus(document.getElementById('ingestStatus'), 'err', '任务状态刷新失败：' + String(e.message || e));
+    ingestPollTimer = setTimeout(() => pollIngestJob(jobId), 5000);
+  }
+}
+
+async function resumeLatestIngestJob() {
+  try {
+    const data = await apiFetch('/api/cve/ingest-jobs/latest');
+    const job = data.job;
+    if (!job) return;
+    const running = job.status === 'queued' || job.status === 'running';
+    if (!running && !ingestJobId) return;
+    ingestJobId = job.job_id;
+    localStorage.setItem('ma_yisheng_ingest_job_id', ingestJobId);
+    switchToResultsTab();
+    renderJobProgress(job);
+    if (running) {
+      if (ingestPollTimer) clearTimeout(ingestPollTimer);
+      ingestPollTimer = setTimeout(() => pollIngestJob(ingestJobId), 1000);
+    }
+  } catch (e) {
+    console.warn('resume ingest job failed', e);
+  }
+}
+
 document.getElementById('ingestBtn').addEventListener('click', async () => {
   const ruleSetId = parseInt(document.getElementById('targetRuleSet').value);
   if (!ruleSetId) { alert('请先选择或创建一个目标规则集'); return; }
@@ -923,49 +1025,25 @@ document.getElementById('ingestBtn').addEventListener('click', async () => {
   const ghsaIds = Array.from(state.selectedCves);
   const status = document.getElementById('ingestStatus');
 
-  // Switch to results tab
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.tab[data-tab="results"]').classList.add('active');
-  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-  document.getElementById('tab-results').style.display = 'block';
+  switchToResultsTab();
 
   resetProgress(ghsaIds.length);
-  showStatus(status, 'info', '正在处理 ' + ghsaIds.length + ' 个条目，可能需要几分钟...');
-
-  const allDetails = [];
-  let generated = 0;
-  let failed = 0;
-  let rulesGenerated = 0;
+  showStatus(status, 'info', '正在创建后台任务...');
   document.getElementById('ingestResults').innerHTML = '<div style="font-size:12px;color:#555;">正在生成...</div>';
 
-  for (let i = 0; i < ghsaIds.length; i += 1) {
-    const ghsaId = ghsaIds[i];
-    updateProgress(i, ghsaIds.length, '正在生成 ' + ghsaId);
-    appendProgressLog('开始：' + ghsaId);
-    try {
-      const data = await apiFetch('/api/cve/ingest', {
-        method: 'POST', body: JSON.stringify({ ghsa_ids: [ghsaId], rule_set_id: ruleSetId })
-      });
-      const details = data.details || [{ ghsa_id: ghsaId, status: data.generated ? 'ok' : 'unknown' }];
-      allDetails.push(...details);
-      generated += data.generated || 0;
-      failed += data.failed || 0;
-      rulesGenerated += data.rules_generated || 0;
-      appendProgressLog('完成：' + ghsaId + '，加入 ' + (data.generated || 0) + ' 条', true);
-      updateProgress(i + 1, ghsaIds.length, '已完成 ' + ghsaId, true);
-    } catch (e) {
-      failed += 1;
-      allDetails.push({ ghsa_id: ghsaId, status: 'request_failed', error: String(e.message || e) });
-      appendProgressLog('失败：' + ghsaId + '，' + String(e.message || e), false);
-      updateProgress(i + 1, ghsaIds.length, '失败 ' + ghsaId, false);
-    }
-    renderIngestResults(ghsaIds.length, rulesGenerated, generated, allDetails);
+  try {
+    const data = await apiFetch('/api/cve/ingest-jobs', {
+      method: 'POST',
+      body: JSON.stringify({ ghsa_ids: ghsaIds, rule_set_id: ruleSetId })
+    });
+    ingestJobId = data.job.job_id;
+    localStorage.setItem('ma_yisheng_ingest_job_id', ingestJobId);
+    renderJobProgress(data.job);
+    if (ingestPollTimer) clearTimeout(ingestPollTimer);
+    ingestPollTimer = setTimeout(() => pollIngestJob(ingestJobId), 1000);
+  } catch (e) {
+    showStatus(status, 'err', '任务创建失败：' + String(e.message || e));
   }
-
-  const finalOk = failed === 0;
-  updateProgress(ghsaIds.length, ghsaIds.length, finalOk ? '全部完成' : '完成，有失败项', finalOk);
-  showStatus(status, finalOk ? 'ok' : 'err', '处理完成！生成 ' + generated + ' 条规则，失败 ' + failed + ' 条');
-  loadRuleSets();
 });
 
 function renderIngestResults(total, rulesGenerated, generated, results) {

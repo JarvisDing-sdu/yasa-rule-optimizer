@@ -4,17 +4,15 @@ import { API_BASE } from '../api/client'
 import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 
-const MAX_AUTO_RETRIES = 2
-
 export default function RuleWorkshopPage() {
   const nav = useNavigate()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const loadTimerRef = useRef<number | null>(null)
+  const loadedOnceRef = useRef(false)
   const token = useAuthStore((state) => state.token)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [reloadKey, setReloadKey] = useState(0)
-  const [autoRetries, setAutoRetries] = useState(0)
   const url = useMemo(
     () => `${API_BASE}/rule-workshop?v=${reloadKey}&ts=${Date.now()}#token=${encodeURIComponent(token || '')}`,
     [token, reloadKey],
@@ -29,6 +27,7 @@ export default function RuleWorkshopPage() {
 
   const reloadFrame = useCallback(() => {
     clearLoadTimer()
+    loadedOnceRef.current = false
     setLoading(true)
     setError('')
     setReloadKey((value) => value + 1)
@@ -46,24 +45,54 @@ export default function RuleWorkshopPage() {
   }, [token])
 
   useEffect(() => {
-    setLoading(true)
+    let cancelled = false
+    setLoading(!loadedOnceRef.current)
     setError('')
+
     loadTimerRef.current = window.setTimeout(() => {
-      const frame = iframeRef.current
-      const text = frame?.contentDocument?.body?.innerText?.trim() || ''
-      if (!text) {
-        window.maYisheng?.log?.(`rule-workshop blank after timeout reloadKey=${reloadKey}`)
-        if (autoRetries < MAX_AUTO_RETRIES) {
-          setAutoRetries((value) => value + 1)
-          setReloadKey((value) => value + 1)
+      if (!cancelled && !loadedOnceRef.current) {
+        window.maYisheng?.log?.(`rule-workshop iframe load timeout reloadKey=${reloadKey}`)
+        setLoading(false)
+        setError('规则工坊加载超时，请点击重新加载。')
+      }
+    }, 15000)
+
+    fetch(`${API_BASE}/rule-workshop?probe=${reloadKey}&ts=${Date.now()}`, { cache: 'no-store' })
+      .then(async (response) => {
+        const text = await response.text()
+        if (cancelled) return
+        if (!response.ok || text.includes('Not Found')) {
+          clearLoadTimer()
+          if (!loadedOnceRef.current) {
+            setLoading(false)
+            setError(`规则工坊页面不可用：后端返回 ${response.status}`)
+          }
           return
         }
-        setLoading(false)
-        setError('规则工坊加载后仍为空白，请点击刷新重新加载。')
-      }
-    }, 2500)
-    return clearLoadTimer
-  }, [autoRetries, clearLoadTimer, reloadKey])
+        if (!text.trim()) {
+          clearLoadTimer()
+          if (!loadedOnceRef.current) {
+            setLoading(false)
+            setError('规则工坊页面为空，请点击重新加载。')
+          }
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return
+        clearLoadTimer()
+        if (!loadedOnceRef.current) {
+          setLoading(false)
+          setError(`规则工坊连接失败：${err instanceof Error ? err.message : String(err)}`)
+        } else {
+          window.maYisheng?.log?.(`rule-workshop probe ignored after load: ${err instanceof Error ? err.message : String(err)}`)
+        }
+      })
+
+    return () => {
+      cancelled = true
+      clearLoadTimer()
+    }
+  }, [clearLoadTimer, reloadKey])
 
   useEffect(() => {
     return () => clearLoadTimer()
@@ -82,7 +111,6 @@ export default function RuleWorkshopPage() {
             variant="cyan"
             size="sm"
             onClick={() => {
-              setAutoRetries(0)
               reloadFrame()
             }}
           >
@@ -111,7 +139,6 @@ export default function RuleWorkshopPage() {
                   variant="cyan"
                   size="sm"
                   onClick={() => {
-                    setAutoRetries(0)
                     reloadFrame()
                   }}
                 >
@@ -130,35 +157,10 @@ export default function RuleWorkshopPage() {
           className="h-full w-full border-3 border-black bg-white shadow-brutal"
           onLoad={(event) => {
             clearLoadTimer()
-            try {
-              const frame = event.currentTarget
-              const title = frame.contentDocument?.title || ''
-              const text = frame.contentDocument?.body?.innerText?.trim() || ''
-              const href = frame.contentWindow?.location.href || ''
-              window.maYisheng?.log?.(`rule-workshop loaded title=${title || '-'} text=${text.length} href=${href}`)
-              if (title.includes('404') || text.includes('Not Found')) {
-                setLoading(false)
-                setError('规则工坊页面未找到：后端返回 404 Not Found')
-                return
-              }
-              if (!text) {
-                if (autoRetries < MAX_AUTO_RETRIES) {
-                  setAutoRetries((value) => value + 1)
-                  setReloadKey((value) => value + 1)
-                  return
-                }
-                setLoading(false)
-                setError('规则工坊返回了空页面，请点击重新加载。')
-                return
-              }
-              setLoading(false)
-              setError('')
-              setAutoRetries(0)
-            } catch (err) {
-              window.maYisheng?.log?.(`rule-workshop load inspection failed: ${String(err)}`)
-              setLoading(false)
-              setError('')
-            }
+            loadedOnceRef.current = true
+            window.maYisheng?.log?.(`rule-workshop iframe loaded ${event.currentTarget.src}`)
+            setLoading(false)
+            setError('')
             syncAuthToFrame()
             window.setTimeout(syncAuthToFrame, 200)
             window.setTimeout(syncAuthToFrame, 800)

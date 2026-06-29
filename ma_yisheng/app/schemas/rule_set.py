@@ -30,7 +30,7 @@ class RuleSetCloneOfficial(BaseModel):
 
 
 class RuleToggle(BaseModel):
-    rule_id: int
+    rule_id: Optional[int] = None
     is_enabled: bool
 
 
