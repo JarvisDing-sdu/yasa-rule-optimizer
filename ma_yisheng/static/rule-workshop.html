@@ -242,7 +242,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     <label>搜索来源</label>
     <select id="cveSource">
       <option value="github">GitHub Advisory</option>
-      <option value="codeql">本地 CodeQL 测试集</option>
+      <option value="codeql" selected>本地 CodeQL 测试集</option>
     </select>
   </div>
   <div class="section">
@@ -288,14 +288,14 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     <input id="cveCountCustom" type="number" min="1" max="5000" value="100" disabled>
     </div>
   </div>
-  <button id="searchBtn" class="btn-yellow" style="width:100%;">搜索 GitHub 漏洞公告</button>
+  <button id="searchBtn" class="btn-yellow" style="width:100%;">搜索 CodeQL 测试集</button>
   <div id="cveStatus"></div>
   <div class="list" id="cveResults" style="margin-top:8px;">
     <div style="color:#888;font-size:12px;">输入条件后点击搜索</div>
   </div>
   <div style="margin-top:8px;display:flex;gap:6px;">
     <button id="selectAllBtn" class="btn-sm" disabled>全选</button>
-    <button id="selectCodeqlAllBtn" class="btn-sm btn-yellow" disabled>全选 CodeQL</button>
+    <button id="selectCodeqlAllBtn" class="btn-sm btn-yellow">全选 CodeQL</button>
     <button id="deselectAllBtn" class="btn-sm" disabled>取消</button>
   </div>
   <div id="selectionInfo" style="font-size:11px;color:#666;margin-top:6px;">已选 0 条</div>
@@ -561,6 +561,7 @@ document.getElementById('cveSource').addEventListener('change', () => {
   if (allOption) allOption.disabled = source !== 'codeql';
   if (source !== 'codeql' && preset.value === 'all') preset.value = '100';
   updateCountCustomState();
+  updateSelectionInfo();
 });
 
 document.getElementById('cveCountPreset').addEventListener('change', updateCountCustomState);
@@ -587,9 +588,10 @@ function updateSelectionInfo() {
   const info = document.getElementById('selectionInfo');
   const total = state.cveResults.length;
   const selected = state.selectedCves.size;
+  const isCodeql = document.getElementById('cveSource').value === 'codeql';
   info.textContent = '已选 ' + selected + ' / ' + total + ' 条';
   document.getElementById('selectAllBtn').disabled = total === 0;
-  document.getElementById('selectCodeqlAllBtn').disabled = total === 0 || document.getElementById('cveSource').value !== 'codeql';
+  document.getElementById('selectCodeqlAllBtn').disabled = !isCodeql;
   document.getElementById('deselectAllBtn').disabled = selected === 0;
 }
 
