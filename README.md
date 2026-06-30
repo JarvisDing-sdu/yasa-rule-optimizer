@@ -25,7 +25,7 @@
 
 **桌面客户端**：
 
-1. 从 [Releases](https://github.com/JarvisDing-sdu/yasa-rule-optimizer/releases) 页面下载对应系统的安装包（`.exe` / `.dmg` / `.AppImage`）
+1. 从 [Releases](https://github.com/JarvisDing-sdu/yasa-rule-optimizer/releases) 页面下载对应系统的安装包（ `.dmg` / `.AppImage`）
 2. 从同一页面单独下载 YASA 引擎包（约 466MB），解压到本地任意目录
 3. 安装并打开客户端，首次启动按引导填写 YASA 引擎路径和 LLM API Key
 4. 注册账号，开始使用
