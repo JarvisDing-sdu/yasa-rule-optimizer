@@ -10,7 +10,7 @@ class RegisterRequest(BaseModel):
     code: str
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str  # 接受任意字符串作为账号名，不强制邮箱格式
     password: str
 
 class ResetPasswordRequest(BaseModel):

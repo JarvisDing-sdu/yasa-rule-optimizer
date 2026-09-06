@@ -1,158 +1,110 @@
 [
   {
-    "checkerIds": [
-      "taint_flow_c_input"
-    ],
+    "checkerIds": ["taint_flow_c_input"],
     "sources": {
       "FuncCallArgTaintSource": [
-        {
-          "fsig": "gets",
-          "args": [
-            "0"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "fgets",
-          "args": [
-            "0"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "scanf",
-          "args": [
-            "1:"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "sscanf",
-          "args": [
-            "2:"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "recv",
-          "args": [
-            "1"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "read",
-          "args": [
-            "1"
-          ],
-          "kind": "C_INPUT"
-        }
+        { "fsig": "gets",    "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "fgets",   "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "getc",    "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "fgetc",   "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "getchar", "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "getw",    "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "scanf",   "args": ["1:"], "kind": "C_INPUT" },
+        { "fsig": "fscanf",  "args": ["2:"], "kind": "C_INPUT" },
+        { "fsig": "sscanf",  "args": ["2:"], "kind": "C_INPUT" },
+        { "fsig": "vscanf",  "args": ["1:"], "kind": "C_INPUT" },
+        { "fsig": "vfscanf", "args": ["2:"], "kind": "C_INPUT" },
+        { "fsig": "vsscanf", "args": ["2:"], "kind": "C_INPUT" },
+        { "fsig": "read",    "args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "pread",   "args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "readv",   "args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "fread",   "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "recv",    "args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "recvfrom","args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "recvmsg", "args": ["1"],  "kind": "C_INPUT" }
       ],
       "FuncCallReturnValueTaintSource": [
-        {
-          "fsig": "getenv",
-          "values": [
-            "0"
-          ],
-          "kind": "C_INPUT"
-        }
+        { "fsig": "getenv",          "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "secure_getenv",   "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "ttyname",         "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "cuserid",         "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getlogin",        "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getpwuid",        "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getpwnam",        "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "gethostbyname",   "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "gethostbyaddr",   "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getaddrinfo",     "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getnameinfo",     "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "inet_ntoa",       "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "strdup",          "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "strndup",         "values": ["0"], "kind": "C_INPUT" }
       ]
     },
     "sinks": {
       "FuncCallTaintSink": [
-        {
-          "fsig": "system",
-          "args": [
-            "0"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "popen",
-          "args": [
-            "0"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execl",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execlp",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execle",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execv",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execvp",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "strcpy",
-          "args": [
-            "1"
-          ],
-          "attribute": "CBufferOverflow"
-        },
-        {
-          "fsig": "strcat",
-          "args": [
-            "1"
-          ],
-          "attribute": "CBufferOverflow"
-        },
-        {
-          "fsig": "sprintf",
-          "args": [
-            "1:"
-          ],
-          "attribute": "CFormatOrBufferOverflow"
-        },
-        {
-          "fsig": "vsprintf",
-          "args": [
-            "1:"
-          ],
-          "attribute": "CFormatOrBufferOverflow"
-        },
-        {
-          "fsig": "printf",
-          "args": [
-            "0"
-          ],
-          "attribute": "CFormatString"
-        },
-        {
-          "fsig": "fprintf",
-          "args": [
-            "1"
-          ],
-          "attribute": "CFormatString"
-        }
+        { "fsig": "system",       "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "popen",        "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execl",        "args": ["0:"],   "attribute": "CCommandInjection" },
+        { "fsig": "execlp",       "args": ["0:"],   "attribute": "CCommandInjection" },
+        { "fsig": "execle",       "args": ["0:"],   "attribute": "CCommandInjection" },
+        { "fsig": "execv",        "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execvp",       "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execve",       "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execvpe",      "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "posix_spawn",  "args": ["1"],    "attribute": "CCommandInjection" },
+        { "fsig": "posix_spawnp", "args": ["1"],    "attribute": "CCommandInjection" },
+
+        { "fsig": "gets",         "args": ["0"],    "attribute": "CBufferOverflow" },
+        { "fsig": "strcpy",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "strcat",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "wcscpy",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "wcscat",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "memcpy",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "memmove",      "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "bcopy",        "args": ["0"],    "attribute": "CBufferOverflow" },
+
+        { "fsig": "sprintf",      "args": ["1:"],   "attribute": "CFormatOrBufferOverflow" },
+        { "fsig": "vsprintf",     "args": ["1:"],   "attribute": "CFormatOrBufferOverflow" },
+        { "fsig": "snprintf",     "args": ["2:"],   "attribute": "CFormatOrBufferOverflow" },
+        { "fsig": "vsnprintf",    "args": ["2:"],   "attribute": "CFormatOrBufferOverflow" },
+
+        { "fsig": "printf",       "args": ["0"],    "attribute": "CFormatString" },
+        { "fsig": "fprintf",      "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "dprintf",      "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "vprintf",      "args": ["0"],    "attribute": "CFormatString" },
+        { "fsig": "vfprintf",     "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "vdprintf",     "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "syslog",       "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "vsyslog",      "args": ["1"],    "attribute": "CFormatString" },
+
+        { "fsig": "fopen",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "open",         "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "openat",       "args": ["1"],    "attribute": "CPathTraversal" },
+        { "fsig": "creat",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "mkdir",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "rmdir",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "unlink",       "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "remove",       "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "rename",       "args": ["0", "1"], "attribute": "CPathTraversal" },
+        { "fsig": "chmod",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "chown",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "access",       "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "stat",         "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "lstat",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "opendir",      "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "readlink",     "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "realpath",     "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "symlink",      "args": ["1"],    "attribute": "CPathTraversal" },
+        { "fsig": "link",         "args": ["1"],    "attribute": "CPathTraversal" },
+
+        { "fsig": "write",        "args": ["1"],    "attribute": "CFileOperation" },
+        { "fsig": "pwrite",       "args": ["1"],    "attribute": "CFileOperation" },
+        { "fsig": "fwrite",       "args": ["0"],    "attribute": "CFileOperation" },
+        { "fsig": "writev",       "args": ["0"],    "attribute": "CFileOperation" },
+        { "fsig": "send",         "args": ["1"],    "attribute": "CNetworkOperation" },
+        { "fsig": "sendto",       "args": ["1"],    "attribute": "CNetworkOperation" },
+        { "fsig": "sendmsg",      "args": ["1"],    "attribute": "CNetworkOperation" }
       ]
-    },
-    "sanitizers": []
+    }
   }
 ]

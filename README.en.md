@@ -14,7 +14,22 @@ Ma Yisheng is a code security scanning platform built on the YASA static analysi
 - **Personal rule library**: clone official rules, create custom rules, and enable or disable individual rules.
 - **Reports**: JSON, SARIF, TXT, HTML export, favorites, and AI-assisted triage.
 
-## Quick Start
+## Desktop Client (macOS / Linux)
+
+1. Download the installer from [Releases](https://github.com/JarvisDing-sdu/yasa-rule-optimizer/releases): macOS `.dmg` or Linux `.AppImage`.
+2. **macOS**: Open the `.dmg`, drag the app into Applications, and launch it.
+   **Linux**: Mark it executable and run — no installation needed:
+   ```bash
+   chmod +x "Ma Yisheng-*.AppImage"
+   ./"Ma Yisheng-*.AppImage"
+   ```
+3. Enter your LLM API Key, register an account, and start scanning.
+
+> The YASA engine is bundled inside the installer — no separate download or path configuration required. The backend starts automatically when the app opens.
+>
+> All data (accounts, reports, rule libraries) is stored locally — Linux: `~/.config/Ma Yisheng/runtime/`, macOS: `~/Library/Application Support/Ma Yisheng/runtime/`. Desktop data is independent from the web version.
+
+## Self-hosted / Development
 
 ```bash
 cd ma_yisheng

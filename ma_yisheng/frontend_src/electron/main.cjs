@@ -133,6 +133,8 @@ function startBackend() {
     SERVER_URL: '',
     ALLOWED_ORIGINS: '',
     MA_YISHENG_DATA_DIR: path.join(app.getPath('userData'), 'runtime'),
+    YASA_BUNDLE_PATH: path.join(process.resourcesPath || '', 'yasa'),
+    YASA_EXECUTABLE: 'yasa-engine-linux-x64',
   }
   fs.mkdirSync(env.MA_YISHENG_DATA_DIR, { recursive: true })
   const runtimeLogDir = path.join(env.MA_YISHENG_DATA_DIR, 'logs')

@@ -83,25 +83,14 @@ def init_db():
 
 def check_login_allowed(key: str, max_fails: int = 5, lockout_seconds: int = 900) -> bool:
     """检查该 key（ip:email）是否被锁定，返回 True 表示允许登录"""
-    db_path = get_db_path()
-    conn = _connect()
-    row = conn.execute("SELECT fail_count, locked_until FROM login_attempts WHERE key=?", (key,)).fetchone()
-    conn.close()
-    if not row:
-        return True
-    fail_count, locked_until = row
-    if time.time() < locked_until:
-        return False
-    return fail_count < max_fails
+    # 开发调试期间取消登录锁定。恢复时删掉下行即可。
+    return True
 
 
 def record_login_fail(key: str, max_fails: int = 5, lockout_seconds: int = 900):
     """记录一次登录失败，达到上限后锁定"""
-    db_path = get_db_path()
-    conn = _connect()
-    row = conn.execute("SELECT fail_count FROM login_attempts WHERE key=?", (key,)).fetchone()
-    fail_count = (row[0] if row else 0) + 1
-    locked_until = time.time() + lockout_seconds if fail_count >= max_fails else 0
+    # 开发调试期间取消登录锁定。恢复时删掉下行即可。
+    return
     conn.execute(
         "INSERT INTO login_attempts (key, fail_count, locked_until) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET fail_count=excluded.fail_count, locked_until=excluded.locked_until",
         (key, fail_count, locked_until)

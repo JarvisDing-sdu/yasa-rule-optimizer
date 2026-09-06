@@ -23,14 +23,21 @@
 
 **网页版**：直接访问 [http://47.94.95.178](http://47.94.95.178)，注册账号即可使用，无需安装任何软件。
 
-**桌面客户端**：
+**桌面客户端**（macOS / Linux）：
+**桌面客户端**（macOS / Linux）：
 
-1. 从 [Releases](https://github.com/JarvisDing-sdu/yasa-rule-optimizer/releases) 页面下载对应系统的安装包（ `.dmg` / `.AppImage`）
-2. 从同一页面单独下载 YASA 引擎包（约 466MB），解压到本地任意目录
-3. 安装并打开客户端，首次启动按引导填写 YASA 引擎路径和 LLM API Key
-4. 注册账号，开始使用
+1. 从 [Releases](https://github.com/JarvisDing-sdu/yasa-rule-optimizer/releases) 页面下载对应系统的安装包（macOS：`.dmg`，Linux：`.AppImage`）
+2. **macOS**：打开 `.dmg`，将应用拖入 Applications 文件夹，双击启动
+   **Linux**：赋予执行权限后直接运行，无需安装
+   ```bash
+   chmod +x "Ma Yisheng-*.AppImage"
+   ./"Ma Yisheng-*.AppImage"
+   ```
+3. 填写 LLM API Key，注册账号，即可使用
 
-> 桌面客户端内置后端，打开即自动启动，无需额外配置服务器。账号与报告数据存储在本机，与网页版相互独立。
+> YASA 引擎已内置于安装包，无需单独下载或配置引擎路径。客户端内置后端，打开即自动启动，无需额外配置服务器。
+>
+> 账号、报告、规则库等数据存储在本机（Linux：`~/.config/Ma Yisheng/runtime/`，macOS：`~/Library/Application Support/Ma Yisheng/runtime/`），与网页版相互独立。
 
 ---
 

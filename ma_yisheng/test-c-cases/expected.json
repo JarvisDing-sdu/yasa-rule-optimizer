@@ -1,8 +1,19 @@
 {
-  "vulnerabilities": [
+  "expected_findings": [
     {
-      "type": "command-injection",
-      "count": 1
+      "vuln_type": "CCommandInjection",
+      "file": "vulnerable.c",
+      "min_count": 2
+    },
+    {
+      "vuln_type": "CFormatString",
+      "file": "vulnerable.c",
+      "min_count": 1
+    },
+    {
+      "vuln_type": "CBufferOverflow",
+      "file": "vulnerable.c",
+      "min_count": 1
     }
   ]
 }

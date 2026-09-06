@@ -70,7 +70,7 @@ def login(request: Request, req: LoginRequest):
     user = get_user_by_email(req.email)
     if not user or not verify_password(req.password, user["password_hash"]):
         record_login_fail(rate_key)
-        raise HTTPException(status_code=401, detail="邮箱或密码错误")
+        raise HTTPException(status_code=401, detail="账号或密码错误")
 
     record_login_success(rate_key)
     token = create_jwt_token(user["id"], user["email"], JWT_SECRET, JWT_EXPIRE_DAYS)

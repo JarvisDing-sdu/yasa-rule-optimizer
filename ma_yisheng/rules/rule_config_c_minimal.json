@@ -1,158 +1,54 @@
 [
   {
-    "checkerIds": [
-      "taint_flow_c_input"
-    ],
+    "checkerIds": ["taint_flow_c_input"],
     "sources": {
       "FuncCallArgTaintSource": [
-        {
-          "fsig": "gets",
-          "args": [
-            "0"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "fgets",
-          "args": [
-            "0"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "scanf",
-          "args": [
-            "1:"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "sscanf",
-          "args": [
-            "2:"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "recv",
-          "args": [
-            "1"
-          ],
-          "kind": "C_INPUT"
-        },
-        {
-          "fsig": "read",
-          "args": [
-            "1"
-          ],
-          "kind": "C_INPUT"
-        }
+        { "fsig": "gets",    "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "fgets",   "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "scanf",   "args": ["1:"], "kind": "C_INPUT" },
+        { "fsig": "fscanf",  "args": ["2:"], "kind": "C_INPUT" },
+        { "fsig": "sscanf",  "args": ["2:"], "kind": "C_INPUT" },
+        { "fsig": "read",    "args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "fread",   "args": ["0"],  "kind": "C_INPUT" },
+        { "fsig": "recv",    "args": ["1"],  "kind": "C_INPUT" },
+        { "fsig": "recvfrom","args": ["1"],  "kind": "C_INPUT" }
       ],
       "FuncCallReturnValueTaintSource": [
-        {
-          "fsig": "getenv",
-          "values": [
-            "0"
-          ],
-          "kind": "C_INPUT"
-        }
+        { "fsig": "getenv",          "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getpwuid",        "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getpwnam",        "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "gethostbyname",   "values": ["0"], "kind": "C_INPUT" },
+        { "fsig": "getaddrinfo",     "values": ["0"], "kind": "C_INPUT" }
       ]
     },
     "sinks": {
       "FuncCallTaintSink": [
-        {
-          "fsig": "system",
-          "args": [
-            "0"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "popen",
-          "args": [
-            "0"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execl",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execlp",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execle",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execv",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "execvp",
-          "args": [
-            "0:"
-          ],
-          "attribute": "CCommandInjection"
-        },
-        {
-          "fsig": "strcpy",
-          "args": [
-            "1"
-          ],
-          "attribute": "CBufferOverflow"
-        },
-        {
-          "fsig": "strcat",
-          "args": [
-            "1"
-          ],
-          "attribute": "CBufferOverflow"
-        },
-        {
-          "fsig": "sprintf",
-          "args": [
-            "1:"
-          ],
-          "attribute": "CFormatOrBufferOverflow"
-        },
-        {
-          "fsig": "vsprintf",
-          "args": [
-            "1:"
-          ],
-          "attribute": "CFormatOrBufferOverflow"
-        },
-        {
-          "fsig": "printf",
-          "args": [
-            "0"
-          ],
-          "attribute": "CFormatString"
-        },
-        {
-          "fsig": "fprintf",
-          "args": [
-            "1"
-          ],
-          "attribute": "CFormatString"
-        }
+        { "fsig": "system",       "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "popen",        "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execl",        "args": ["0:"],   "attribute": "CCommandInjection" },
+        { "fsig": "execlp",       "args": ["0:"],   "attribute": "CCommandInjection" },
+        { "fsig": "execle",       "args": ["0:"],   "attribute": "CCommandInjection" },
+        { "fsig": "execv",        "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execvp",       "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "execve",       "args": ["0"],    "attribute": "CCommandInjection" },
+        { "fsig": "gets",         "args": ["0"],    "attribute": "CBufferOverflow" },
+        { "fsig": "strcpy",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "strcat",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "memcpy",       "args": ["1"],    "attribute": "CBufferOverflow" },
+        { "fsig": "sprintf",      "args": ["1:"],   "attribute": "CFormatOrBufferOverflow" },
+        { "fsig": "vsprintf",     "args": ["1:"],   "attribute": "CFormatOrBufferOverflow" },
+        { "fsig": "snprintf",     "args": ["2:"],   "attribute": "CFormatOrBufferOverflow" },
+        { "fsig": "printf",       "args": ["0"],    "attribute": "CFormatString" },
+        { "fsig": "fprintf",      "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "syslog",       "args": ["1"],    "attribute": "CFormatString" },
+        { "fsig": "fopen",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "open",         "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "mkdir",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "unlink",       "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "remove",       "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "chmod",        "args": ["0"],    "attribute": "CPathTraversal" },
+        { "fsig": "stat",         "args": ["0"],    "attribute": "CPathTraversal" }
       ]
-    },
-    "sanitizers": []
+    }
   }
 ]

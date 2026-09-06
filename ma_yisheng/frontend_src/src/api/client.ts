@@ -24,10 +24,14 @@ client.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
+      // 登录接口的 401 直接透传服务器消息（"账号或密码错误"），不做拦截处理
+      if (err.config?.url?.includes('/api/auth/login')) {
+        const detail = err.response.data?.detail
+        return Promise.reject(new Error(detail || '登录失败'))
+      }
       if (!isDesktopMode) {
         localStorage.removeItem('token')
         localStorage.removeItem('email')
-        // 跳转登录页，同时 reject 让调用方知道自己被中断了
         setTimeout(() => { window.location.hash = '#/login' }, 0)
       }
       return Promise.reject(new Error('AUTH_REQUIRED'))

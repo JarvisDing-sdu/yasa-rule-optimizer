@@ -21,7 +21,20 @@ ma_yisheng/ma-yisheng-backend.spec
 backend.log
 .jwt_secret
 
+# 学习笔记（不上传 GitHub）
+docs/learning/
+
 # 比赛材料（非项目代码）
 CISCNThesis-master/
 团队成员登记表.docx
 蚂蚁集团-丁云山-邓子壮.doc
+
+# YASA 引擎源码（本地参考，非本项目代码）
+YASA-Engine-main/
+parser-C/
+
+# C 语言 SAST 基准测试集（外部数据集，不提交）
+CASTLE-Benchmark/
+
+# 引擎解包残留（二进制 unpack 产物，不提交）
+c/
